@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Peripheral · 外设电量</title>
+<style>
+:root{font-family:Segoe UI,Microsoft YaHei,sans-serif;color:#e7eee8;background:#0d1411;font-synthesis:none}*{box-sizing:border-box}body{margin:0}main{max-width:1120px;margin:auto;padding:48px 36px}header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #29352e;padding-bottom:26px}.brand{letter-spacing:3px;font-size:15px}.brand b{color:#b4e894}.pill{font-size:12px;background:#1c2a21;border:1px solid #334b3a;border-radius:30px;padding:9px 14px;color:#b4e894}.intro{margin:55px 0 32px;display:flex;align-items:end;justify-content:space-between;gap:24px}.eyebrow{font-size:11px;color:#b4e894;letter-spacing:2px}h1{font-size:44px;font-weight:500;letter-spacing:-1px;margin:16px 0}p{color:#9caea1;line-height:1.8;font-size:14px}button{background:#b4e894;color:#13200e;border:0;border-radius:8px;padding:13px 19px;cursor:pointer;font:inherit;font-size:13px;white-space:nowrap}button.secondary{background:transparent;color:#d5e3d7;border:1px solid #415447}button:disabled{opacity:.4;cursor:wait}button:focus-visible{outline:3px solid white;outline-offset:3px}.actions{display:flex;gap:9px;flex-wrap:wrap}.summary{display:flex;gap:40px;margin:32px 0;color:#93a598;font-size:12px}.summary strong{color:#fff;font-size:21px;margin-right:8px;font-weight:400}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(285px,1fr));gap:18px}.card{border:1px solid #334238;background:linear-gradient(140deg,#1b2b20,#152019);border-radius:14px;padding:27px;min-height:225px}.type{font-size:10px;letter-spacing:2px;color:#92b193}.card h2{font-size:18px;font-weight:500;min-height:46px;margin:16px 0 24px}.level{display:flex;align-items:baseline;gap:5px}.level b{font-size:49px;font-weight:400;letter-spacing:-2px}.level span{color:#a4b7a9}.track{height:5px;background:#34453a;border-radius:4px;margin:18px 0}.fill{height:100%;border-radius:4px;background:#b4e894}.card small{color:#9baea0;font-size:12px}.empty{border:1px dashed #3c5143;border-radius:14px;padding:38px;grid-column:1/-1}.empty h2{font-weight:400;font-size:22px}aside{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:35px;border-top:1px solid #29392f;padding-top:25px}aside h3{font-size:13px;font-weight:500}aside p{font-size:12px}#message{min-height:25px;color:#c7d5ca;font-size:13px;line-height:1.8;overflow-wrap:anywhere}footer{margin-top:40px;font-size:11px;color:#6c8272;letter-spacing:1px}@media(max-width:650px){main{padding:25px 20px}.intro{display:block;margin-top:36px}h1{font-size:34px}.actions{margin-top:22px}aside{grid-template-columns:1fr;gap:8px}.summary{gap:20px}}
+</style>
+<main><header><div class="brand"><b>◉</b> PERIPHERAL</div><span class="pill" id="mode">本地外设电量</span></header>
+<section class="intro"><div><div class="eyebrow">YOUR DEVICES, AT A GLANCE</div><h1>电量，一目了然。</h1><p>在一个地方查看鼠标、键盘及支持设备的剩余电量。</p></div><div class="actions"><button id="connect">连接设备</button><button class="secondary" id="refresh">刷新电量 ↻</button></div></section>
+<div id="message" role="status" aria-live="polite">正在检查连接方式…</div>
+<p><a href="https://github.com/XLJFZ/peripheral-battery/releases/latest/download/Peripheral-Battery-Two-Versions.zip" style="color:#b4e894">下载托盘版 / 本地网页版 ↗</a> · <a href="https://github.com/XLJFZ/peripheral-battery" style="color:#9caea1">查看源码</a></p>
+<div class="summary"><div><strong id="count">0</strong>可读取设备</div><div><strong id="low">0</strong>低电量</div><div id="updated">尚未读取</div></div>
+<section class="grid" id="devices"></section>
+<aside><div><h3>两种连接方式</h3><p>本地连接器支持已适配的雷蛇和迈从设备，以及 Windows 提供电量的外设。纯网页模式使用 WebHID，需要 Chrome / Edge 和你的设备授权。</p></div><div><h3>设备未出现？</h3><p>请先唤醒设备。浏览器可能禁止访问鼠标接口，此时请双击交付包中的“启动网页版”。其他品牌的 2.4G 设备需要单独适配电量协议。</p></div></aside>
+<footer>PERIPHERAL / LOCAL BATTERY MONITOR · 设备数据仅在本机处理 <button id="stop" class="secondary" hidden>关闭本地连接器</button></footer></main>
+<script>
+'use strict';
+const CATALOG = [
+  {
+    "pid": 31,
+    "name": "Razer Naga Epic",
+    "tid": 255,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 36,
+    "name": "Razer Mamba 2012 (Wired)",
+    "tid": 255,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 37,
+    "name": "Razer Mamba 2012 (Wireless)",
+    "tid": 255,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 50,
+    "name": "Razer Ouroboros",
+    "tid": 255,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 62,
+    "name": "Razer Naga Epic Chroma (Wired)",
+    "tid": 255,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 63,
+    "name": "Razer Naga Epic Chroma (Wireless)",
+    "tid": 255,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 68,
+    "name": "Razer Mamba Chroma (Wired)",
+    "tid": 255,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 69,
+    "name": "Razer Mamba Chroma (Wireless)",
+    "tid": 255,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 89,
+    "name": "Razer Lancehead (Wired)",
+    "tid": 63,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 90,
+    "name": "Razer Lancehead (Wireless)",
+    "tid": 63,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 98,
+    "name": "Razer Atheris (Receiver)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.4,
+    "charging": false
+  },
+  {
+    "pid": 111,
+    "name": "Razer Lancehead Wireless (Receiver)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 112,
+    "name": "Razer Lancehead Wireless (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 114,
+    "name": "Razer Mamba Wireless (Receiver)",
+    "tid": 63,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 115,
+    "name": "Razer Mamba Wireless (Wired)",
+    "tid": 63,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 119,
+    "name": "Razer Pro Click (Receiver)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 122,
+    "name": "Razer Viper Ultimate (Wired)",
+    "tid": 255,
+    "interface": 0,
+    "wait": 0.0599,
+    "charging": true
+  },
+  {
+    "pid": 123,
+    "name": "Razer Viper Ultimate (Wireless)",
+    "tid": 255,
+    "interface": 0,
+    "wait": 0.0599,
+    "charging": true
+  },
+  {
+    "pid": 124,
+    "name": "Razer DeathAdder V2 Pro (Wired)",
+    "tid": 63,
+    "interface": 0,
+    "wait": 0.0599,
+    "charging": true
+  },
+  {
+    "pid": 125,
+    "name": "Razer DeathAdder V2 Pro (Wireless)",
+    "tid": 63,
+    "interface": 0,
+    "wait": 0.0599,
+    "charging": true
+  },
+  {
+    "pid": 128,
+    "name": "Razer Pro Click (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 131,
+    "name": "Razer Basilisk X HyperSpeed",
+    "tid": 255,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": false
+  },
+  {
+    "pid": 134,
+    "name": "Razer Basilisk Ultimate",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 136,
+    "name": "Razer Basilisk Ultimate Receiver",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 143,
+    "name": "Razer Naga Pro (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 144,
+    "name": "Razer Naga Pro (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 148,
+    "name": "Razer Orochi V2 (Receiver)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.4,
+    "charging": false
+  },
+  {
+    "pid": 149,
+    "name": "Razer Orochi V2 (Bluetooth)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.4,
+    "charging": false
+  },
+  {
+    "pid": 154,
+    "name": "Razer Pro Click Mini (Receiver)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 156,
+    "name": "Razer DeathAdder V2 X HyperSpeed",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": false
+  },
+  {
+    "pid": 158,
+    "name": "Razer Viper Mini SE (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.0599,
+    "charging": true
+  },
+  {
+    "pid": 159,
+    "name": "Razer Viper Mini SE (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.0599,
+    "charging": true
+  },
+  {
+    "pid": 165,
+    "name": "Razer Viper V2 Pro (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 166,
+    "name": "Razer Viper V2 Pro (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 167,
+    "name": "Razer Naga V2 Pro (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 168,
+    "name": "Razer Naga V2 Pro (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 170,
+    "name": "Razer Basilisk V3 Pro (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 171,
+    "name": "Razer Basilisk V3 Pro (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 175,
+    "name": "Razer Cobra Pro (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 176,
+    "name": "Razer Cobra Pro (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 179,
+    "name": "Razer HyperPolling Wireless Dongle",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.0599,
+    "charging": true
+  },
+  {
+    "pid": 180,
+    "name": "Razer Naga V2 HyperSpeed (Receiver)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": false
+  },
+  {
+    "pid": 182,
+    "name": "Razer DeathAdder V3 Pro (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 183,
+    "name": "Razer DeathAdder V3 Pro (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 184,
+    "name": "Razer Viper V3 HyperSpeed",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.0599,
+    "charging": false
+  },
+  {
+    "pid": 185,
+    "name": "Razer Basilisk V3 X HyperSpeed",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": false
+  },
+  {
+    "pid": 190,
+    "name": "Razer DeathAdder V4 Pro (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 191,
+    "name": "Razer DeathAdder V4 Pro (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 192,
+    "name": "Razer Viper V3 Pro (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 193,
+    "name": "Razer Viper V3 Pro (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.0599,
+    "charging": true
+  },
+  {
+    "pid": 194,
+    "name": "Razer DeathAdder V3 Pro (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 195,
+    "name": "Razer DeathAdder V3 Pro (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 196,
+    "name": "Razer DeathAdder V3 HyperSpeed (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 197,
+    "name": "Razer DeathAdder V3 HyperSpeed (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 199,
+    "name": "Razer Pro Click V2 Vertical Edition (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 200,
+    "name": "Razer Pro Click V2 Vertical Edition (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 204,
+    "name": "Razer Basilisk V3 Pro 35K (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 205,
+    "name": "Razer Basilisk V3 Pro 35K (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 208,
+    "name": "Razer Pro Click V2 (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 209,
+    "name": "Razer Pro Click V2 (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 211,
+    "name": "Razer Basilisk Mobile (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": false
+  },
+  {
+    "pid": 212,
+    "name": "Razer Basilisk Mobile (Receiver)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": false
+  },
+  {
+    "pid": 214,
+    "name": "Razer Basilisk V3 Pro 35K Phantom Green Edition (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 215,
+    "name": "Razer Basilisk V3 Pro 35K Phantom Green Edition (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 218,
+    "name": "Razer Cobra HyperSpeed",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 219,
+    "name": "Razer Cobra HyperSpeed Receiver",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 222,
+    "name": "Razer Viper V3 Pro SE (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 223,
+    "name": "Razer Viper V3 Pro SE (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.0599,
+    "charging": true
+  },
+  {
+    "pid": 226,
+    "name": "Razer Basilisk V4 Pro (Wired)",
+    "tid": 31,
+    "interface": 3,
+    "wait": 0.0599,
+    "charging": true
+  },
+  {
+    "pid": 227,
+    "name": "Razer Basilisk V4 Pro (Wireless)",
+    "tid": 31,
+    "interface": 3,
+    "wait": 0.0599,
+    "charging": true
+  },
+  {
+    "pid": 229,
+    "name": "Razer Viper V4 Pro (Wired)",
+    "tid": 31,
+    "interface": 3,
+    "wait": 0.0599,
+    "charging": true
+  },
+  {
+    "pid": 230,
+    "name": "Razer Viper V4 Pro (Wireless)",
+    "tid": 31,
+    "interface": 3,
+    "wait": 0.0599,
+    "charging": true
+  }
+]
+;
+const token=new URLSearchParams(location.search).get('token');
+const bridge=!!token && location.hostname==='127.0.0.1';
+const $=id=>document.getElementById(id);let busy=false;let active=[];let rows=[];
+function message(text){$('message').textContent=text}
+function draw(data){rows=data;$('devices').replaceChildren();const valid=data.filter(r=>r.percent!==null);$('count').textContent=valid.length;$('low').textContent=valid.filter(r=>r.percent<=10).length;
+ if(!data.length){const el=document.createElement('div');el.className='empty';const h=document.createElement('h2');h.textContent='连接你的第一台设备';const p=document.createElement('p');p.textContent=bridge?'未发现支持的设备。请确认接收器已插入，并唤醒鼠标或键盘。':'点击“连接设备”授权访问。若列表中没有鼠标，请使用本地连接器。';el.append(h,p);$('devices').append(el)}
+ for(const r of data){const card=document.createElement('article');card.className='card';const type=document.createElement('div');type.className='type';type.textContent=r.provider;const h=document.createElement('h2');h.textContent=r.name;const level=document.createElement('div');level.className='level';const n=document.createElement('b');n.textContent=r.percent===null?'—':r.percent;const unit=document.createElement('span');unit.textContent=r.percent===null?'':'%';level.append(n,unit);const track=document.createElement('div');track.className='track';const fill=document.createElement('div');fill.className='fill';fill.style.width=(r.percent??0)+'%';if(r.percent!==null&&r.percent<=10)fill.style.background='#f4a38e';track.append(fill);const s=document.createElement('small');s.textContent=r.percent===null?'无法读取 · 请唤醒设备或检查连接':r.charging?'正在充电':r.charging===false?'使用电池':'电量已更新';card.append(type,h,level,track,s);$('devices').append(card)}
+ $('updated').textContent='更新于 '+new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
+}
+function entry(d){return CATALOG.find(e=>d.vendorId===0x1532&&d.productId===e.pid)}
+async function razer(d,e,cmd){const p=new Uint8Array(90);p[1]=e.tid;p[5]=2;p[6]=7;p[7]=cmd;for(let i=2;i<88;i++)p[88]^=p[i];await d.sendFeatureReport(0,p);await new Promise(r=>setTimeout(r,e.wait*1000));const v=await d.receiveFeatureReport(0);const b=new Uint8Array(v.buffer,v.byteOffset,v.byteLength);if(b.length!==90)throw Error('设备返回长度不正确');let crc=0;for(let i=2;i<88;i++)crc^=b[i];if(crc!==b[88]||b[0]!==2||b[1]!==e.tid||b[5]!==2||b[6]!==7||b[7]!==cmd)throw Error('设备休眠、忙碌或返回无效数据');return b[9]}
+async function readDevice(d){const r={name:d.productName||'HID 设备',provider:'WebHID',percent:null,charging:null};try{if(!d.opened)await d.open();const e=entry(d);if(e){r.percent=Math.round(await razer(d,e,0x80)*100/255);if(e.charging){try{r.charging=!!(await razer(d,e,0x84))}catch{}}}else if(d.vendorId===0x5253&&d.productId===0x1021){await d.sendFeatureReport(0x11,new Uint8Array([0xf9,0xff,...Array(17).fill(0xff)]));await new Promise(r=>setTimeout(r,120));const v=await d.receiveFeatureReport(0x11);if(v.byteLength<13)throw Error('回包过短');r.percent=v.getUint8(12)^0xff}else if(d.vendorId===0x41e4&&d.productId===0x2001){const v=await d.receiveFeatureReport(6);if(v.byteLength<3)throw Error('回包过短');r.percent=v.getUint8(2)}if(r.percent!==null&&(r.percent<0||r.percent>100))throw Error('电量值无效')}catch(e){r.percent=null;r.error=e.message}return r}
+async function refresh(){if(busy)return;busy=true;$('refresh').disabled=true;try{if(bridge){const res=await fetch('/api/battery?token='+encodeURIComponent(token),{cache:'no-store'});if(!res.ok)throw Error('连接器拒绝请求：'+res.status);const data=await res.json();draw(data.readings);message(data.errors.length?'部分接口不可用：'+data.errors.join('；'):'已连接本机 · 每分钟自动刷新')}else{draw(await Promise.all(active.map(readDevice)));message(active.length?'已读取授权设备；无法读取时请使用本地连接器。':'纯网页模式 · 点击连接设备开始')}}catch(e){draw([]);message('读取失败：'+e.message+'。请重新启动本地连接器。')}finally{busy=false;$('refresh').disabled=false}}
+$('refresh').onclick=refresh;
+$('stop').hidden=!bridge;
+$('stop').onclick=async()=>{try{const r=await fetch('/api/stop?token='+encodeURIComponent(token));if(!r.ok)throw Error('关闭失败');$('refresh').disabled=true;$('connect').disabled=true;$('stop').disabled=true;message('本地连接器已关闭。需要使用时请重新双击“启动网页版”。');clearInterval(timer)}catch(e){message(e.message)}};
+$('connect').onclick=async()=>{if(bridge){refresh();return}if(!navigator.hid){message('当前浏览器不支持 WebHID。请使用桌面版 Chrome / Edge，或启动本地连接器。');return}try{const filters=CATALOG.map(e=>({vendorId:0x1532,productId:e.pid}));filters.push({vendorId:0x5253,productId:0x1021},{vendorId:0x41e4,productId:0x2001});const chosen=await navigator.hid.requestDevice({filters});for(const d of chosen)if(!active.includes(d))active.push(d);await refresh()}catch(e){message(e.name==='NotFoundError'?'已取消设备选择。':'无法连接：'+e.message+'。可改用本地连接器。')}};
+if(navigator.hid)navigator.hid.addEventListener('disconnect',e=>{active=active.filter(d=>d!==e.device);refresh()});
+$('mode').textContent=bridge?'● 本地连接器':'○ WebHID 直连';if(bridge){$('connect').textContent='检查连接';refresh()}else{draw([]);message('纯网页模式 · 无需安装；鼠标接口可能受浏览器限制。')}
+const timer=setInterval(refresh,60000);
+</script></html>

@@ -1,0 +1,578 @@
+[
+  {
+    "pid": 31,
+    "name": "Razer Naga Epic",
+    "tid": 255,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 36,
+    "name": "Razer Mamba 2012 (Wired)",
+    "tid": 255,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 37,
+    "name": "Razer Mamba 2012 (Wireless)",
+    "tid": 255,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 50,
+    "name": "Razer Ouroboros",
+    "tid": 255,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 62,
+    "name": "Razer Naga Epic Chroma (Wired)",
+    "tid": 255,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 63,
+    "name": "Razer Naga Epic Chroma (Wireless)",
+    "tid": 255,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 68,
+    "name": "Razer Mamba Chroma (Wired)",
+    "tid": 255,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 69,
+    "name": "Razer Mamba Chroma (Wireless)",
+    "tid": 255,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 89,
+    "name": "Razer Lancehead (Wired)",
+    "tid": 63,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 90,
+    "name": "Razer Lancehead (Wireless)",
+    "tid": 63,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 98,
+    "name": "Razer Atheris (Receiver)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.4,
+    "charging": false
+  },
+  {
+    "pid": 111,
+    "name": "Razer Lancehead Wireless (Receiver)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 112,
+    "name": "Razer Lancehead Wireless (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 114,
+    "name": "Razer Mamba Wireless (Receiver)",
+    "tid": 63,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 115,
+    "name": "Razer Mamba Wireless (Wired)",
+    "tid": 63,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 119,
+    "name": "Razer Pro Click (Receiver)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 122,
+    "name": "Razer Viper Ultimate (Wired)",
+    "tid": 255,
+    "interface": 0,
+    "wait": 0.0599,
+    "charging": true
+  },
+  {
+    "pid": 123,
+    "name": "Razer Viper Ultimate (Wireless)",
+    "tid": 255,
+    "interface": 0,
+    "wait": 0.0599,
+    "charging": true
+  },
+  {
+    "pid": 124,
+    "name": "Razer DeathAdder V2 Pro (Wired)",
+    "tid": 63,
+    "interface": 0,
+    "wait": 0.0599,
+    "charging": true
+  },
+  {
+    "pid": 125,
+    "name": "Razer DeathAdder V2 Pro (Wireless)",
+    "tid": 63,
+    "interface": 0,
+    "wait": 0.0599,
+    "charging": true
+  },
+  {
+    "pid": 128,
+    "name": "Razer Pro Click (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 131,
+    "name": "Razer Basilisk X HyperSpeed",
+    "tid": 255,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": false
+  },
+  {
+    "pid": 134,
+    "name": "Razer Basilisk Ultimate",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 136,
+    "name": "Razer Basilisk Ultimate Receiver",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 143,
+    "name": "Razer Naga Pro (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 144,
+    "name": "Razer Naga Pro (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 148,
+    "name": "Razer Orochi V2 (Receiver)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.4,
+    "charging": false
+  },
+  {
+    "pid": 149,
+    "name": "Razer Orochi V2 (Bluetooth)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.4,
+    "charging": false
+  },
+  {
+    "pid": 154,
+    "name": "Razer Pro Click Mini (Receiver)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 156,
+    "name": "Razer DeathAdder V2 X HyperSpeed",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": false
+  },
+  {
+    "pid": 158,
+    "name": "Razer Viper Mini SE (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.0599,
+    "charging": true
+  },
+  {
+    "pid": 159,
+    "name": "Razer Viper Mini SE (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.0599,
+    "charging": true
+  },
+  {
+    "pid": 165,
+    "name": "Razer Viper V2 Pro (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 166,
+    "name": "Razer Viper V2 Pro (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 167,
+    "name": "Razer Naga V2 Pro (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 168,
+    "name": "Razer Naga V2 Pro (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 170,
+    "name": "Razer Basilisk V3 Pro (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 171,
+    "name": "Razer Basilisk V3 Pro (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 175,
+    "name": "Razer Cobra Pro (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 176,
+    "name": "Razer Cobra Pro (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 179,
+    "name": "Razer HyperPolling Wireless Dongle",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.0599,
+    "charging": true
+  },
+  {
+    "pid": 180,
+    "name": "Razer Naga V2 HyperSpeed (Receiver)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": false
+  },
+  {
+    "pid": 182,
+    "name": "Razer DeathAdder V3 Pro (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 183,
+    "name": "Razer DeathAdder V3 Pro (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 184,
+    "name": "Razer Viper V3 HyperSpeed",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.0599,
+    "charging": false
+  },
+  {
+    "pid": 185,
+    "name": "Razer Basilisk V3 X HyperSpeed",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": false
+  },
+  {
+    "pid": 190,
+    "name": "Razer DeathAdder V4 Pro (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 191,
+    "name": "Razer DeathAdder V4 Pro (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 192,
+    "name": "Razer Viper V3 Pro (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 193,
+    "name": "Razer Viper V3 Pro (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.0599,
+    "charging": true
+  },
+  {
+    "pid": 194,
+    "name": "Razer DeathAdder V3 Pro (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 195,
+    "name": "Razer DeathAdder V3 Pro (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 196,
+    "name": "Razer DeathAdder V3 HyperSpeed (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 197,
+    "name": "Razer DeathAdder V3 HyperSpeed (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 199,
+    "name": "Razer Pro Click V2 Vertical Edition (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 200,
+    "name": "Razer Pro Click V2 Vertical Edition (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 204,
+    "name": "Razer Basilisk V3 Pro 35K (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 205,
+    "name": "Razer Basilisk V3 Pro 35K (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 208,
+    "name": "Razer Pro Click V2 (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 209,
+    "name": "Razer Pro Click V2 (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 211,
+    "name": "Razer Basilisk Mobile (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": false
+  },
+  {
+    "pid": 212,
+    "name": "Razer Basilisk Mobile (Receiver)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": false
+  },
+  {
+    "pid": 214,
+    "name": "Razer Basilisk V3 Pro 35K Phantom Green Edition (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 215,
+    "name": "Razer Basilisk V3 Pro 35K Phantom Green Edition (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 218,
+    "name": "Razer Cobra HyperSpeed",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 219,
+    "name": "Razer Cobra HyperSpeed Receiver",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 222,
+    "name": "Razer Viper V3 Pro SE (Wired)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.04,
+    "charging": true
+  },
+  {
+    "pid": 223,
+    "name": "Razer Viper V3 Pro SE (Wireless)",
+    "tid": 31,
+    "interface": 0,
+    "wait": 0.0599,
+    "charging": true
+  },
+  {
+    "pid": 226,
+    "name": "Razer Basilisk V4 Pro (Wired)",
+    "tid": 31,
+    "interface": 3,
+    "wait": 0.0599,
+    "charging": true
+  },
+  {
+    "pid": 227,
+    "name": "Razer Basilisk V4 Pro (Wireless)",
+    "tid": 31,
+    "interface": 3,
+    "wait": 0.0599,
+    "charging": true
+  },
+  {
+    "pid": 229,
+    "name": "Razer Viper V4 Pro (Wired)",
+    "tid": 31,
+    "interface": 3,
+    "wait": 0.0599,
+    "charging": true
+  },
+  {
+    "pid": 230,
+    "name": "Razer Viper V4 Pro (Wireless)",
+    "tid": 31,
+    "interface": 3,
+    "wait": 0.0599,
+    "charging": true
+  }
+]
