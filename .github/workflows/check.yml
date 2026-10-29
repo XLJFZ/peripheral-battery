@@ -27,6 +27,11 @@ jobs:
       - run: node test_web_state.cjs
       - name: Tray regression checks
         run: dotnet test native/tests/BluetoothBatteryMonitor.Tests/BluetoothBatteryMonitor.Tests.csproj -c Release --filter "FullyQualifiedName~HidFreshnessTests|FullyQualifiedName~BluetoothBatteryEngine_HasAllProvidersRegistered|FullyQualifiedName~MultiRingTests|FullyQualifiedName~PeripheralAppearanceTests|FullyQualifiedName~ToastNotificationServiceTests"
+      - name: Publish and verify popup dependencies
+        run: |
+          dotnet publish native/src/BluetoothBatteryMonitor.App/BluetoothBatteryMonitor.App.csproj -c Release -r win-x64 --self-contained true -o dist/ci-native
+          if ($LASTEXITCODE -ne 0) { throw 'Publish failed' }
+          python tools/check_native_package.py dist/ci-native --report dist/ui-smoke.json
   mac:
     strategy:
       fail-fast: false

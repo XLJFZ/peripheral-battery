@@ -206,17 +206,20 @@
 
                                         <!-- Cihaz Adı, Ses Kodeki ve Kaynak -->
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,8,0">
-                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,3">
-                                                <TextBlock Text="{Binding Name}"
+                                            <Grid VerticalAlignment="Center" Margin="0,0,0,3">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding Name}" ToolTip="{Binding Name}"
                                                            FontSize="13.5"
                                                            FontWeight="SemiBold"
-                                                           TextTrimming="CharacterEllipsis"
+                                                           TextTrimming="None" TextWrapping="Wrap"
                                                            Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                                                           VerticalAlignment="Center"
-                                                           MaxWidth="175" />
+                                                           VerticalAlignment="Center" />
 
                                                 <!-- Ses Kodeki Rozeti (LDAC, aptX HD, aptX, AAC, SBC) -->
-                                                <Border Margin="6,0,0,0"
+                                                <Border Grid.Column="1" Margin="6,0,0,0"
                                                         Padding="5,1"
                                                         CornerRadius="4"
                                                         VerticalAlignment="Center"
@@ -277,7 +280,7 @@
                                                         </TextBlock.Style>
                                                     </TextBlock>
                                                 </Border>
-                                            </StackPanel>
+                                            </Grid>
 
                                             <TextBlock TextTrimming="CharacterEllipsis">
                                                 <Run Text="{Binding ConnectionStatusText, Mode=OneWay}"

@@ -37,6 +37,19 @@ public partial class App : System.Windows.Application
 
     protected override async void OnStartup(StartupEventArgs e)
     {
+        int uiSmokeIndex=Array.IndexOf(e.Args,"--ui-smoke");
+        if(uiSmokeIndex>=0 && e.Args.Length>uiSmokeIndex+1)
+        {
+            base.OnStartup(e);ShutdownMode=ShutdownMode.OnExplicitShutdown;
+            try { await UiPackageSmoke.RunAsync(e.Args[uiSmokeIndex+1]);Shutdown(0); }
+            catch(Exception ex)
+            {
+                await global::System.IO.File.WriteAllTextAsync(e.Args[uiSmokeIndex+1],
+                    global::System.Text.Json.JsonSerializer.Serialize(new{success=false,error=ex.ToString()}));
+                Shutdown(1);
+            }
+            return;
+        }
         int probeIndex=Array.IndexOf(e.Args,"--diagnose");
         if(probeIndex>=0 && e.Args.Length>probeIndex+1)
         {
