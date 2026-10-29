@@ -18,6 +18,8 @@ class Reading:
     charging: bool | None = None
     error: str = ''
     connected: bool | None = None
+    raw_value: int | None = None
+    sampled_at: float | None = None
 
 
 def request(tid, command):
@@ -91,7 +93,9 @@ def read_hid(hid, catalog):
             try:
                 dev.open_path(d['path'])
                 if entry:
-                    row.percent = int(query(dev, entry, 0x80) * 100 / 255 + .5)
+                    row.raw_value = query(dev, entry, 0x80)
+                    row.percent = int(row.raw_value * 100 / 255 + .5)
+                    row.sampled_at = time.time()
                     if entry['charging']:
                         try:
                             row.charging = bool(query(dev, entry, 0x84))

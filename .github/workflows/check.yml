@@ -1,0 +1,62 @@
+name: Check and build desktop apps
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - run: python -m pip install 'Pillow>=10.4,<14'
+      - run: python -m unittest discover -p 'test_*.py' -v
+      - run: node test_webhid.cjs
+      - run: node test_web_state.cjs
+      - name: Tray regression checks
+        run: dotnet test native/tests/BluetoothBatteryMonitor.Tests/BluetoothBatteryMonitor.Tests.csproj -c Release --filter "FullyQualifiedName~HidFreshnessTests|FullyQualifiedName~BluetoothBatteryEngine_HasAllProvidersRegistered|FullyQualifiedName~MultiRingTests|FullyQualifiedName~PeripheralAppearanceTests|FullyQualifiedName~ToastNotificationServiceTests"
+  mac:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            arch: arm64
+          - runner: macos-15-intel
+            arch: x86_64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Mac dependencies
+        run: python -m pip install -r macos/requirements.txt 'pyinstaller>=6.11,<7'
+      - name: Parser and policy tests
+        run: python -m unittest discover -s macos -p 'test_*.py' -v
+      - name: Validate shell scripts
+        run: for script in macos/bootstrap.sh macos/*.command; do bash -n "$script"; done
+      - name: Build application
+        run: python macos/build_macos.py
+      - name: Check frozen native imports
+        run: macos/dist/PeripheralBattery.app/Contents/MacOS/PeripheralBattery --self-check
+      - name: Package application
+        run: ditto -c -k --sequesterRsrc --keepParent macos/dist/PeripheralBattery.app Peripheral-Battery-Mac-0.1.0-preview-${{ matrix.arch }}.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PeripheralBattery-Mac-${{ matrix.arch }}
+          path: Peripheral-Battery-Mac-0.1.0-preview-${{ matrix.arch }}.zip
+          retention-days: 14

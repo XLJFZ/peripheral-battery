@@ -1,5 +1,7 @@
 # Peripheral Battery changes
 
+- v0.2.2: Disable Apple AirPods / Beats Beacon and Google Fast Pair advertisement discovery in the tray engine and diagnostic probe. Nearby broadcasts do not establish ownership; Windows-connected, GATT, PnP, and HID providers remain available.
+
 The original native WPF UI and Bluetooth providers are retained under the MIT license in LICENSE.
 
 - Added the existing Razer/MCHOSE HID backend as a separate local provider.

@@ -13,8 +13,8 @@ public static class DeviceProbe
             new ConnectedBluetoothDeviceProvider(),
             new XInputBatteryProvider(),
             new BleGattBatteryProvider(),new WindowsPnpBatteryProvider(),
-            new AppleAirPodsBeaconProvider(),new SamsungGalaxyBudsBatteryProvider(),
-            new SonyHeadphonesBatteryProvider(),new GoogleFastPairBatteryProvider(),
+            new SamsungGalaxyBudsBatteryProvider(),
+            new SonyHeadphonesBatteryProvider(),
             new LogitechHidBatteryProvider(),new LogitechGHubBatteryProvider(),
             new PlayStationControllerBatteryProvider(),new NintendoSwitchBatteryProvider(),new SteelSeriesBatteryProvider()};
         try

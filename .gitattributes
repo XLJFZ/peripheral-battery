@@ -1,0 +1,5 @@
+macos/*.command text eol=lf
+macos/*.sh text eol=lf
+*.py text eol=lf
+*.cjs text eol=lf
+*.yml text eol=lf

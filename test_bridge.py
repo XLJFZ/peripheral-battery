@@ -39,6 +39,21 @@ class BridgeTests(unittest.TestCase):
             html = res.read().decode()
         self.assertIn('WebHID',html)
         self.assertNotIn('__CATALOG__',html)
+    @patch('web_bridge.Monitor.scan', return_value=[Reading('test','Test mouse','Test',75)])
+    def test_manual_refresh_bypasses_cache(self, scan):
+        url = self.url.replace('/?', '/api/battery?')
+        with urlopen(url): pass
+        with urlopen(url + '&fresh=1'): pass
+        self.assertEqual(scan.call_count, 2)
+    @patch('web_bridge.Monitor.scan')
+    def test_failed_refresh_cannot_keep_old_battery(self, scan):
+        scan.side_effect = [[Reading('test','Test mouse','Test',75)], OSError('unavailable')]
+        url = self.url.replace('/?', '/api/battery?')
+        with urlopen(url): pass
+        with urlopen(url + '&fresh=1') as res: data = json.load(res)
+        self.assertEqual(data['readings'], [])
+        self.assertEqual(data['updated'], 0)
+        self.assertTrue(data['errors'])
 
 
 if __name__ == '__main__': unittest.main()

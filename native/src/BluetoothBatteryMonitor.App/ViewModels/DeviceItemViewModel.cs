@@ -53,6 +53,9 @@ public partial class DeviceItemViewModel : ObservableObject
     [ObservableProperty]
     private string _providerSource = string.Empty;
 
+    [ObservableProperty]
+    private string _batteryReadingDetails = string.Empty;
+
     // TWS Fields
     [ObservableProperty]
     private bool _isTws;
@@ -238,6 +241,11 @@ public partial class DeviceItemViewModel : ObservableObject
         Id = model.Id;
         Name = model.Name;
         ProviderSource = model.ProviderSource;
+        BatteryReadingDetails = !string.IsNullOrWhiteSpace(model.BatteryReadError)
+            ? "本次未读取到电量；旧读数已清除。" + model.BatteryReadError
+            : model.RawBatteryValue.HasValue
+                ? $"设备原始值 {model.RawBatteryValue}/255，按 ×100÷255 四舍五入。\n采样时间：{model.BatterySampledAt:yyyy-MM-dd HH:mm:ss}\n设备报告可能与官方软件的更新时间或处理方式不同。"
+                : $"设备记录更新：{model.LastUpdated:yyyy-MM-dd HH:mm:ss}";
         IsConnected = model.IsConnected;
         ConnectionStatusText = model.ConnectionStatusText;
         IsCharging = model.IsCharging;

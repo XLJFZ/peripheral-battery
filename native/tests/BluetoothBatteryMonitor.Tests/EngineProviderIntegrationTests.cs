@@ -21,19 +21,19 @@ public class EngineProviderIntegrationTests
 
         var providers = engine.Providers;
 
-        Assert.Equal(11, providers.Count);
+        Assert.Equal(13, providers.Count);
 
         var names = providers.Select(p => p.Name).ToList();
 
         Assert.Contains(names, n => n.Contains("GATT"));
-        Assert.Contains(names, n => n.Contains("AirPods"));
+        Assert.DoesNotContain(names, n => n.Contains("AirPods"));
         Assert.Contains(names, n => n.Contains("PnP"));
         Assert.Contains(names, n => n.Contains("HID++"));
         Assert.Contains(names, n => n.Contains("G HUB"));
         Assert.Contains(names, n => n.Contains("PlayStation"));
         Assert.Contains(names, n => n.Contains("Galaxy Buds"));
         Assert.Contains(names, n => n.Contains("Sony"));
-        Assert.Contains(names, n => n.Contains("Google Fast Pair"));
+        Assert.DoesNotContain(names, n => n.Contains("Google Fast Pair"));
         Assert.Contains(names, n => n.Contains("Nintendo Switch"));
         Assert.Contains(names, n => n.Contains("SteelSeries"));
     }

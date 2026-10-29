@@ -308,7 +308,7 @@
                                                            Margin="0,0,4,0"
                                                            Visibility="{Binding IsCharging, Converter={StaticResource BoolToVis}}" />
                                             <!-- Yüzde Metni -->
-                                            <TextBlock Text="{Binding BatteryText}"
+                                            <TextBlock Text="{Binding BatteryText}" ToolTip="{Binding BatteryReadingDetails}"
                                                        FontSize="14"
                                                        FontWeight="Bold"
                                                        Foreground="{Binding BatteryBrush}"

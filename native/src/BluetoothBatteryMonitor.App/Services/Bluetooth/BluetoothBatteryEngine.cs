@@ -55,14 +55,14 @@ public class BluetoothBatteryEngine : IDisposable
         _providers.Add(new XInputBatteryProvider());
         _providers.Add(new ConnectedBluetoothDeviceProvider());
         _providers.Add(new BleGattBatteryProvider());
-        _providers.Add(new AppleAirPodsBeaconProvider());
+        // Proximity advertisements do not prove device ownership. Do not discover
+        // nearby earbuds through broadcasts; Windows/GATT providers handle our devices.
         _providers.Add(new WindowsPnpBatteryProvider());
         _providers.Add(new LogitechHidBatteryProvider());
         _providers.Add(new LogitechGHubBatteryProvider());
         _providers.Add(new PlayStationControllerBatteryProvider());
         _providers.Add(new SamsungGalaxyBudsBatteryProvider());
         _providers.Add(new SonyHeadphonesBatteryProvider());
-        _providers.Add(new GoogleFastPairBatteryProvider());
         _providers.Add(new NintendoSwitchBatteryProvider());
         _providers.Add(new SteelSeriesBatteryProvider());
 
@@ -603,7 +603,11 @@ public class BluetoothBatteryEngine : IDisposable
             if (string.Equals(target.Id, newDev.Id, StringComparison.OrdinalIgnoreCase))
             {
                 target.IsConnected = newDev.IsConnected;
-                if (newDev.BatteryLevel.HasValue) target.BatteryLevel = newDev.BatteryLevel;
+                if (newDev.BatteryLevel.HasValue || newDev.ProviderSource.StartsWith("Peripheral HID", StringComparison.Ordinal))
+                    target.BatteryLevel = newDev.BatteryLevel;
+                target.RawBatteryValue = newDev.RawBatteryValue;
+                target.BatterySampledAt = newDev.BatterySampledAt;
+                target.BatteryReadError = newDev.BatteryReadError;
                 target.IsCharging = newDev.IsCharging;
                 target.LastUpdated = newDev.LastUpdated;
                 if (!string.IsNullOrWhiteSpace(newDev.Name) && !BluetoothDeviceModel.IsGenericName(newDev.Name)) target.Name = newDev.Name;

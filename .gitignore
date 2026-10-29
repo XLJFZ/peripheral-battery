@@ -10,3 +10,4 @@ diagnostic.json
 **/bin/
 **/obj/
 native/publish/
+macos/diagnostics/

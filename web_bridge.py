@@ -33,10 +33,15 @@ def make_server(resources, port=0):
                 kind = 'text/html; charset=utf-8'
             elif parts.path == '/api/battery':
                 with lock:
-                    if time.time() - cache['updated'] >= 10:
-                        cache['readings'] = [asdict(r) for r in monitor.scan()]
-                        cache['errors'] = monitor.errors
-                        cache['updated'] = time.time()
+                    if parse_qs(parts.query).get('fresh') == ['1'] or time.time() - cache['updated'] >= 10:
+                        # Clear first: a failed scan must never preserve a previous percentage.
+                        cache.update(updated=0, readings=[], errors=[])
+                        try:
+                            cache['readings'] = [asdict(r) for r in monitor.scan()]
+                            cache['errors'] = monitor.errors
+                            cache['updated'] = time.time()
+                        except Exception as exc:
+                            cache['errors'] = ['读取失败：' + type(exc).__name__]
                     data = json.dumps(cache, ensure_ascii=False).encode('utf-8')
                 kind = 'application/json; charset=utf-8'
             elif parts.path == '/api/stop':

@@ -70,6 +70,8 @@ class Tests(unittest.TestCase):
         rows = read_hid(bus, self.catalog)
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0].percent, 50)
+        self.assertEqual(rows[0].raw_value, 128)
+        self.assertIsNotNone(rows[0].sampled_at)
         self.assertTrue(rows[0].charging)
         bus.fail = True
         rows = read_hid(bus, self.catalog)

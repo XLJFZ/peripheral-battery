@@ -1,2 +1,2 @@
 @echo off
-start "" "%~dp0dist\PeripheralBattery-v0.2.1\BluetoothBatteryMonitor.App.exe" --settings
+start "" "%~dp0dist\PeripheralBattery-v0.2.3\BluetoothBatteryMonitor.App.exe" --settings
