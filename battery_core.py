@@ -20,6 +20,7 @@ class Reading:
     connected: bool | None = None
     raw_value: int | None = None
     sampled_at: float | None = None
+    source_note: str = ''
 
 
 def request(tid, command):
@@ -57,6 +58,39 @@ def query(dev, entry, command):
     raise OSError(str(error))
 
 
+def query_serial(dev, entry):
+    """Known read-only 0x00/0x82 identity command, 22 ASCII argument bytes."""
+    message = bytearray(request(entry['tid'], 0x80))
+    message[6:9] = bytes([0x16, 0x00, 0x82])
+    message[89] = reduce(xor, message[3:89], 0)
+    for _ in range(3):
+        try:
+            if dev.send_feature_report(bytes(message)) != 91:
+                raise OSError('Incomplete serial query')
+            time.sleep(entry['wait'])
+            raw = bytes(dev.get_feature_report(0, 91))
+            if len(raw) != 91 or raw[0] != 0 or raw[1] != 2 or raw[2] != entry['tid']:
+                raise ValueError('Invalid serial response')
+            if raw[6:9] != bytes([0x16, 0, 0x82]) or reduce(xor, raw[3:89], 0) != raw[89]:
+                raise ValueError('Serial response belongs to another query or has invalid checksum')
+            identity = raw[9:31].split(b'\0', 1)[0].decode('ascii')
+            if not re.fullmatch(r'[A-Z0-9]{5,22}', identity) or set(identity) == {'0'}:
+                raise ValueError('Invalid device serial')
+            return identity
+        except (OSError, ValueError):
+            time.sleep(.04)
+    return None
+
+
+def apply_synapse(row, official):
+    row.percent, row.charging, row.sampled_at = official
+    row.connected = True
+    row.error = ''
+    row.raw_value = None
+    row.provider = 'Razer Synapse 日志'
+    row.source_note = '雷云本地日志电量；按硬件序列号匹配，软件记录不保证与界面即时同步'
+
+
 def collection_key(path):
     s = path.decode(errors='replace') if isinstance(path, bytes) else str(path)
     parts = s.lower().split('#')
@@ -65,7 +99,7 @@ def collection_key(path):
     return s.lower()
 
 
-def read_hid(hid, catalog):
+def read_hid(hid, catalog, synapse_snapshot=None, synapse_note=''):
     groups = {}
     detected = []
     for d in hid.enumerate():
@@ -87,12 +121,28 @@ def read_hid(hid, catalog):
         entry = catalog.get(pid) if vid == 0x1532 else None
         name = entry['name'] if entry else ('8BitDo Ultimate 2' if vid == 0x2DC8 else 'MCHOSE A7' if vid == 0x5253 else 'MCHOSE G87')
         row = Reading('hid:' + key, name, 'Razer HID' if entry else '8BitDo HID' if vid == 0x2DC8 else 'MCHOSE HID')
+        if entry:
+            from synapse_battery import match_device
+            official = match_device(synapse_snapshot, candidates)
+            if official is not None:
+                apply_synapse(row, official)
+                result.append(row)
+                continue
+            row.source_note = synapse_note or '雷云日志无唯一匹配、设备状态不可用或序列号缺失，使用 HID 直读'
         candidates.sort(key=lambda d: (d.get('usage_page'), d.get('usage')) != (1, 2))
         for d in candidates:
             dev = hid.device()
             try:
                 dev.open_path(d['path'])
                 if entry:
+                    # Receiver USB serials can be all-zero placeholders. Only use
+                    # verified identity queries for the listed DeathAdder receivers.
+                    if synapse_snapshot is not None and pid in {0x00B3, 0x00B6, 0x00B7, 0x00C2, 0x00C3}:
+                        identity = query_serial(dev, entry)
+                        official = match_device(synapse_snapshot, [{'serial_number': identity}]) if identity else None
+                        if official is not None:
+                            apply_synapse(row, official)
+                            break
                     row.raw_value = query(dev, entry, 0x80)
                     row.percent = int(row.raw_value * 100 / 255 + .5)
                     row.sampled_at = time.time()
@@ -137,6 +187,12 @@ def read_hid(hid, catalog):
                 dev.close()
         result.append(row)
     return result + detected
+
+
+def read_peripherals(hid, catalog):
+    from synapse_battery import load_snapshot
+    snapshot, note = load_snapshot()
+    return read_hid(hid, catalog, snapshot, note)
 
 
 def parse_windows(rows):
@@ -184,7 +240,7 @@ class Monitor:
         rows = []
         try:
             import hid
-            rows.extend(read_hid(hid, self.catalog))
+            rows.extend(read_peripherals(hid, self.catalog))
         except Exception as exc:
             self.errors.append('HID: ' + str(exc))
         try:

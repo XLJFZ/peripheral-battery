@@ -7,6 +7,21 @@ using Toast = MonitorApp::BluetoothBatteryMonitor.App.Services.Notification.Toas
 public class HidFreshnessTests
 {
     [Fact]
+    public void SourceSwitchUpdatesLabelAndRemovesOldRawValue()
+    {
+        using var engine = new Engine(new Toast());
+        const string id="PeripheralHID:test-source";
+        engine.MergeOrAddDevice(new Device {Id=id,Name="Mouse",ProviderSource="Peripheral HID · Razer HID",BatteryLevel=90,RawBatteryValue=230,IsConnected=true});
+        var official=engine.MergeOrAddDevice(new Device {Id=id,Name="Mouse",ProviderSource="Peripheral HID · Razer Synapse 日志",BatteryLevel=89,BatterySourceNote="Synapse snapshot",IsConnected=true});
+        Assert.Equal(89,official.BatteryLevel);
+        Assert.Contains("Synapse",official.ProviderSource);
+        Assert.Null(official.RawBatteryValue);
+        var fallback=engine.MergeOrAddDevice(new Device {Id=id,Name="Mouse",ProviderSource="Peripheral HID · Razer HID",BatteryLevel=89,RawBatteryValue=227,BatterySourceNote="Log expired",IsConnected=true});
+        Assert.DoesNotContain("Synapse",fallback.ProviderSource);
+        Assert.Equal(227,fallback.RawBatteryValue);
+        Assert.Equal("Log expired",fallback.BatterySourceNote);
+    }
+    [Fact]
     public void MissingHidReadingClearsCachedBatteryAndCanRecover()
     {
         using var engine = new Engine(new Toast());

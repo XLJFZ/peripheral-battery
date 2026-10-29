@@ -608,6 +608,9 @@ public class BluetoothBatteryEngine : IDisposable
                 target.RawBatteryValue = newDev.RawBatteryValue;
                 target.BatterySampledAt = newDev.BatterySampledAt;
                 target.BatteryReadError = newDev.BatteryReadError;
+                target.BatterySourceNote = newDev.BatterySourceNote;
+                if(newDev.ProviderSource.StartsWith("Peripheral HID", StringComparison.Ordinal))
+                    target.ProviderSource = newDev.ProviderSource;
                 target.IsCharging = newDev.IsCharging;
                 target.LastUpdated = newDev.LastUpdated;
                 if (!string.IsNullOrWhiteSpace(newDev.Name) && !BluetoothDeviceModel.IsGenericName(newDev.Name)) target.Name = newDev.Name;

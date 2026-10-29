@@ -243,8 +243,10 @@ public partial class DeviceItemViewModel : ObservableObject
         ProviderSource = model.ProviderSource;
         BatteryReadingDetails = !string.IsNullOrWhiteSpace(model.BatteryReadError)
             ? "本次未读取到电量；旧读数已清除。" + model.BatteryReadError
+            : model.ProviderSource.Contains("Synapse", StringComparison.OrdinalIgnoreCase)
+                ? $"来源：雷云本地日志（非公开电量 API）。\n软件记录时间：{model.BatterySampledAt:yyyy-MM-dd HH:mm:ss}\n{model.BatterySourceNote}"
             : model.RawBatteryValue.HasValue
-                ? $"设备原始值 {model.RawBatteryValue}/255，按 ×100÷255 四舍五入。\n采样时间：{model.BatterySampledAt:yyyy-MM-dd HH:mm:ss}\n设备报告可能与官方软件的更新时间或处理方式不同。"
+                ? $"设备原始值 {model.RawBatteryValue}/255，按 ×100÷255 四舍五入。\n采样时间：{model.BatterySampledAt:yyyy-MM-dd HH:mm:ss}\n{model.BatterySourceNote}\n设备报告可能与官方软件的更新时间或处理方式不同。"
                 : $"设备记录更新：{model.LastUpdated:yyyy-MM-dd HH:mm:ss}";
         IsConnected = model.IsConnected;
         ConnectionStatusText = model.ConnectionStatusText;

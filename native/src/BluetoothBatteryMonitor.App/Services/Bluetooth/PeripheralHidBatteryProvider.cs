@@ -38,6 +38,7 @@ public sealed class PeripheralHidBatteryProvider : IBluetoothBatteryProvider
                     RawBatteryValue=r.TryGetProperty("raw_value",out var raw)&&raw.ValueKind==JsonValueKind.Number?raw.GetInt32():null,
                     BatterySampledAt=battery.HasValue&&r.TryGetProperty("sampled_at",out var sampled)&&sampled.ValueKind==JsonValueKind.Number?DateTimeOffset.FromUnixTimeMilliseconds((long)(sampled.GetDouble()*1000)).LocalDateTime:null,
                     BatteryReadError=r.TryGetProperty("error",out var error)?error.GetString():null,
+                    BatterySourceNote=r.TryGetProperty("source_note",out var note)?note.GetString():null,
                     IsCharging=r.GetProperty("charging").ValueKind==JsonValueKind.True,
                     IsConnected=battery.HasValue||(r.TryGetProperty("connected",out var connected)&&connected.ValueKind==JsonValueKind.True),
                     ProviderSource="Peripheral HID · "+r.GetProperty("provider").GetString(),

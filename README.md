@@ -1,8 +1,10 @@
 # Peripheral Battery · 外设电量
 
+Windows v0.2.4 新增雷云本地日志优先电量源：记录足够新且设备序列号唯一匹配时直接采用雷云百分比，否则回退到 HID。详情见 [v0.2.4 说明](notes/v0.2.4.md)。需要新版本地连接器，纯网页模式仍使用 WebHID；Mac 功能不变。
+
 Mac 菜单栏预览版位于 [`macos/`](macos/README.md)，提供系统已配对且已连接设备的电量读取、多环、固定顺序和低电量提醒。当前交付源码与 Mac 构建脚本，尚未在真实 Mac 上验证；USB 厂商协议尚未移植。
 
-当前 Windows 托盘版为 v0.2.3：关闭 AirPods / Beats Beacon 和 Google Fast Pair 的附近广播发现，避免陌生耳机混入设备列表。Windows 已连接设备与其他电量读取方式保留；部分耳机的左右耳、充电盒独立电量暂时不再显示。本轮增加 HID 失败时清除旧读数、原始值与采样时间提示，详情见 [v0.2.3 验证记录](notes/v0.2.3.md)。
+托盘版保留以下修复：关闭 AirPods / Beats Beacon 和 Google Fast Pair 的附近广播发现，避免陌生耳机混入设备列表。Windows 已连接设备与其他电量读取方式保留；部分耳机的左右耳、充电盒独立电量暂时不再显示。此前已增加 HID 失败时清除旧读数、原始值与采样时间提示，详情见 [v0.2.3 验证记录](notes/v0.2.3.md)。
 
 Windows 托盘电量工具与 WebHID 网页面板，基于 [marsuyone/mchose-battery-tray](https://github.com/marsuyone/mchose-battery-tray) 扩展。
 

@@ -14,6 +14,7 @@ public class BluetoothDeviceModel
     public int? RawBatteryValue { get; set; }
     public DateTime? BatterySampledAt { get; set; }
     public string? BatteryReadError { get; set; }
+    public string? BatterySourceNote { get; set; }
     public string? BatteryLevelDescription { get; set; }
     public ushort UsbVendorId { get; set; }
     public ushort UsbProductId { get; set; }

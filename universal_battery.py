@@ -194,9 +194,9 @@ def main():
     args = parser.parse_args()
     if args.hid_scan:
         import hid
-        from battery_core import read_hid
+        from battery_core import read_peripherals
         monitor = Monitor(RESOURCES)
-        rows = read_hid(hid, monitor.catalog)
+        rows = read_peripherals(hid, monitor.catalog)
         Path(args.hid_scan).write_text(json.dumps([asdict(r) for r in rows]), encoding='utf-8')
         return
     if args.web:
