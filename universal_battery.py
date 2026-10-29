@@ -188,9 +188,17 @@ class TrayApp:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--scan', metavar='JSON_PATH')
+    parser.add_argument('--hid-scan', metavar='JSON_PATH')
     parser.add_argument('--details', action='store_true')
     parser.add_argument('--web', action='store_true')
     args = parser.parse_args()
+    if args.hid_scan:
+        import hid
+        from battery_core import read_hid
+        monitor = Monitor(RESOURCES)
+        rows = read_hid(hid, monitor.catalog)
+        Path(args.hid_scan).write_text(json.dumps([asdict(r) for r in rows]), encoding='utf-8')
+        return
     if args.web:
         from web_bridge import serve
         serve(RESOURCES)

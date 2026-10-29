@@ -1,0 +1,438 @@
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Text;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Microsoft.Win32;
+using BluetoothBatteryMonitor.App.Models;
+using BluetoothBatteryMonitor.App.Services.System;
+using BluetoothBatteryMonitor.App.Services.Localization;
+using BluetoothBatteryMonitor.App.Services.Update;
+
+namespace BluetoothBatteryMonitor.App.ViewModels;
+
+public record ThresholdOption(int Value, string DisplayName);
+public record RefreshIntervalOption(int Seconds, string DisplayName);
+
+public partial class SettingsViewModel : ObservableObject
+{
+    private readonly AppSettings _settings;
+
+    public static string[] AvailableTrayStyles => new[] { "圆环", "数字", "圆环 + 数字" };
+    [ObservableProperty] private bool _trayAutoColor;
+    [ObservableProperty] private string _trayHighColor = "#00C98D";
+    [ObservableProperty] private string _trayMidColor = "#FFC048";
+    [ObservableProperty] private string _trayLowColor = "#FF6577";
+    [ObservableProperty] private string _trayFixedColor = "#61B8FF";
+    [ObservableProperty] private string _trayIconStyle = "圆环";
+    [ObservableProperty] private double _trayRingWidth = 10;
+
+    private readonly IEnumerable<BluetoothDeviceModel>? _knownDevices;
+
+    public static IReadOnlyList<ThresholdOption> AvailableThresholds => LocalizationService.CurrentLanguage == "tr"
+        ? new[]
+        {
+            new ThresholdOption(0, "Varsayılan (Global)"),
+            new ThresholdOption(10, "%10 (Fare / Düşük)"),
+            new ThresholdOption(15, "%15"),
+            new ThresholdOption(20, "%20 (Standart)"),
+            new ThresholdOption(25, "%25"),
+            new ThresholdOption(30, "%30"),
+            new ThresholdOption(40, "%40 (Erken Uyarı)")
+        }
+        : new[]
+        {
+            new ThresholdOption(0, "Default (Global)"),
+            new ThresholdOption(10, "10% (Mouse / Low Power)"),
+            new ThresholdOption(15, "15%"),
+            new ThresholdOption(20, "20% (Standard)"),
+            new ThresholdOption(25, "25%"),
+            new ThresholdOption(30, "30%"),
+            new ThresholdOption(40, "40% (Early Warning)")
+        };
+
+    public static IReadOnlyList<RefreshIntervalOption> AvailableRefreshIntervals => LocalizationService.CurrentLanguage == "tr"
+        ? new[]
+        {
+            new RefreshIntervalOption(30, "30 Saniye"),
+            new RefreshIntervalOption(60, "60 Saniye"),
+            new RefreshIntervalOption(120, "120 Saniye"),
+            new RefreshIntervalOption(300, "300 Saniye")
+        }
+        : new[]
+        {
+            new RefreshIntervalOption(30, "30 Seconds"),
+            new RefreshIntervalOption(60, "60 Seconds"),
+            new RefreshIntervalOption(120, "120 Seconds"),
+            new RefreshIntervalOption(300, "300 Seconds")
+        };
+
+    public SettingsViewModel(IEnumerable<BluetoothDeviceModel>? knownDevices = null)
+    {
+        _settings = AppSettings.Load();
+        _trayAutoColor=_settings.TrayAutoColor; _trayHighColor=_settings.TrayHighColor;
+        _trayMidColor=_settings.TrayMidColor; _trayLowColor=_settings.TrayLowColor;
+        _trayFixedColor=_settings.TrayFixedColor; _trayIconStyle=_settings.TrayIconStyle;
+        _trayRingWidth=_settings.TrayRingWidth;
+        _knownDevices = knownDevices;
+
+        _launchAtStartup = StartupManager.IsStartupEnabled();
+        _enableNotifications = _settings.EnableNotifications;
+        _lowBatteryThreshold = _settings.LowBatteryThreshold;
+        _criticalBatteryThreshold = _settings.CriticalBatteryThreshold;
+        _refreshIntervalSeconds = _settings.RefreshIntervalSeconds;
+        _selectedTheme = _settings.Theme;
+        _selectedLanguage = _settings.Language;
+        _autoSwitchAudioEndpoint = _settings.AutoSwitchAudioEndpoint;
+        _enableRestApi = _settings.EnableRestApi;
+        _restApiPort = _settings.RestApiPort;
+
+        PopulateDeviceThresholds(knownDevices);
+    }
+
+    private void PopulateDeviceThresholds(IEnumerable<BluetoothDeviceModel>? knownDevices)
+    {
+        var seenKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var seenNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        // 1. Add known connected/paired devices
+        if (knownDevices != null)
+        {
+            foreach (var dev in knownDevices)
+            {
+                if (string.IsNullOrWhiteSpace(dev.Id)) continue;
+
+                ulong mac = dev.BluetoothAddress != 0 ? dev.BluetoothAddress : BluetoothDeviceModel.ExtractMacAddress(dev.Id);
+                string macHex = mac != 0 ? mac.ToString("X12") : string.Empty;
+
+                if (seenKeys.Contains(dev.Id) || (!string.IsNullOrEmpty(macHex) && seenKeys.Contains(macHex)))
+                    continue;
+
+                string friendlyName = !string.IsNullOrWhiteSpace(dev.Name) && !BluetoothDeviceModel.IsGenericName(dev.Name)
+                    ? dev.Name
+                    : (_settings.DeviceNames.TryGetValue(dev.Id, out var sn) ? sn : dev.Name);
+
+                // Deduplicate devices sharing the same friendly name (e.g., dual BTHENUM and BTHLE nodes)
+                if (!string.IsNullOrWhiteSpace(friendlyName) && !BluetoothDeviceModel.IsGenericName(friendlyName))
+                {
+                    if (seenNames.Contains(friendlyName))
+                    {
+                        seenKeys.Add(dev.Id);
+                        if (!string.IsNullOrEmpty(macHex)) seenKeys.Add(macHex);
+                        continue;
+                    }
+                    seenNames.Add(friendlyName);
+                }
+
+                int currentThreshold = 0;
+                if (_settings.DeviceSpecificThresholds.TryGetValue(dev.Id, out int t1))
+                    currentThreshold = t1;
+                else if (!string.IsNullOrEmpty(macHex) && _settings.DeviceSpecificThresholds.TryGetValue(macHex, out int t2))
+                    currentThreshold = t2;
+
+                DeviceThresholds.Add(new DeviceThresholdItem
+                {
+                    Id = dev.Id,
+                    MacHex = macHex,
+                    Name = friendlyName,
+                    SelectedThreshold = currentThreshold
+                });
+
+                seenKeys.Add(dev.Id);
+                if (!string.IsNullOrEmpty(macHex)) seenKeys.Add(macHex);
+            }
+        }
+
+        // 2. Add other previously saved devices from settings
+        foreach (var kvp in _settings.DeviceSpecificThresholds)
+        {
+            if (seenKeys.Contains(kvp.Key)) continue;
+
+            string name = _settings.DeviceNames.TryGetValue(kvp.Key, out var sn) ? sn : kvp.Key;
+            ulong mac = BluetoothDeviceModel.ExtractMacAddress(kvp.Key);
+            string macHex = mac != 0 ? mac.ToString("X12") : string.Empty;
+
+            DeviceThresholds.Add(new DeviceThresholdItem
+            {
+                Id = kvp.Key,
+                MacHex = macHex,
+                Name = name,
+                SelectedThreshold = kvp.Value
+            });
+
+            seenKeys.Add(kvp.Key);
+            if (!string.IsNullOrEmpty(macHex)) seenKeys.Add(macHex);
+        }
+
+        // 3. If no devices found, scan paired devices in Windows Registry
+        if (DeviceThresholds.Count == 0)
+        {
+            try
+            {
+                using var bthKey = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Services\BTHPORT\Parameters\Devices");
+                if (bthKey != null)
+                {
+                    foreach (var subName in bthKey.GetSubKeyNames())
+                    {
+                        using var devKey = bthKey.OpenSubKey(subName);
+                        if (devKey != null)
+                        {
+                            string devName = subName;
+                            var nameVal = devKey.GetValue("Name") as byte[];
+                            if (nameVal != null && nameVal.Length > 0)
+                            {
+                                devName = Encoding.UTF8.GetString(nameVal).TrimEnd('\0');
+                            }
+
+                            if (!seenKeys.Contains(subName))
+                            {
+                                int th = _settings.GetEffectiveLowBatteryThreshold(subName);
+                                DeviceThresholds.Add(new DeviceThresholdItem
+                                {
+                                    Id = subName,
+                                    MacHex = subName,
+                                    Name = devName,
+                                    SelectedThreshold = _settings.HasCustomThreshold(subName) ? th : 0
+                                });
+                                seenKeys.Add(subName);
+                            }
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore registry read error
+            }
+        }
+
+        HasDeviceThresholds = DeviceThresholds.Count > 0;
+    }
+
+    [ObservableProperty]
+    private ObservableCollection<DeviceThresholdItem> _deviceThresholds = new();
+
+    [ObservableProperty]
+    private bool _hasDeviceThresholds;
+
+    [ObservableProperty]
+    private bool _launchAtStartup;
+
+    [ObservableProperty]
+    private bool _enableNotifications;
+
+    [ObservableProperty]
+    private bool _autoSwitchAudioEndpoint;
+
+    [ObservableProperty]
+    private bool _enableRestApi;
+
+    [ObservableProperty]
+    private int _restApiPort;
+
+    partial void OnRestApiPortChanged(int value)
+    {
+        OnPropertyChanged(nameof(RestApiUrlPreview));
+    }
+
+    public string RestApiUrlPreview => $"http://127.0.0.1:{(RestApiPort >= 1024 && RestApiPort <= 65535 ? RestApiPort : 23253)}/devices";
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(LowBatteryThresholdText))]
+    private int _lowBatteryThreshold;
+
+    public string LowBatteryThresholdText => LocalizationService.FormatPercent(LowBatteryThreshold);
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CriticalBatteryThresholdText))]
+    private int _criticalBatteryThreshold;
+
+    public string CriticalBatteryThresholdText => LocalizationService.FormatPercent(CriticalBatteryThreshold);
+
+    [ObservableProperty]
+    private int _refreshIntervalSeconds;
+
+    [ObservableProperty]
+    private string _selectedTheme;
+
+    public IReadOnlyList<string> AvailableThemes { get; } = new[] { "System", "Dark", "Light" };
+
+    [ObservableProperty]
+    private string _selectedLanguage;
+
+    public IReadOnlyList<LanguageOption> AvailableLanguages => LocalizationService.SupportedLanguages;
+
+    [RelayCommand]
+    private void Save()
+    {
+        int validPort = (RestApiPort >= 1024 && RestApiPort <= 65535) ? RestApiPort : 23253;
+        RestApiPort = validPort;
+
+        var newThresholds = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        foreach (var item in DeviceThresholds)
+        {
+            if (item.SelectedThreshold > 0)
+            {
+                newThresholds[item.Id] = item.SelectedThreshold;
+                if (!string.IsNullOrEmpty(item.MacHex))
+                {
+                    newThresholds[item.MacHex] = item.SelectedThreshold;
+                }
+
+                if (!string.IsNullOrWhiteSpace(item.Name))
+                {
+                    _settings.DeviceNames[item.Id] = item.Name;
+                    if (!string.IsNullOrEmpty(item.MacHex))
+                    {
+                        _settings.DeviceNames[item.MacHex] = item.Name;
+                    }
+                }
+
+                // Apply threshold to duplicate nodes sharing the same friendly name
+                if (_knownDevices != null && !string.IsNullOrWhiteSpace(item.Name) && !BluetoothDeviceModel.IsGenericName(item.Name))
+                {
+                    foreach (var other in _knownDevices.Where(d => string.Equals(d.Name, item.Name, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        newThresholds[other.Id] = item.SelectedThreshold;
+                        ulong omac = other.BluetoothAddress != 0 ? other.BluetoothAddress : BluetoothDeviceModel.ExtractMacAddress(other.Id);
+                        if (omac != 0)
+                        {
+                            string omacHex = omac.ToString("X12");
+                            newThresholds[omacHex] = item.SelectedThreshold;
+                            _settings.DeviceNames[omacHex] = item.Name;
+                        }
+                        _settings.DeviceNames[other.Id] = item.Name;
+                    }
+                }
+            }
+            else
+            {
+                newThresholds.Remove(item.Id);
+                if (!string.IsNullOrEmpty(item.MacHex))
+                {
+                    newThresholds.Remove(item.MacHex);
+                }
+
+                if (_knownDevices != null && !string.IsNullOrWhiteSpace(item.Name) && !BluetoothDeviceModel.IsGenericName(item.Name))
+                {
+                    foreach (var other in _knownDevices.Where(d => string.Equals(d.Name, item.Name, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        newThresholds.Remove(other.Id);
+                        ulong omac = other.BluetoothAddress != 0 ? other.BluetoothAddress : BluetoothDeviceModel.ExtractMacAddress(other.Id);
+                        if (omac != 0) newThresholds.Remove(omac.ToString("X12"));
+                    }
+                }
+            }
+        }
+        _settings.DeviceSpecificThresholds = newThresholds;
+
+        _settings.EnableNotifications = EnableNotifications;
+        _settings.AutoSwitchAudioEndpoint = AutoSwitchAudioEndpoint;
+        _settings.EnableRestApi = EnableRestApi;
+        _settings.RestApiPort = validPort;
+        _settings.LowBatteryThreshold = LowBatteryThreshold;
+        _settings.CriticalBatteryThreshold = CriticalBatteryThreshold;
+        _settings.RefreshIntervalSeconds = RefreshIntervalSeconds;
+        _settings.Theme = SelectedTheme;
+        _settings.Language = SelectedLanguage;
+        _settings.LaunchAtStartup = LaunchAtStartup;
+
+        _settings.TrayAutoColor=TrayAutoColor;
+        _settings.TrayHighColor=Helpers.TrayAppearance.ValidColor(TrayHighColor,"#00C98D");
+        _settings.TrayMidColor=Helpers.TrayAppearance.ValidColor(TrayMidColor,"#FFC048");
+        _settings.TrayLowColor=Helpers.TrayAppearance.ValidColor(TrayLowColor,"#FF6577");
+        _settings.TrayFixedColor=Helpers.TrayAppearance.ValidColor(TrayFixedColor,"#61B8FF");
+        _settings.TrayIconStyle=TrayIconStyle;
+        _settings.TrayRingWidth=Math.Clamp(TrayRingWidth,7,13);
+        _settings.Save();
+
+        // Update startup registry configuration
+        StartupManager.SetStartup(LaunchAtStartup);
+
+        // Apply theme
+        ThemeManager.ApplyTheme(SelectedTheme);
+
+        // Apply language
+        LocalizationService.ApplyLanguage(SelectedLanguage);
+    }
+
+    private readonly UpdateCheckService _updateService = new();
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanCheckUpdates))]
+    private bool _isCheckingUpdates;
+
+    public bool CanCheckUpdates => !IsCheckingUpdates;
+
+    [ObservableProperty]
+    private string? _updateStatusMessage;
+
+    [ObservableProperty]
+    private bool _hasUpdateAvailable;
+
+    [ObservableProperty]
+    private string? _latestUpdateVersion;
+
+    [ObservableProperty]
+    private string? _updateDownloadUrl;
+
+    [RelayCommand]
+    public async Task CheckForUpdatesAsync()
+    {
+        if (IsCheckingUpdates) return;
+        IsCheckingUpdates = true;
+        UpdateStatusMessage = LocalizationService.GetString("Update_Checking");
+
+        try
+        {
+            var result = await _updateService.CheckForUpdatesAsync();
+            if (result.HasUpdate)
+            {
+                HasUpdateAvailable = true;
+                LatestUpdateVersion = result.LatestVersion;
+                UpdateDownloadUrl = result.DownloadUrl ?? result.ReleaseUrl;
+                UpdateStatusMessage = LocalizationService.GetString("Update_Available", result.LatestVersion);
+            }
+            else if (!string.IsNullOrEmpty(result.ErrorMessage))
+            {
+                HasUpdateAvailable = false;
+                UpdateStatusMessage = LocalizationService.GetString("Update_Error");
+            }
+            else
+            {
+                HasUpdateAvailable = false;
+                UpdateStatusMessage = LocalizationService.GetString("Update_UpToDate", result.CurrentVersion);
+            }
+        }
+        catch
+        {
+            HasUpdateAvailable = false;
+            UpdateStatusMessage = LocalizationService.GetString("Update_Error");
+        }
+        finally
+        {
+            IsCheckingUpdates = false;
+        }
+    }
+
+    [RelayCommand]
+    public void OpenUpdateDownload()
+    {
+        if (!string.IsNullOrEmpty(UpdateDownloadUrl))
+        {
+            UpdateCheckService.OpenUrl(UpdateDownloadUrl);
+        }
+    }
+}
+
+public partial class DeviceThresholdItem : ObservableObject
+{
+    public string Id { get; set; } = string.Empty;
+    public string MacHex { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    private int _selectedThreshold;
+}

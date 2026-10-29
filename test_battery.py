@@ -88,5 +88,21 @@ class Tests(unittest.TestCase):
         for pid in (0xb6,0xb7,0xc2,0xc3,0xb3):
             self.assertEqual(self.catalog[pid]['tid'], 0x1f)
 
+    def test_8bitdo_read_only_query_and_reply(self):
+        class Pad:
+            def open_path(self,path): pass
+            def write(self,data):
+                assert len(data)==64 and data[:7]==bytes([0x81,4,0x21,1,0,0,6])
+            def read(self,size,timeout):
+                data=bytearray(64);data[:6]=bytes([2,4,4,0,0x21,1]);data[18]=76;return data
+            def close(self): pass
+        class PadBus:
+            def enumerate(self):
+                return [dict(vendor_id=0x2dc8,product_id=0x310b,usage_page=0xff7a,path=b'pad')]
+            def device(self): return Pad()
+        rows=read_hid(PadBus(),self.catalog)
+        self.assertEqual(rows[0].percent,76)
+        self.assertEqual(rows[0].provider,'8BitDo HID')
+
 
 if __name__ == '__main__': unittest.main()

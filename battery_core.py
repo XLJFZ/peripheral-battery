@@ -17,6 +17,7 @@ class Reading:
     percent: int | None = None
     charging: bool | None = None
     error: str = ''
+    connected: bool | None = None
 
 
 def request(tid, command):
@@ -64,21 +65,26 @@ def collection_key(path):
 
 def read_hid(hid, catalog):
     groups = {}
+    detected = []
     for d in hid.enumerate():
         vid, pid = d['vendor_id'], d['product_id']
+        if (vid,pid,d.get('usage_page'))==(0x05AC,0x024F,0xFF13) and d.get('product_string')=='QK75N':
+            detected.append(Reading('hid:'+collection_key(d['path']),'QK75N',
+                '设备已识别 · 电量协议待适配',error='No verified battery query is available for this firmware',connected=True))
+            continue
         entry = catalog.get(pid) if vid == 0x1532 else None
         if entry and d.get('interface_number') != entry['interface']:
             continue
         if not entry and (vid, pid, d.get('usage_page')) not in {
-                (0x5253, 0x1021, 0xFF01), (0x41E4, 0x2001, 0xFF04)}:
+                (0x5253, 0x1021, 0xFF01), (0x41E4, 0x2001, 0xFF04), (0x2DC8, 0x6013, 0xFFA0), (0x2DC8, 0x310B, 0xFF7A)}:
             continue
         key = collection_key(d['path'])
         groups.setdefault((vid, pid, key), []).append(d)
     result = []
     for (vid, pid, key), candidates in groups.items():
         entry = catalog.get(pid) if vid == 0x1532 else None
-        name = entry['name'] if entry else ('MCHOSE A7' if vid == 0x5253 else 'MCHOSE G87')
-        row = Reading('hid:' + key, name, 'Razer HID' if entry else 'MCHOSE HID')
+        name = entry['name'] if entry else ('8BitDo Ultimate 2' if vid == 0x2DC8 else 'MCHOSE A7' if vid == 0x5253 else 'MCHOSE G87')
+        row = Reading('hid:' + key, name, 'Razer HID' if entry else '8BitDo HID' if vid == 0x2DC8 else 'MCHOSE HID')
         candidates.sort(key=lambda d: (d.get('usage_page'), d.get('usage')) != (1, 2))
         for d in candidates:
             dev = hid.device()
@@ -91,6 +97,19 @@ def read_hid(hid, catalog):
                             row.charging = bool(query(dev, entry, 0x84))
                         except OSError:
                             row.charging = None
+                elif vid == 0x2DC8:
+                    # Read-only query documented for Ultimate 2 dongle 2dc8:6013.
+                    # No profile/flash writes, report-mode changes or rumble commands.
+                    dev.write(bytes([0x81, 0x04, 0x21, 0x01, 0, 0, 0x06] + [0] * 57))
+                    response = None
+                    for _ in range(3):
+                        candidate = bytes(dev.read(64, 400))
+                        if len(candidate) >= 24 and candidate[:6] == bytes([2, 4, 4, 0, 0x21, 1]):
+                            response = candidate
+                            break
+                    if response is None:
+                        raise OSError('Receiver did not return controller battery; wake the controller')
+                    row.percent = response[18]
                 elif vid == 0x5253:
                     dev.send_feature_report(bytes([0x11, 0xF9, 0xFF] + [0xFF] * 17))
                     time.sleep(.12)
@@ -113,7 +132,7 @@ def read_hid(hid, catalog):
             finally:
                 dev.close()
         result.append(row)
-    return result
+    return result + detected
 
 
 def parse_windows(rows):

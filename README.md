@@ -2,6 +2,8 @@
 
 Windows 托盘电量工具与 WebHID 网页面板，基于 [marsuyone/mchose-battery-tray](https://github.com/marsuyone/mchose-battery-tray) 扩展。
 
+v0.2.0 的托盘版直接基于 [BluetoothBatteryMonitor](https://github.com/Kaandonmez/BluetoothBatteryMonitor) 的原生 Fluent UI 和蓝牙模块改造，保留 MIT 许可与署名。新增加粗圆环、可视化调色、自定义三档电量颜色，以及 10 秒无操作自动隐藏。详情见 [新版托盘说明](新版托盘说明.md)。
+
 - [在线网页版](https://xljfz.github.io/peripheral-battery/)
 - [下载 Windows 双版本包](https://github.com/XLJFZ/peripheral-battery/releases/latest)
 - [使用说明](使用说明.md)
@@ -17,7 +19,7 @@ Windows 托盘电量工具与 WebHID 网页面板，基于 [marsuyone/mchose-bat
 
 已在炼狱蝰蛇 V3 Pro 无线接收器 `1532:00B7` 上实测电量与充电状态。设备表还包含其他雷蛇鼠标，保留迈从 A7、G87 协议，并支持读取 Windows 提供电量的部分外设；这些型号未逐款实测。
 
-QK75N、八位堂 Ultimate 2 等未实现私有电量协议的设备，目前不能读取电量。“泛用”指支持多个设备和扩展协议，不表示所有无线外设即插即用。网页功能用于读取电量，不包含 DPI、按键映射或固件更新。
+v0.2.0 已新增八位堂 Ultimate 2 的接收器及工作模式接口查询。QK75N 当前可识别，但其电量协议尚待适配。“泛用”指支持多个设备和扩展协议，不表示所有无线外设即插即用。网页功能用于读取电量，不包含 DPI、按键映射或固件更新。
 
 ## 开发
 
@@ -30,7 +32,7 @@ python -m venv .venv
 ./.venv/Scripts/python.exe universal_battery.py
 ```
 
-执行 `build.ps1` 打包 Windows EXE。GitHub Pages 从 `main` 分支的 `/docs` 发布；网页原稿为 `web/index.html`，修改网页后执行 `python sync_pages.py` 同步发布目录。
+执行 `build-native.ps1` 构建新版原生托盘及 HID 后端，需要 .NET 8 SDK 与 Python 3.13。`build.ps1` 仍可单独构建旧 Python 后端与本地网页。GitHub Pages 从 `main` 分支的 `/docs` 发布；网页原稿为 `web/index.html`，修改网页后执行 `python sync_pages.py` 同步发布目录。
 
 安装 Node.js 后，可执行 `node test_webhid.cjs` 验证实际网页中的 WebHID 报文处理。测试覆盖带编号和不带编号的回包、偏移、校验、受限接口与访问拒绝。
 
