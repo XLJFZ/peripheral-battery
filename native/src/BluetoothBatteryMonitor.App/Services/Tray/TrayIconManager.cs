@@ -217,7 +217,12 @@ public class TrayIconManager : IDisposable
         int? lowest = _mainViewModel.LowestBatteryLevel;
         bool isCharging = _mainViewModel.IsLowestCharging;
 
-        var newIcon = TrayIconGenerator.GenerateTrayIcon(lowest, isCharging, isDark);
+        var settings=AppSettings.Load();
+        // Lowest batteries remain visible when more than three devices are connected.
+        var ringDevices=_mainViewModel.Devices.Where(d=>d.IsConnected&&d.HasBattery)
+            .OrderBy(d=>d.BatteryProgress).ThenBy(d=>d.Id,StringComparer.OrdinalIgnoreCase).Take(3).ToList();
+        var newIcon = TrayIconGenerator.GenerateMultiple(
+            ringDevices.Select(d=>(d.BatteryProgress,d.IsCharging)).ToList(),isDark,settings);
 
         _taskbarIcon.Icon = newIcon;
 
@@ -236,7 +241,9 @@ public class TrayIconManager : IDisposable
         // Update tooltip text
         if (_mainViewModel.Devices.Count > 0)
         {
-            var summary = string.Join("\n", _mainViewModel.Devices.Take(4).Select(d => $"{d.Name}: {d.BatteryText}"));
+            var summary = string.Join("\n", ringDevices.Select((d,i)=>$"环 {i+1}（由外向内） {d.Name}: {d.BatteryText}"));
+            if(_mainViewModel.Devices.Count(d=>d.IsConnected&&d.HasBattery)>3)summary+="\n其余设备请点击查看";
+            if(ringDevices.Count==0)summary=string.Join("\n",_mainViewModel.Devices.Take(4).Select(d=>$"{d.Name}: {d.BatteryText}"));
             _taskbarIcon.ToolTipText = $"{LocalizationService.GetString("App_Title")}\n{summary}";
         }
         else

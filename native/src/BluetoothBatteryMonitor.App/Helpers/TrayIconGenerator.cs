@@ -16,6 +16,49 @@ public static class TrayIconGenerator
         IntPtr handle=bitmap.GetHicon();
         try{return (Icon)Icon.FromHandle(handle).Clone();}finally{NativeMethods.DestroyIcon(handle);}
     }
+    public static Icon GenerateMultiple(IReadOnlyList<(int Level,bool Charging)> devices,bool dark,AppSettings settings)
+    {
+        using var bitmap=RenderMultiple(devices,dark,settings);
+        IntPtr handle=bitmap.GetHicon();
+        try{return (Icon)Icon.FromHandle(handle).Clone();}finally{NativeMethods.DestroyIcon(handle);}
+    }
+    public static Bitmap RenderMultiple(IReadOnlyList<(int Level,bool Charging)> devices,bool dark,AppSettings settings,int size=64)
+    {
+        if(devices.Count==0)return Render(null,false,dark,settings,size);
+        if(devices.Count==1||settings.TrayIconStyle=="数字")
+            return Render(devices.Min(d=>d.Level),devices.Any(d=>d.Charging),dark,settings,size);
+        var bitmap=new Bitmap(size,size);
+        using var g=Graphics.FromImage(bitmap);
+        g.ScaleTransform(size/64f,size/64f);
+        g.SmoothingMode=SmoothingMode.AntiAlias;g.PixelOffsetMode=PixelOffsetMode.HighQuality;
+        g.Clear(Color.Transparent);
+        int count=Math.Min(devices.Count,3);
+        float width=Math.Min((float)Math.Clamp(settings.TrayRingWidth,7,13),count==2?10:7);
+        float spacing=width+3;
+        for(int i=0;i<count;i++)
+        {
+            float inset=2+width/2+i*spacing;
+            var box=new RectangleF(inset,inset,64-2*inset,64-2*inset);
+            using var outline=new Pen(Color.FromArgb(190,dark?Color.Black:Color.White),width+2);
+            using var track=new Pen(Color.FromArgb(90,dark?Color.White:Color.Black),width);
+            using var arc=new Pen(TrayAppearance.GetColor(devices[i].Level,settings),width){StartCap=LineCap.Round,EndCap=LineCap.Round};
+            g.DrawEllipse(outline,box);g.DrawEllipse(track,box);
+            if(devices[i].Level>0)g.DrawArc(arc,box,-90,Math.Clamp(devices[i].Level,0,100)*3.6f);
+            if(devices[i].Charging)
+            {
+                using var marker=new SolidBrush(dark?Color.White:Color.Black);
+                g.FillEllipse(marker,32-width/4,inset-width/4,width/2,width/2);
+            }
+        }
+        if(settings.TrayIconStyle=="圆环 + 数字"&&count==2)
+        {
+            using var font=new Font("Segoe UI",17,FontStyle.Bold,GraphicsUnit.Pixel);
+            using var brush=new SolidBrush(TrayAppearance.GetColor(devices.Min(d=>d.Level),settings));
+            using var format=new StringFormat{Alignment=StringAlignment.Center,LineAlignment=StringAlignment.Center};
+            g.DrawString(devices.Min(d=>d.Level).ToString(),font,brush,new RectangleF(0,0,64,64),format);
+        }
+        return bitmap;
+    }
     public static Bitmap Render(int? level,bool charging,bool dark,AppSettings settings,int size=64)
     {
         var bitmap=new Bitmap(size,size);

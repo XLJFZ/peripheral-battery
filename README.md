@@ -43,3 +43,7 @@ python -m venv .venv
 上游原始代码位于 `upstream/mchose_battery.py`，原始提交为 `f8e0e06b9934b8beb48c6d5d884e3330f1188aea`。双环绘图来自上游。雷蛇报文布局及设备参数参考 [razer-battery-report](https://github.com/xzeldon/razer-battery-report/tree/master/crates/razer-hid)。
 
 上游未声明许可证，本仓库不为上游代码添加许可证；公开可见不代表获得了额外的再许可权。
+
+## v0.2.1 多设备托盘
+
+圆环样式会自动为已连接且有电量的设备显示同心环，每个环独立显示进度和颜色。由外向内按电量从低到高排列，悬停可查看对应设备。最多显示三个环；更多设备请点开窗口查看。数字样式继续显示最低电量。
