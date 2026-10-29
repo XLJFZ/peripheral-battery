@@ -602,7 +602,7 @@ const bridge=!!token && location.hostname==='127.0.0.1';
 const $=id=>document.getElementById(id);let busy=false;let active=[];let rows=[];
 let updatedAt=0,epoch=0,refreshQueued=false,stopped=false;const MAX_AGE=90000;
 function message(text){$('message').textContent=text}
-function displayError(r){const error=r.error||'';if(error.includes('No verified battery query'))return '设备已识别，电量协议尚未适配';if(error.includes('Receiver did not return controller battery'))return '接收器已识别，请唤醒手柄后刷新';if(error.includes('disconnected'))return '设备已断开，请重新连接后刷新';return error||'本次未读取到有效电量'}
+function displayError(r){const error=r.error||'';if(error.includes('No verified battery query'))return '设备已识别，电量协议尚未适配';if(error.includes('Receiver did not return controller battery'))return '接收器已识别，请唤醒手柄后刷新';if(error.includes('Device status'))return '设备休眠、繁忙或暂不可用，请唤醒后刷新';if(error.includes('disconnected'))return '设备已断开，请重新连接后刷新';return error||'本次未读取到有效电量'}
 function isValid(r){return Number.isFinite(r.percent)&&r.percent>=0&&r.percent<=100}
 function updateAge(){if(updatedAt){const age=Math.max(0,Math.floor((Date.now()-updatedAt)/1000));$('updated').textContent=`读取于 ${new Date(updatedAt).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'})} · ${age} 秒前`;if(Date.now()-updatedAt>MAX_AGE||Date.now()<updatedAt-5000){epoch++;draw([],0);message('读数已过期，百分比已清除。请刷新电量。')}}}
 function draw(data,stamp=0){rows=data;updatedAt=stamp;$('export').disabled=!data.length;$('devices').replaceChildren();const valid=data.filter(isValid);$('count').textContent=valid.length;$('unknown').textContent=data.length-valid.length;$('low').textContent=valid.filter(r=>r.percent<=20).length;
