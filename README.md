@@ -32,6 +32,8 @@ python -m venv .venv
 
 执行 `build.ps1` 打包 Windows EXE。GitHub Pages 从 `main` 分支的 `/docs` 发布；网页原稿为 `web/index.html`，修改网页后执行 `python sync_pages.py` 同步发布目录。
 
+安装 Node.js 后，可执行 `node test_webhid.cjs` 验证实际网页中的 WebHID 报文处理。测试覆盖带编号和不带编号的回包、偏移、校验、受限接口与访问拒绝。
+
 设备数据在本机读取，网页没有分析脚本或外部数据服务。本地连接器只监听回环地址，并使用每次启动生成的访问令牌。
 
 ## 来源
