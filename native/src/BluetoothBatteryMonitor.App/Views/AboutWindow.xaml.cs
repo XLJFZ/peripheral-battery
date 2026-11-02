@@ -23,6 +23,7 @@ public partial class AboutWindow : FluentWindow
     {
         Close();
     }
+    private void OpenRepository(object sender,RoutedEventArgs e)=>Services.RepositoryLink.Open();
 
     private async void OnCheckUpdatesClick(object sender, RoutedEventArgs e)
     {

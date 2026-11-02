@@ -8,6 +8,13 @@
                 <ui:ThemesDictionary Theme="Dark" />
                 <ui:ControlsDictionary />
             </ResourceDictionary.MergedDictionaries>
+            <SolidColorBrush x:Key="PeripheralPanelBrush" Color="#202020" />
+            <SolidColorBrush x:Key="PeripheralCardBrush" Color="#2B2B2B" />
+            <SolidColorBrush x:Key="PeripheralEdgeBrush" Color="#25FFFFFF" />
+            <SolidColorBrush x:Key="PeripheralCardEdgeBrush" Color="#25FFFFFF" />
+            <SolidColorBrush x:Key="PeripheralGlintBrush" Color="Transparent" />
+            <CornerRadius x:Key="PeripheralPanelRadius">12</CornerRadius>
+            <CornerRadius x:Key="PeripheralCardRadius">8</CornerRadius>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

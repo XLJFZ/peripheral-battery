@@ -7,6 +7,12 @@ namespace BluetoothBatteryMonitor.App.Models;
 
 public class AppSettings
 {
+    public List<string> DeviceOrder { get; set; } = new();
+    public bool EnableGamePolling { get; set; }
+    public int DesktopPollingHz { get; set; } = 500;
+    public int GamePollingHz { get; set; } = 1000;
+    public string PollingGames { get; set; } = "cs2,VALORANT-Win64-Shipping,r5apex";
+    public int DeviceRank(string id) { int n=(DeviceOrder ?? new()).FindIndex(x=>string.Equals(x,id,StringComparison.OrdinalIgnoreCase)); return n<0?int.MaxValue:n; }
     public bool TrayAutoColor { get; set; } = true;
     public string TrayHighColor { get; set; } = "#00C98D";
     public string TrayMidColor { get; set; } = "#FFC048";
@@ -23,7 +29,7 @@ public class AppSettings
     public bool AutoSwitchAudioEndpoint { get; set; } = false;
     public bool EnableRestApi { get; set; } = false;
     public int RestApiPort { get; set; } = 23253;
-    public string Theme { get; set; } = "Dark"; // "System", "Dark", "Light"
+    public string Theme { get; set; } = "普通版";
     public string Language { get; set; } = "zh"; // "en", "tr"
 
     public Dictionary<string, int> DeviceSpecificThresholds { get; set; } = new(StringComparer.OrdinalIgnoreCase);

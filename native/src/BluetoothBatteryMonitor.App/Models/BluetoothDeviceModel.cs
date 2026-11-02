@@ -25,6 +25,14 @@ public class BluetoothDeviceModel
     {
         get
         {
+            if(!string.IsNullOrWhiteSpace(BatteryReadError))
+            {
+                var error=BatteryReadError.ToLowerInvariant();
+                if(error.Contains("待适配") || error.Contains("no verified")) return "已识别 · 电量协议待适配";
+                if(error.Contains("access") || error.Contains("denied") || error.Contains("拒绝"))return "读取受限 · 接口权限或占用";
+                if(error.Contains("sleep") || error.Contains("wake") || error.Contains("超时"))return "可能休眠或无线链路不可用";
+                return "电量读取失败";
+            }
             if (IsConnected) return Services.Localization.LocalizationService.GetString("Device_Connected");
             if (IsTws && (IsLeftCharging || IsRightCharging || IsCaseCharging))
                 return Services.Localization.LocalizationService.GetString("Device_ChargingInCase");

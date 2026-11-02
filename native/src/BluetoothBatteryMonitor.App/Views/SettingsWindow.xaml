@@ -153,15 +153,15 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="{DynamicResource Settings_Theme}"
+                            <TextBlock Text="界面外观"
                                        FontSize="14"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                            <TextBlock Text="{DynamicResource Settings_ThemeDesc}"
+                            <TextBlock Text="液态玻璃 / 普通版"
                                        FontSize="12"
                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                         </StackPanel>
-                        <ComboBox Grid.Column="1"
+                        <ComboBox x:Name="AppearanceModeSelector" Grid.Column="1"
                                   ItemsSource="{Binding AvailableThemes}"
                                   SelectedItem="{Binding SelectedTheme, Mode=TwoWay}"
                                   Width="130"
@@ -477,10 +477,14 @@
         <!-- Kaydet Butonu -->
         <Border Grid.Row="2"
                 Margin="0,16,0,0">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="GitHub 仓库" ToolTip="https://github.com/XLJFZ/peripheral-battery" Click="OpenRepository" Margin="0,0,12,0" Padding="16,8" />
+            <Button Content="游戏回报率调度" Click="OpenGamePolling" Margin="0,0,12,0" Padding="16,8" />
             <Button Content="{DynamicResource Settings_SaveAndClose}"
                     HorizontalAlignment="Right"
                     Click="OnSaveAndCloseClick"
                     Padding="20,8" />
+            </StackPanel>
         </Border>
     </Grid>
 </ui:FluentWindow>

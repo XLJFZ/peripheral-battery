@@ -1,57 +1,38 @@
 # Peripheral Battery · 外设电量
 
-Windows v0.2.5 修复长设备名被截断，改为完整文件夹发布并检查菜单、提示框的桌面依赖。请完整解压，保留全部 DLL，不要只复制 EXE。详情见 [v0.2.5 说明](notes/v0.2.5.md)。
+当前 Windows 版本 **v0.3.2**，提供“液态玻璃”和“普通版”两种外观，默认普通版。完整解压发布包后，双击 `启动托盘版.cmd`；请保留全部 DLL 和 backend 文件夹。详情见 [发布说明](notes/v0.3.2.md)。
 
-Windows v0.2.4 新增雷云本地日志优先电量源：记录足够新且设备序列号唯一匹配时直接采用雷云百分比，否则回退到 HID。详情见 [v0.2.4 说明](notes/v0.2.4.md)。需要新版本地连接器，纯网页模式仍使用 WebHID；Mac 功能不变。
-
-Mac 菜单栏预览版位于 [`macos/`](macos/README.md)，提供系统已配对且已连接设备的电量读取、多环、固定顺序和低电量提醒。当前交付源码与 Mac 构建脚本，尚未在真实 Mac 上验证；USB 厂商协议尚未移植。
-
-托盘版保留以下修复：关闭 AirPods / Beats Beacon 和 Google Fast Pair 的附近广播发现，避免陌生耳机混入设备列表。Windows 已连接设备与其他电量读取方式保留；部分耳机的左右耳、充电盒独立电量暂时不再显示。此前已增加 HID 失败时清除旧读数、原始值与采样时间提示，详情见 [v0.2.3 验证记录](notes/v0.2.3.md)。
-
-Windows 托盘电量工具与 WebHID 网页面板，基于 [marsuyone/mchose-battery-tray](https://github.com/marsuyone/mchose-battery-tray) 扩展。
-
-v0.2.0 的托盘版直接基于 [BluetoothBatteryMonitor](https://github.com/Kaandonmez/BluetoothBatteryMonitor) 的原生 Fluent UI 和蓝牙模块改造，保留 MIT 许可与署名。新增加粗圆环、可视化调色、自定义三档电量颜色，以及 10 秒无操作自动隐藏。详情见 [新版托盘说明](新版托盘说明.md)。
-
-- [在线网页版](https://xljfz.github.io/peripheral-battery/)
-- [下载 Windows 双版本包](https://github.com/XLJFZ/peripheral-battery/releases/latest)
+- [下载 Windows 版本](https://github.com/XLJFZ/peripheral-battery/releases/latest)
+- [在线网页面板](https://xljfz.github.io/peripheral-battery/)
 - [使用说明](使用说明.md)
-- [验证记录](验证记录.md)
+- [Mac 源码预览版](macos/README.md)
 
-## 使用
+## 功能与兼容范围
 
-下载 Release 中的 ZIP 并完整解压，无需安装 Python。
+原生 Windows 托盘聚合外设电量，支持设备拖拽排序、多环图标、颜色设置、低电量提醒和两种界面外观。设置和关于窗口均提供 GitHub 仓库按钮。
 
-托盘版双击 `启动托盘版.cmd`。网页版双击 `启动网页版.cmd`，自动打开本地浏览器面板。在线网页使用桌面版 Chrome / Edge 打开，点击“连接设备”授权 WebHID；浏览器可能屏蔽鼠标接口，此时使用下载包内的本地连接器。
+雷蛇使用 C# 原生 HID 读取，本机已验证炼狱蝰蛇 V3 Pro 无线接收器 `1532:00B7`。设备表中其他型号未逐款实测。罗技、迈从、八位堂和 Windows 系统电量继续使用已有读取方式，覆盖范围取决于具体型号、固件和连接方式。QK75N 可识别，USB 电量协议尚未适配。
 
-## 兼容范围
+游戏回报率调度默认关闭，目前仅开放已验证的 `1532:00B7` 接收器及 125–1000Hz，带回读校验和原值恢复记录。4000/8000Hz 尚未开放，真实游戏自动触发仍待实测。网页面板只读取电量，不提供硬件设置功能。
 
-已在炼狱蝰蛇 V3 Pro 无线接收器 `1532:00B7` 上实测电量与充电状态。设备表还包含其他雷蛇鼠标，保留迈从 A7、G87 协议，并支持读取 Windows 提供电量的部分外设；这些型号未逐款实测。
-
-v0.2.0 已新增八位堂 Ultimate 2 的接收器及工作模式接口查询。QK75N 当前可识别，但其电量协议尚待适配。“泛用”指支持多个设备和扩展协议，不表示所有无线外设即插即用。网页功能用于读取电量，不包含 DPI、按键映射或固件更新。
+关闭 AirPods / Beats Beacon 和 Google Fast Pair 附近广播发现，避免把陌生耳机加入列表。保留 Windows 已连接设备和其他电量来源。
 
 ## 开发
 
-Python 3.13：
+Windows 构建需要 .NET 8 SDK 和 Python 3.13。执行 `build-native.ps1` 构建原生托盘及 Python 打包后端；当前不是单文件发布。`build.ps1` 可单独构建 Python 后端和本地网页连接器。
 
 ```powershell
 python -m venv .venv
 ./.venv/Scripts/python.exe -m pip install -r requirements.txt
 ./.venv/Scripts/python.exe -m unittest discover -p 'test_*.py'
-./.venv/Scripts/python.exe universal_battery.py
 ```
 
-执行 `build-native.ps1` 构建新版原生托盘及 HID 后端，需要 .NET 8 SDK 与 Python 3.13。`build.ps1` 仍可单独构建旧 Python 后端与本地网页。GitHub Pages 从 `main` 分支的 `/docs` 发布；网页原稿为 `web/index.html`，修改网页后执行 `python sync_pages.py` 同步发布目录。
+GitHub Pages 从 `main` 分支的 `/docs` 发布。网页原稿为 `web/index.html`，修改后执行 `python sync_pages.py`。在线网页使用桌面 Chrome / Edge 的 WebHID 授权；浏览器屏蔽鼠标接口时可使用发布包中的本地连接器。
 
-安装 Node.js 后，可执行 `node test_webhid.cjs` 验证实际网页中的 WebHID 报文处理。测试覆盖带编号和不带编号的回包、偏移、校验、受限接口与访问拒绝。
+设备数据在本机读取，本地连接器只监听回环地址，并使用每次启动生成的访问令牌。
 
-设备数据在本机读取，网页没有分析脚本或外部数据服务。本地连接器只监听回环地址，并使用每次启动生成的访问令牌。
+## 来源与许可
 
-## 来源
+Python 版本基于 [marsuyone/mchose-battery-tray](https://github.com/marsuyone/mchose-battery-tray) 扩展，上游原始代码保存在 `upstream/`，原始提交为 `f8e0e06b9934b8beb48c6d5d884e3330f1188aea`。上游未声明许可证，本仓库不为其添加许可证；公开可见不代表获得额外再许可权。
 
-上游原始代码位于 `upstream/mchose_battery.py`，原始提交为 `f8e0e06b9934b8beb48c6d5d884e3330f1188aea`。双环绘图来自上游。雷蛇报文布局及设备参数参考 [razer-battery-report](https://github.com/xzeldon/razer-battery-report/tree/master/crates/razer-hid)。
-
-上游未声明许可证，本仓库不为上游代码添加许可证；公开可见不代表获得了额外的再许可权。
-
-## v0.2.1 多设备托盘
-
-圆环样式会自动为已连接且有电量的设备显示同心环，每个环独立显示进度和颜色。由外向内按电量从低到高排列，悬停可查看对应设备。最多显示三个环；更多设备请点开窗口查看。数字样式继续显示最低电量。
+原生托盘基于 [BluetoothBatteryMonitor](https://github.com/Kaandonmez/BluetoothBatteryMonitor) 改造，保留 `native/LICENSE` 中的 MIT 许可与署名。雷蛇报文与设备表参考 [razer-battery-report](https://github.com/xzeldon/razer-battery-report/tree/master/crates/razer-hid)，回报率报文对照 [OpenRazer](https://github.com/openrazer/openrazer/blob/master/driver/razerchromacommon.c) 并在本机验证。本项目没有复制 FerrisPulse 的 GPLv3 源码。

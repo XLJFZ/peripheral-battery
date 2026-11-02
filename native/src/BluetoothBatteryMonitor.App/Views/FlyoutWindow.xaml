@@ -26,10 +26,10 @@
     </ui:FluentWindow.Resources>
 
     <!-- Ana Kart Çerçevesi (Windows 11 Tarzı Akrilik / Yuvarlak Köşeli) -->
-    <Border CornerRadius="12"
+    <Border CornerRadius="{DynamicResource PeripheralPanelRadius}"
             BorderThickness="1"
-            BorderBrush="{DynamicResource SurfaceStrokeColorDefaultBrush}"
-            Background="{DynamicResource ApplicationBackgroundBrush}"
+            BorderBrush="{DynamicResource PeripheralEdgeBrush}"
+            Background="{DynamicResource PeripheralPanelBrush}"
             Padding="0"
             Margin="6">
         <Border.Effect>
@@ -47,6 +47,7 @@
                 <RowDefinition Height="Auto" /> <!-- Boş Durum (Empty State) -->
                 <RowDefinition Height="Auto" /> <!-- Alt Araç Çubuğu -->
             </Grid.RowDefinitions>
+            <Border Grid.RowSpan="4" CornerRadius="{DynamicResource PeripheralPanelRadius}" Background="{DynamicResource PeripheralGlintBrush}" IsHitTestVisible="False" />
 
             <!-- 1. Başlık Çubuğu -->
             <Border Grid.Row="0"
@@ -99,12 +100,12 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="{x:Type vm:DeviceItemViewModel}">
                             <!-- Cihaz Kartı -->
-                            <Border Margin="0,4,0,6"
+                            <Border Margin="0,4,0,6" AllowDrop="True" PreviewMouseLeftButtonDown="DeviceDragStart" PreviewMouseMove="DeviceDragMove" Drop="DeviceDrop" MouseEnter="GlassCardEnter" MouseLeave="GlassCardLeave" RenderTransformOrigin="0.5,0.5"
                                     Padding="14,12"
-                                    CornerRadius="8"
-                                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                    CornerRadius="{DynamicResource PeripheralCardRadius}"
+                                    Background="{DynamicResource PeripheralCardBrush}"
                                     BorderThickness="1"
-                                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                                    BorderBrush="{DynamicResource PeripheralCardEdgeBrush}"
                                     UseLayoutRounding="True"
                                     SnapsToDevicePixels="True">
                                 <Border.Style>
@@ -314,7 +315,7 @@
                                             <TextBlock Text="{Binding BatteryText}" ToolTip="{Binding BatteryReadingDetails}"
                                                        FontSize="14"
                                                        FontWeight="Bold"
-                                                       Foreground="{Binding BatteryBrush}"
+                                                       Foreground="{Binding BatteryTextBrush}"
                                                        VerticalAlignment="Center" />
                                         </StackPanel>
                                     </Grid>

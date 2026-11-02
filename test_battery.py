@@ -52,6 +52,35 @@ class Tests(unittest.TestCase):
     def test_battery_endpoints(self):
         self.assertEqual(decode(response(0), 0x1f, 0x80), 0)
         self.assertEqual(decode(response(255), 0x1f, 0x80), 255)
+    def test_unnumbered_report(self):
+        self.assertEqual(decode(response(128)[1:], 0x1f, 0x80), 128)
+        broken = bytearray(response(128)[1:]); broken[9] ^= 1
+        with self.assertRaises(ValueError): decode(broken, 0x1f, 0x80)
+    @patch('battery_core.time.sleep')
+    def test_missing_interface_metadata(self, sleep):
+        bus = Bus()
+        original = bus.enumerate
+        bus.enumerate = lambda: [dict(d, interface_number=-1) for d in original()]
+        self.assertEqual(read_hid(bus, self.catalog)[0].percent, 50)
+    @patch('battery_core.time.sleep')
+    def test_synapse_virtual_collections_are_not_queried(self, sleep):
+        bus = Bus()
+        original = bus.enumerate
+        bus.enumerate = lambda: original() + [dict(vendor_id=0x1532, product_id=0xb7,
+            interface_number=-1, usage_page=12, usage=1, path=b'virtual-media')]
+        self.assertEqual(len(read_hid(bus, self.catalog)), 1)
+        self.assertEqual(len(bus.sent), 2)
+    @patch('battery_core.time.sleep')
+    def test_windows_feature_fallback(self, sleep):
+        bus = Bus()
+        class Denied(FakeDevice):
+            def open_path(self, path): raise OSError('access denied')
+        bus.device = lambda: Denied(bus)
+        with patch('battery_core.sys.platform', 'win32'), patch('windows_feature.FeatureDevice', return_value=FakeDevice(bus)):
+            row = read_hid(bus, self.catalog)[0]
+        self.assertEqual(row.percent, 50)
+        self.assertTrue(row.connected)
+        self.assertIn('Feature', row.source_note)
     def test_checksum(self):
         p = bytearray(response()); p[10] ^= 1
         with self.assertRaises(ValueError): decode(p, 0x1f, 0x80)

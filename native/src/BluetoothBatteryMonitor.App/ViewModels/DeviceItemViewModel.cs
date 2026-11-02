@@ -12,6 +12,9 @@ namespace BluetoothBatteryMonitor.App.ViewModels;
 
 public partial class DeviceItemViewModel : ObservableObject
 {
+    public Brush BatteryTextBrush=>global::System.Windows.SystemParameters.HighContrast?global::System.Windows.SystemColors.WindowTextBrush:Services.System.GlassAppearance.Enabled?Brushes.Black:BatteryBrush;
+    public void RefreshAppearance()=>OnPropertyChanged(nameof(BatteryTextBrush));
+    partial void OnBatteryBrushChanged(Brush value)=>RefreshAppearance();
     private readonly BluetoothDeviceModel _model;
     private readonly IAudioEndpointManager? _audioManager;
     private bool _isUpdatingVolumeInternally;

@@ -9,24 +9,26 @@ namespace BluetoothBatteryMonitor.App.Services.Bluetooth;
 public sealed class PeripheralHidBatteryProvider : IBluetoothBatteryProvider
 {
     public string Name => "Peripheral HID";
-    public bool IsSupported => File.Exists(BackendPath);
+    public bool IsSupported => File.Exists(Path.Combine(AppContext.BaseDirectory,"razer_devices.json"));
     public event EventHandler<BluetoothDeviceModel>? DeviceUpdated { add { } remove { } }
     private static string BackendPath => Path.Combine(AppContext.BaseDirectory,"backend","UniversalBatteryTray.exe");
     private Dictionary<string,BluetoothDeviceModel> previous = new();
     public async Task<IReadOnlyList<BluetoothDeviceModel>> GetDevicesAsync(CancellationToken ct=default)
     {
-        if(!IsSupported)return InvalidatePrevious("HID backend unavailable");
         string temp=Path.Combine(Path.GetTempPath(),"peripheral-hid-"+Guid.NewGuid().ToString("N")+".json");
         var rows=new List<BluetoothDeviceModel>();
         try
         {
+            rows.AddRange(await NativeRazerBattery.ReadAsync(ct));
+            if(!File.Exists(BackendPath)) return PreserveNative(rows,"其他品牌 HID 后端缺失");
             var info=new ProcessStartInfo(BackendPath){UseShellExecute=false,CreateNoWindow=true};
             info.ArgumentList.Add("--hid-scan");info.ArgumentList.Add(temp);
+            info.ArgumentList.Add("--exclude-razer");
             using var process=Process.Start(info);
-            if(process is null)return InvalidatePrevious("HID backend did not start");
+            if(process is null)return PreserveNative(rows,"HID backend did not start");
             try { await process.WaitForExitAsync(ct); }
             catch(OperationCanceledException){ try{process.Kill(true);}catch{} throw; }
-            if(process.ExitCode!=0 || !File.Exists(temp))return InvalidatePrevious("HID backend did not return a reading");
+            if(process.ExitCode!=0 || !File.Exists(temp))return PreserveNative(rows,$"HID 后端读取失败（退出码 {process.ExitCode}）；请检查 backend 文件夹是否完整");
             using var doc=JsonDocument.Parse(await File.ReadAllTextAsync(temp,ct));
             foreach(var r in doc.RootElement.EnumerateArray())
             {
@@ -49,10 +51,10 @@ public sealed class PeripheralHidBatteryProvider : IBluetoothBatteryProvider
             }
             var ids=rows.Select(r=>r.Id).ToHashSet();
             foreach(var old in previous.Values.Where(p=>!ids.Contains(p.Id)))
-            { old.IsConnected=false;old.BatteryLevel=null;old.RawBatteryValue=null;old.BatterySampledAt=null;old.LastUpdated=DateTime.Now;rows.Add(old); }
+            { old.IsConnected=false;old.BatteryLevel=null;old.IsCharging=false;old.RawBatteryValue=null;old.BatterySampledAt=null;old.LastUpdated=DateTime.Now;rows.Add(old); }
             previous=rows.ToDictionary(r=>r.Id);
         }
-        catch(Exception ex){return InvalidatePrevious("HID read failed: "+ex.GetType().Name);}
+        catch(Exception ex){return PreserveNative(rows,"HID read failed: "+ex.GetType().Name);}
         finally{try{File.Delete(temp);}catch{}}
         return rows;
     }
@@ -65,6 +67,12 @@ public sealed class PeripheralHidBatteryProvider : IBluetoothBatteryProvider
             old.BatteryReadError=reason;old.LastUpdated=DateTime.Now;
         }
         return previous.Values.ToList();
+    }
+    private IReadOnlyList<BluetoothDeviceModel> PreserveNative(List<BluetoothDeviceModel> rows,string reason)
+    {
+        var ids=rows.Select(x=>x.Id).ToHashSet();
+        rows.AddRange(InvalidatePrevious(reason).Where(x=>!ids.Contains(x.Id)));
+        previous=rows.ToDictionary(x=>x.Id);return rows;
     }
     public void StartMonitoring(){} public void StopMonitoring(){} public void Dispose(){}
 }

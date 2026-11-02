@@ -34,9 +34,17 @@ public static class UiPackageSmoke
             tooltip.IsOpen=true;
             await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
             bool tooltipOpened=tooltip.IsOpen && PresentationSource.FromVisual(tooltip)!=null;
+            var polling=new Views.GamePollingWindow{Left=-10000,Top=-10000,ShowInTaskbar=false,WindowStartupLocation=WindowStartupLocation.Manual};
+            polling.Show();await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+            bool pollingOpened=PresentationSource.FromVisual(polling)!=null;
+            var bitmap=new global::System.Windows.Media.Imaging.RenderTargetBitmap((int)polling.ActualWidth,(int)polling.ActualHeight,96,96,global::System.Windows.Media.PixelFormats.Pbgra32);
+            bitmap.Render(polling);
+            var png=new global::System.Windows.Media.Imaging.PngBitmapEncoder();png.Frames.Add(global::System.Windows.Media.Imaging.BitmapFrame.Create(bitmap));
+            using(var stream=File.Create(Path.ChangeExtension(reportPath,".png")))png.Save(stream);
+            polling.Close();
             if(!menuOpened || !tooltipOpened)throw new InvalidOperationException("Published popup smoke check failed.");
             await File.WriteAllTextAsync(reportPath,JsonSerializer.Serialize(new {
-                success=true,menuOpened,tooltipOpened,accessibilityAssembly=accessibility.Location
+                success=true,menuOpened,tooltipOpened,pollingOpened,accessibilityAssembly=accessibility.Location
             }));
         }
         finally { tooltip.IsOpen=false;menu.IsOpen=false;window.Close(); }

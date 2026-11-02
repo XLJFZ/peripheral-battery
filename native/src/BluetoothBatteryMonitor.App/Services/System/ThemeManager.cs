@@ -17,6 +17,13 @@ public static class ThemeManager
     {
         if (_isInitialized) return;
         _isInitialized = true;
+        global::System.Windows.EventManager.RegisterClassHandler(typeof(Wpf.Ui.Controls.FluentWindow),global::System.Windows.FrameworkElement.LoadedEvent,
+            new global::System.Windows.RoutedEventHandler((sender,_)=>GlassAppearance.ApplyWindow((global::System.Windows.Window)sender)));
+        global::System.Windows.SystemParameters.StaticPropertyChanged += (_,e)=>
+        {
+            if(e.PropertyName==nameof(global::System.Windows.SystemParameters.HighContrast))
+                global::System.Windows.Application.Current.Dispatcher.Invoke(ApplyCurrentTheme);
+        };
 
         SystemEvents.UserPreferenceChanged += (s, e) =>
         {
@@ -50,10 +57,14 @@ public static class ThemeManager
 
     public static void ApplyTheme(string themePreference)
     {
+        if(global::System.Windows.Application.Current is { } app && !app.Dispatcher.CheckAccess())
+        {app.Dispatcher.Invoke(()=>ApplyTheme(themePreference));return;}
         bool isDark = themePreference switch
         {
             "Light" => false,
             "Dark" => true,
+            "液态玻璃" or "液态玻璃（低透明）" => false,
+            "普通版" => true,
             _ => IsWindowsDarkTheme()
         };
 
@@ -66,6 +77,7 @@ public static class ThemeManager
             // Suppress if outside UI thread or window is not loaded yet
         }
 
+        GlassAppearance.Apply(themePreference,isDark);
         ThemeChanged?.Invoke(null, isDark);
     }
 

@@ -189,6 +189,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--scan', metavar='JSON_PATH')
     parser.add_argument('--hid-scan', metavar='JSON_PATH')
+    parser.add_argument('--exclude-razer', action='store_true')
     parser.add_argument('--details', action='store_true')
     parser.add_argument('--web', action='store_true')
     args = parser.parse_args()
@@ -196,6 +197,8 @@ def main():
         import hid
         from battery_core import read_peripherals
         monitor = Monitor(RESOURCES)
+        if args.exclude_razer:
+            monitor.catalog = {}
         rows = read_peripherals(hid, monitor.catalog)
         Path(args.hid_scan).write_text(json.dumps([asdict(r) for r in rows]), encoding='utf-8')
         return

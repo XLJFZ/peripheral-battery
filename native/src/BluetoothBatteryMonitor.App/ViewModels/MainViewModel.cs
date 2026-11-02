@@ -35,6 +35,7 @@ public partial class MainViewModel : ObservableObject
 
         _engine.DevicesUpdated += OnEngineDevicesUpdated;
         _engine.StatusChanged += OnEngineStatusChanged;
+        Services.System.ThemeManager.ThemeChanged+=(_,_)=>{foreach(var device in Devices)device.RefreshAppearance();};
         LocalizationService.LanguageChanged += (_, _) => UpdateStatusMessage();
     }
 
@@ -200,6 +201,8 @@ public partial class MainViewModel : ObservableObject
 
     private void OnEngineDevicesUpdated(object? sender, IReadOnlyList<BluetoothDeviceModel> deviceModels)
     {
+        var orderSettings=AppSettings.Load();
+        deviceModels=deviceModels.OrderBy(d=>orderSettings.DeviceRank(d.Id)).ThenByDescending(d=>d.IsConnected).ToList();
         System.Windows.Application.Current.Dispatcher.Invoke(() =>
         {
             // Update UI collection

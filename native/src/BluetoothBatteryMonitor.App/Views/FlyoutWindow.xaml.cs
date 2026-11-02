@@ -11,6 +11,44 @@ namespace BluetoothBatteryMonitor.App.Views;
 
 public partial class FlyoutWindow : FluentWindow
 {
+    private Point _dragStart;
+    private void GlassCardEnter(object sender,System.Windows.Input.MouseEventArgs e)=>AnimateGlassCard(sender,1.012);
+    private void GlassCardLeave(object sender,System.Windows.Input.MouseEventArgs e)=>AnimateGlassCard(sender,1);
+    private static void AnimateGlassCard(object sender,double target)
+    {
+        if(sender is not System.Windows.Controls.Border card)return;
+        card.RenderTransform=System.Windows.Media.Transform.Identity;
+        if(!GlassAppearance.Enabled || SystemParameters.HighContrast || target==1)
+        {
+            card.SetResourceReference(System.Windows.Controls.Border.BackgroundProperty,"PeripheralCardBrush");return;
+        }
+        card.Background=new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(95,255,255,255));
+    }    private void DeviceDragStart(object sender, System.Windows.Input.MouseButtonEventArgs e) => _dragStart=e.GetPosition(this);
+    private void DeviceDragMove(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if(e.LeftButton!=System.Windows.Input.MouseButtonState.Pressed || sender is not FrameworkElement card || card.DataContext is not DeviceItemViewModel item) return;
+        var delta=e.GetPosition(this)-_dragStart;
+        if(Math.Abs(delta.X)<SystemParameters.MinimumHorizontalDragDistance && Math.Abs(delta.Y)<SystemParameters.MinimumVerticalDragDistance) return;
+        // Interactive controls retain their normal click/slider behavior.
+        var node=e.OriginalSource as DependencyObject;
+        while(node!=null && node!=card)
+        {
+            if(node is System.Windows.Controls.Primitives.ButtonBase or System.Windows.Controls.Primitives.RangeBase or System.Windows.Controls.TextBox) return;
+            node=node is FrameworkContentElement content?content.Parent:System.Windows.Media.VisualTreeHelper.GetParent(node);
+        }
+        DragDrop.DoDragDrop(card,new DataObject("PeripheralDeviceId",item.Id),DragDropEffects.Move);
+        ResetIdle();
+    }
+    private void DeviceDrop(object sender, DragEventArgs e)
+    {
+        if(DataContext is not MainViewModel vm || sender is not FrameworkElement card || card.DataContext is not DeviceItemViewModel target || e.Data.GetData("PeripheralDeviceId") is not string id) return;
+        var source=vm.Devices.FirstOrDefault(d=>d.Id==id);
+        if(source==null || source==target) return;
+        vm.Devices.Move(vm.Devices.IndexOf(source),vm.Devices.IndexOf(target));
+        var settings=Models.AppSettings.Load();
+        settings.DeviceOrder=vm.Devices.Select(d=>d.Id).Concat(settings.DeviceOrder ?? new()).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        settings.Save(); e.Handled=true;
+    }
     private bool _isOpening;
     private bool _isHiding;
     private int _animationGeneration;

@@ -37,6 +37,20 @@ public partial class App : System.Windows.Application
 
     protected override async void OnStartup(StartupEventArgs e)
     {
+        int glassPreview=Array.IndexOf(e.Args,"--glass-preview");
+        if(glassPreview>=0 && e.Args.Length>glassPreview+1)
+        {
+            base.OnStartup(e);ShutdownMode=ShutdownMode.OnExplicitShutdown;
+            try{await Services.GlassPreview.Run(e.Args[glassPreview+1]);Shutdown(0);}
+            catch(Exception ex){await global::System.IO.File.WriteAllTextAsync(e.Args[glassPreview+1]+"-error.txt",ex.ToString());Shutdown(1);}return;
+        }
+        int rateTest=Array.IndexOf(e.Args,"--rate-self-test");
+        if(rateTest>=0 && e.Args.Length>rateTest+1)
+        {
+            base.OnStartup(e);ShutdownMode=ShutdownMode.OnExplicitShutdown;
+            try{await Services.GamePollingService.VerifyAsync(e.Args[rateTest+1]);Shutdown(0);}
+            catch(Exception ex){await global::System.IO.File.WriteAllTextAsync(e.Args[rateTest+1],ex.ToString());Shutdown(1);}return;
+        }
         int uiSmokeIndex=Array.IndexOf(e.Args,"--ui-smoke");
         if(uiSmokeIndex>=0 && e.Args.Length>uiSmokeIndex+1)
         {
@@ -199,6 +213,7 @@ public partial class App : System.Windows.Application
         AppSettings.SettingsChanged += (sender, settings) => Dispatcher.Invoke(() => _trayIconManager?.UpdateTrayIcon());
         // 8. Start Engine
         _ = global::System.Threading.Tasks.Task.Run(() => _engine.Start());
+        Services.GamePollingService.Instance.Start();
 
         if (e.Args.Any(a => a.Equals("--settings", StringComparison.OrdinalIgnoreCase)))
         {
@@ -242,6 +257,7 @@ public partial class App : System.Windows.Application
         _smartAudioRouter?.Dispose();
         _audioEndpointManager?.Dispose();
         _trayIconManager?.Dispose();
+        Services.GamePollingService.Instance.Dispose();
         _engine?.Dispose();
         _singleInstanceMutex?.Dispose();
         _showEventHandle?.Dispose();

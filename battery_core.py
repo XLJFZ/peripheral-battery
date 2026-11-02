@@ -2,6 +2,7 @@
 import json
 import re
 import subprocess
+import sys
 import time
 from dataclasses import asdict, dataclass
 from functools import reduce
@@ -32,9 +33,12 @@ def request(tid, command):
 
 
 def decode(raw, tid, command):
-    if len(raw) != 91 or raw[0] != 0:
+    if len(raw) == 90:
+        p = raw
+    elif len(raw) == 91 and raw[0] == 0:
+        p = raw[1:]
+    else:
         raise ValueError('Invalid feature report length or ID')
-    p = raw[1:]
     if reduce(xor, p[2:88], 0) != p[88]:
         raise ValueError('Invalid checksum')
     if p[0] != 2:
@@ -109,8 +113,13 @@ def read_hid(hid, catalog, synapse_snapshot=None, synapse_note=''):
                 '设备已识别 · 电量协议待适配',error='No verified battery query is available for this firmware',connected=True))
             continue
         entry = catalog.get(pid) if vid == 0x1532 else None
-        if entry and d.get('interface_number') != entry['interface']:
+        if entry and d.get('interface_number') not in (entry['interface'], -1, None):
             continue
+        if entry and d.get('interface_number') in (-1, None):
+            # Synapse adds virtual media/system collections without an interface
+            # number. They do not carry the receiver's feature protocol.
+            if (d.get('usage_page'), d.get('usage')) != (1, 2) and (d.get('usage_page') or 0) < 0xFF00:
+                continue
         if not entry and (vid, pid, d.get('usage_page')) not in {
                 (0x5253, 0x1021, 0xFF01), (0x41E4, 0x2001, 0xFF04), (0x2DC8, 0x6013, 0xFFA0), (0x2DC8, 0x310B, 0xFF7A)}:
             continue
@@ -133,7 +142,16 @@ def read_hid(hid, catalog, synapse_snapshot=None, synapse_note=''):
         for d in candidates:
             dev = hid.device()
             try:
-                dev.open_path(d['path'])
+                try:
+                    dev.open_path(d['path'])
+                except OSError:
+                    dev.close()
+                    if not entry or sys.platform != 'win32':
+                        raise
+                    from windows_feature import FeatureDevice
+                    dev = FeatureDevice()
+                    dev.open_path(d['path'])
+                    row.source_note += '；使用 Windows Feature 专用共享句柄'
                 if entry:
                     # Receiver USB serials can be all-zero placeholders. Only use
                     # verified identity queries for the listed DeathAdder receivers.
@@ -180,6 +198,9 @@ def read_hid(hid, catalog, synapse_snapshot=None, synapse_note=''):
                     row.percent = None
                     raise ValueError('Battery value out of range')
                 row.error = ''
+                row.connected = True
+                if row.sampled_at is None:
+                    row.sampled_at = time.time()
                 break
             except (OSError, ValueError) as exc:
                 row.error = str(exc)
@@ -254,4 +275,6 @@ class Monitor:
         import hid
         devices = [{k: (v.decode(errors='replace') if isinstance(v, bytes) else v)
                     for k, v in d.items() if k != 'serial_number'} for d in hid.enumerate()]
-        return {'readings': [asdict(r) for r in rows], 'errors': self.errors, 'hid_devices': devices}
+        return {'readings': [asdict(r) for r in rows], 'errors': self.errors, 'hid_devices': devices,
+                'backend_path': str(Path(sys.executable).resolve()),
+                'reader_path': str(Path(__file__).resolve())}

@@ -220,7 +220,7 @@ public class TrayIconManager : IDisposable
         var settings=AppSettings.Load();
         // Lowest batteries remain visible when more than three devices are connected.
         var ringDevices=_mainViewModel.Devices.Where(d=>d.IsConnected&&d.HasBattery)
-            .OrderBy(d=>d.BatteryProgress).ThenBy(d=>d.Id,StringComparer.OrdinalIgnoreCase).Take(3).ToList();
+            .OrderBy(d=>settings.DeviceRank(d.Id)).ThenBy(d=>d.BatteryProgress).ThenBy(d=>d.Id,StringComparer.OrdinalIgnoreCase).Take(3).ToList();
         var newIcon = TrayIconGenerator.GenerateMultiple(
             ringDevices.Select(d=>(d.BatteryProgress,d.IsCharging)).ToList(),isDark,settings);
 
