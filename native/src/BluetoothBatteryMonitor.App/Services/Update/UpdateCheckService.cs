@@ -55,7 +55,9 @@ public class UpdateCheckService
     internal static (string? Download, string? Checksum) SelectAssets(JsonElement root)
     {
         string? setupUrl = null;
-        string? checksumUrl = null;
+        string? combinedChecksumUrl = null;   // sha256.txt: one file listing every asset
+        string? setupChecksumUrl = null;      // <Setup>.sha256: single-file checksum for the installer
+        string? anyChecksumUrl = null;        // any other .sha256, last resort
 
         if (!root.TryGetProperty("assets", out var assets) || assets.ValueKind != JsonValueKind.Array)
             return (null, null);
@@ -66,11 +68,21 @@ public class UpdateCheckService
             string url = item.TryGetProperty("browser_download_url", out var d) ? (d.GetString() ?? "") : "";
             if (string.IsNullOrEmpty(url)) continue;
 
-            if (checksumUrl == null &&
-                (name.Equals("sha256.txt", StringComparison.OrdinalIgnoreCase) ||
-                 name.EndsWith(".sha256", StringComparison.OrdinalIgnoreCase)))
+            if (combinedChecksumUrl == null &&
+                name.Equals("sha256.txt", StringComparison.OrdinalIgnoreCase))
             {
-                checksumUrl = url;
+                combinedChecksumUrl = url;
+                continue;
+            }
+
+            if (name.EndsWith(".sha256", StringComparison.OrdinalIgnoreCase))
+            {
+                anyChecksumUrl ??= url;
+                // The portable build's own .sha256 does not list the Setup, so a release that
+                // publishes per-file checksums must use the Setup's one — v0.3.9 shipped that
+                // layout and the updater aborted with a misleading "no checksum published".
+                if (name.Contains("Setup", StringComparison.OrdinalIgnoreCase))
+                    setupChecksumUrl ??= url;
                 continue;
             }
 
@@ -81,7 +93,7 @@ public class UpdateCheckService
             setupUrl = url;
         }
 
-        return (setupUrl, checksumUrl);
+        return (setupUrl, combinedChecksumUrl ?? setupChecksumUrl ?? anyChecksumUrl);
     }
 
     public async Task<UpdateCheckResult> CheckForUpdatesAsync(CancellationToken ct = default)
