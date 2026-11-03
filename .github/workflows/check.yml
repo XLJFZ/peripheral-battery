@@ -26,7 +26,7 @@ jobs:
       - run: node test_webhid.cjs
       - run: node test_web_state.cjs
       - name: Tray regression checks
-        run: dotnet test native/tests/BluetoothBatteryMonitor.Tests/BluetoothBatteryMonitor.Tests.csproj -c Release --filter "FullyQualifiedName~HidFreshnessTests|FullyQualifiedName~BluetoothBatteryEngine_HasAllProvidersRegistered|FullyQualifiedName~MultiRingTests|FullyQualifiedName~PeripheralAppearanceTests|FullyQualifiedName~ToastNotificationServiceTests|FullyQualifiedName~UpdateInstallerTests|FullyQualifiedName~UpdateAssetSelectionTests|FullyQualifiedName~UpdatePendingUpdateTests|FullyQualifiedName~UpdateHardeningTests|FullyQualifiedName~SingleInstanceLockTests|FullyQualifiedName~FlyoutAutoHideTests|FullyQualifiedName~LocalizationCoverageTests"
+        run: dotnet test native/tests/BluetoothBatteryMonitor.Tests/BluetoothBatteryMonitor.Tests.csproj -c Release --filter "FullyQualifiedName~HidFreshnessTests|FullyQualifiedName~BluetoothBatteryEngine_HasAllProvidersRegistered|FullyQualifiedName~MultiRingTests|FullyQualifiedName~PeripheralAppearanceTests|FullyQualifiedName~ToastNotificationServiceTests|FullyQualifiedName~UpdateInstallerTests|FullyQualifiedName~UpdateAssetSelectionTests|FullyQualifiedName~UpdatePendingUpdateTests|FullyQualifiedName~UpdateHardeningTests|FullyQualifiedName~LocalRestApiTests|FullyQualifiedName~SingleInstanceLockTests|FullyQualifiedName~FlyoutAutoHideTests|FullyQualifiedName~LocalizationCoverageTests"
       - name: Publish and verify popup dependencies
         run: |
           dotnet publish native/src/BluetoothBatteryMonitor.App/BluetoothBatteryMonitor.App.csproj -c Release -r win-x64 --self-contained true -o dist/ci-native

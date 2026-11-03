@@ -38,11 +38,13 @@ public class UpdateHardeningTests
     }
 
     [Fact]
-    public void ReadRegistryInstallDir_DoesNotThrowWhenTheKeyIsAbsent()
+    public void ReadRegistryInstallDir_ReturnsNullOrAnExistingDirectory()
     {
-        // The value only exists after installing with the v0.3.13+ Setup; absent is fine.
-        var value = UpdateInstaller.ReadRegistryInstallDir();
-        Assert.True(value == null || Directory.Exists(value) || !Directory.Exists(value));
+        // The value only exists after installing with the v0.3.13+ Setup; on a clean machine
+        // this is null, and when present it must point at a real directory.
+        string? value = UpdateInstaller.ReadRegistryInstallDir();
+        Assert.True(value == null || Directory.Exists(value),
+            $"registry InstallDir must be null or an existing directory, got '{value}'");
     }
 
     // ---------------------------------------------------------------- log rotation
