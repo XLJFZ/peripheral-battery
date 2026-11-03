@@ -107,7 +107,7 @@
 
         <!-- Bottom Action Buttons -->
         <Grid Grid.Row="2" Margin="0,16,0,0">
-            <Button Content="GitHub 仓库"
+            <Button Content="{DynamicResource Settings_RepoButton}"
                     ToolTip="https://github.com/XLJFZ/peripheral-battery"
                     HorizontalAlignment="Center" Click="OpenRepository" Padding="14,6" />
             <Button Content="{DynamicResource Update_CheckNow}"

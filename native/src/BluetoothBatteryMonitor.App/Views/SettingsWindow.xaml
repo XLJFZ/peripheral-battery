@@ -46,37 +46,37 @@
                         Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                         BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1">
                     <StackPanel>
-                        <TextBlock Text="托盘图标与颜色" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                        <TextBlock Text="预览为示例电量；保存后立即更新托盘。" FontSize="12" Margin="0,4,0,12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Text="{DynamicResource Settings_TraySection}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                        <TextBlock Text="{DynamicResource Settings_TraySectionDesc}" FontSize="12" Margin="0,4,0,12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,12">
                             <StackPanel Margin="18,0"><Image x:Name="PreviewHigh" Width="32" Height="32"/><TextBlock Text="80%" HorizontalAlignment="Center" Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/></StackPanel>
                             <StackPanel Margin="18,0"><Image x:Name="PreviewMid" Width="32" Height="32"/><TextBlock Text="30%" HorizontalAlignment="Center" Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/></StackPanel>
                             <StackPanel Margin="18,0"><Image x:Name="PreviewLow" Width="32" Height="32"/><TextBlock Text="9%" HorizontalAlignment="Center" Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/></StackPanel>
                         </StackPanel>
-                        <CheckBox Content="按电量自动变色" IsChecked="{Binding TrayAutoColor}" Margin="0,0,0,6"/>
-                        <TextBlock Text="高于 30% 绿色 · 10%～30% 黄色 · 低于 10% 红色" FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,12"/>
+                        <CheckBox Content="{DynamicResource Settings_TrayAutoColor}" IsChecked="{Binding TrayAutoColor}" Margin="0,0,0,6"/>
+                        <TextBlock Text="{DynamicResource Settings_TrayColorLegend}" FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,12"/>
                         <Grid>
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="24"/><ColumnDefinition Width="100"/></Grid.ColumnDefinitions>
                             <Grid.RowDefinitions><RowDefinition Height="38"/><RowDefinition Height="38"/><RowDefinition Height="38"/><RowDefinition Height="38"/></Grid.RowDefinitions>
-                            <TextBlock Grid.Row="0" Text="充足电量" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                            <TextBlock Grid.Row="0" Text="{DynamicResource Settings_TrayHigh}" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                             <Border Grid.Row="0" Grid.Column="1" Background="{Binding TrayHighColor}" Tag="TrayHighColor" Cursor="Hand" MouseLeftButtonUp="ChooseTrayColor" Width="16" Height="16" CornerRadius="4"/>
                             <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding TrayHighColor,UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Row="1" Text="偏低电量" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                            <TextBlock Grid.Row="1" Text="{DynamicResource Settings_TrayMid}" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                             <Border Grid.Row="1" Grid.Column="1" Background="{Binding TrayMidColor}" Tag="TrayMidColor" Cursor="Hand" MouseLeftButtonUp="ChooseTrayColor" Width="16" Height="16" CornerRadius="4"/>
                             <TextBox Grid.Row="1" Grid.Column="2" Text="{Binding TrayMidColor,UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Row="2" Text="极低电量" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                            <TextBlock Grid.Row="2" Text="{DynamicResource Settings_TrayLow}" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                             <Border Grid.Row="2" Grid.Column="1" Background="{Binding TrayLowColor}" Tag="TrayLowColor" Cursor="Hand" MouseLeftButtonUp="ChooseTrayColor" Width="16" Height="16" CornerRadius="4"/>
                             <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding TrayLowColor,UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Row="3" Text="固定颜色（自动变色关闭时）" FontSize="11" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                            <TextBlock Grid.Row="3" Text="{DynamicResource Settings_TrayFixed}" FontSize="11" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                             <Border Grid.Row="3" Grid.Column="1" Background="{Binding TrayFixedColor}" Tag="TrayFixedColor" Cursor="Hand" MouseLeftButtonUp="ChooseTrayColor" Width="16" Height="16" CornerRadius="4"/>
                             <TextBox Grid.Row="3" Grid.Column="2" Text="{Binding TrayFixedColor,UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
                         </Grid>
-                        <TextBlock Text="颜色支持任意 #RRGGBB 色值。" FontSize="11" Margin="0,8,0,8" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Text="{DynamicResource Settings_TrayColorHint}" FontSize="11" Margin="0,8,0,8" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                         <Grid Margin="0,4,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="135"/></Grid.ColumnDefinitions>
-                            <TextBlock Text="显示方式" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                            <ComboBox Grid.Column="1" ItemsSource="{x:Static vm:SettingsViewModel.AvailableTrayStyles}" SelectedItem="{Binding TrayIconStyle}"/>
+                            <TextBlock Text="{DynamicResource Settings_TrayStyle}" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                            <ComboBox Grid.Column="1" ItemsSource="{x:Static vm:SettingsViewModel.AvailableTrayStyleOptions}" SelectedValuePath="Value" DisplayMemberPath="Display" SelectedValue="{Binding TrayIconStyle, Mode=TwoWay}"/>
                         </Grid>
-                        <TextBlock Text="圆环粗细" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                        <TextBlock Text="{DynamicResource Settings_TrayRingWidth}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                         <Slider Minimum="7" Maximum="13" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding TrayRingWidth}" Margin="0,8,0,0"/>
                     </StackPanel>
                 </Border>
@@ -153,11 +153,11 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="界面外观"
+                            <TextBlock Text="{DynamicResource Settings_Appearance}"
                                        FontSize="14"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                            <TextBlock Text="普通版（默认）· 液态玻璃跟随系统深色设置"
+                            <TextBlock Text="{DynamicResource Settings_AppearanceDesc}"
                                        FontSize="12"
                                        TextWrapping="Wrap"
                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
@@ -183,11 +183,11 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="面板大小"
+                            <TextBlock Text="{DynamicResource Settings_PanelSize}"
                                        FontSize="14"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                            <TextBlock Text="紧凑 / 标准 / 宽松，保存后立即生效"
+                            <TextBlock Text="{DynamicResource Settings_PanelSizeDesc}"
                                        FontSize="12"
                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                         </StackPanel>
@@ -508,8 +508,8 @@
         <Border Grid.Row="2"
                 Margin="0,16,0,0">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Content="GitHub 仓库" ToolTip="https://github.com/XLJFZ/peripheral-battery" Click="OpenRepository" Margin="0,0,12,0" Padding="16,8" />
-            <Button Content="游戏回报率调度" Click="OpenGamePolling" Margin="0,0,12,0" Padding="16,8" />
+            <Button Content="{DynamicResource Settings_RepoButton}" ToolTip="https://github.com/XLJFZ/peripheral-battery" Click="OpenRepository" Margin="0,0,12,0" Padding="16,8" />
+            <Button Content="{DynamicResource GamePolling_Title}" Click="OpenGamePolling" Margin="0,0,12,0" Padding="16,8" />
             <Button Content="{DynamicResource Settings_SaveAndClose}"
                     HorizontalAlignment="Right"
                     Click="OnSaveAndCloseClick"
