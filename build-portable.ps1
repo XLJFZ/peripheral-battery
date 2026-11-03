@@ -1,7 +1,7 @@
 # Build the portable single-file release: one EXE, no installer, no runtime prerequisite.
 $ErrorActionPreference = 'Stop'
 Set-Location -LiteralPath $PSScriptRoot
-$version = '0.3.5'
+$version = '0.3.6'
 $out = "dist/portable-$version"
 if (Test-Path -LiteralPath $out) { Remove-Item -LiteralPath $out -Recurse -Force }
 dotnet publish native/src/BluetoothBatteryMonitor.App/BluetoothBatteryMonitor.App.csproj `

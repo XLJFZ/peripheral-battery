@@ -1,11 +1,12 @@
 # Peripheral Battery · 外设电量
 
-当前 Windows 版本 **v0.3.5**，提供“普通版”（默认）和“液态玻璃”两种外观，液态玻璃跟随 Windows 深色/浅色设置。两种交付形式：
+当前 Windows 版本 **v0.3.6**，提供“普通版”（默认）和“液态玻璃”两种外观，液态玻璃跟随 Windows 深色/浅色设置。三种交付形式：
 
-- **单文件便携版**：只下载一个 `Peripheral-Battery-0.3.5-x64.exe`，双击即用，无需安装运行时、无需解压。不含 Python HID 后端，其他品牌 HID 一列会提示后端缺失。
+- **安装版**：`Peripheral-Battery-Setup-0.3.6.exe`，向导安装到 `%LOCALAPPDATA%\Programs\PeripheralBattery`，带开始菜单 / 桌面快捷方式与卸载项，普通用户权限即可。
+- **单文件便携版**：只下载一个 `Peripheral-Battery-0.3.6-x64.exe`，双击即用，无需安装运行时、无需解压。不含 Python HID 后端，其他品牌 HID 一列会提示后端缺失。
 - **目录版 ZIP**：解压后双击 `启动托盘版.cmd`，保留全部 DLL 与 `backend` 文件夹，功能完整。
 
-面板大小可在设置里选择紧凑 / 标准 / 宽松。详情见 [发布说明](notes/v0.3.5.md)。
+面板大小可在设置里选择紧凑 / 标准 / 宽松。详情见 [发布说明](notes/v0.3.6.md)。
 
 - [下载 Windows 版本](https://github.com/XLJFZ/peripheral-battery/releases/latest)
 - [在线网页面板](https://xljfz.github.io/peripheral-battery/)
@@ -24,7 +25,7 @@
 
 ## 开发
 
-Windows 构建需要 .NET 8 SDK 和 Python 3.13。`build-native.ps1` 构建目录版（原生托盘 + Python 打包后端），`build-portable.ps1` 构建单文件便携 EXE，并用 `tools/check_portable_exe.py`（空目录冒烟）与 `tools/check_flyout_layout.py`（面板高度贴合内容）验证。`build.ps1` 可单独构建 Python 后端和本地网页连接器。
+Windows 构建需要 .NET 8 SDK 和 Python 3.13。`build-native.ps1` 构建目录版（原生托盘 + Python 打包后端），`build-installer.ps1` 构建安装包（先出单文件便携版，再用 Inno Setup 6 打包）。`build-portable.ps1` 构建单文件便携 EXE，并用 `tools/check_portable_exe.py`（空目录冒烟）与 `tools/check_flyout_layout.py`（面板高度贴合内容）验证。`build.ps1` 可单独构建 Python 后端和本地网页连接器。
 
 ```powershell
 python -m venv .venv
