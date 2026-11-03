@@ -11,7 +11,7 @@
 <section class="intro"><div><div class="eyebrow">YOUR DEVICES, AT A GLANCE</div><h1>电量，一目了然。</h1><p>在一个地方查看鼠标、键盘及支持设备的剩余电量。</p></div><div class="actions"><button id="connect">连接设备</button><button class="secondary" id="refresh">刷新电量 ↻</button></div></section>
 <div id="message" role="status" aria-live="polite">正在检查连接方式…</div>
 <p class="tools"><a href="https://github.com/XLJFZ/peripheral-battery/releases/latest">Windows 下载 ↗</a><a href="https://github.com/XLJFZ/peripheral-battery" style="color:#9caea1">查看源码</a><button id="export" class="secondary" disabled>保存本次读取记录</button></p>
-<p class="downloads"><b>安装版</b>（推荐）：向导安装，带开始菜单、桌面快捷方式与卸载项，普通用户权限即可。<b>便携版</b>：单个 EXE，双击即用，无需安装运行时。<b>目录版</b>（含 Python HID 后端）不随发布提供，需在源码中运行 <code>build-native.ps1</code> 自行构建。</p>
+<p class="downloads"><b>安装版</b>（推荐，可在应用内升级）：向导安装，带开始菜单、桌面快捷方式与卸载项，普通用户权限即可；之后在「设置 → 高级 → 软件更新」里点「下载并安装」即可升级（下载后会比对 SHA-256 校验值）。<b>便携版</b>：单个 EXE，双击即用，无需安装运行时，升级需手动覆盖文件。<b>目录版</b>（含 Python HID 后端）不随发布提供，需在源码中运行 <code>build-native.ps1</code> 自行构建。</p>
 <div class="summary"><div><strong id="count">0</strong>有效电量</div><div><strong id="unknown">0</strong>未读到电量</div><div><strong id="low">0</strong>低于或等于 20%</div><div id="updated" aria-live="off">尚未读取</div></div>
 <section class="grid" id="devices"></section>
 <details class="tips"><summary>为什么可能与官方软件显示不同？</summary><p>本地连接器优先读取正在运行的雷云日志：按设备序列号精确匹配，记录不超过 120 秒且状态有效时直接使用雷云百分比。日志过期、状态不可用或无法匹配时回退到 HID 直读，原始值按 0–255 换算并四舍五入显示。纯网页模式仍使用 WebHID。官方软件的刷新时间和处理方式可能不同；这不是已经查明的误差原因。可在设备卡片中查看采样时间和原始读数，再保存记录核对。这里不会用固定偏移值强行对齐官方百分比。</p><p>每分钟自动读取，手动刷新会向新版本地连接器请求重新采样。读取失败或超过 90 秒未更新时会清除百分比。Mac 菜单栏版目前另有源码预览包，尚未经过 Mac 实测。</p></details>

@@ -60,6 +60,10 @@ public static class UpdateInstaller
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "PeripheralBattery", "updates");
 
+    public static string InstallLogPath => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "PeripheralBattery", "install.log");
+
     public static string LogPath => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "PeripheralBattery", "update.log");
@@ -85,9 +89,9 @@ public static class UpdateInstaller
             http.DefaultRequestHeaders.Add("User-Agent", "PeripheralBattery-Updater");
 
             // Reuse a previously downloaded file only when its hash still matches.
-            string? expectedHash = await TryGetExpectedHashAsync(http, update, fileName, ct).ConfigureAwait(false);
+            var (expectedHash, checksumError) = await FetchExpectedHashAsync(http, update, fileName, ct).ConfigureAwait(false);
             if (expectedHash == null)
-                return Fail("noChecksum");
+                return Fail(checksumError ?? "noChecksum");
 
             if (File.Exists(target) && string.Equals(await HashAsync(target, ct).ConfigureAwait(false), expectedHash, StringComparison.OrdinalIgnoreCase))
             {
@@ -95,9 +99,17 @@ public static class UpdateInstaller
             }
             else
             {
-                Log($"downloading {update.DownloadUrl} -> {target}");
-                var download = await DownloadAsync(http, update.DownloadUrl!, target, progress, ct).ConfigureAwait(false);
-                if (!download.Success) return download;
+                // A 75 MB download over a flaky link should not cost the user the whole update,
+                // so a failed attempt gets one clean retry from zero.
+                for (int attempt = 1; ; attempt++)
+                {
+                    Log($"downloading {update.DownloadUrl} -> {target} (attempt {attempt})");
+                    var download = await DownloadAsync(http, update.DownloadUrl!, target, progress, ct).ConfigureAwait(false);
+                    if (download.Success) break;
+                    if (attempt >= DownloadAttempts || download.ErrorCode == "cancelled") return download;
+                    Log($"attempt {attempt} failed: {download.ErrorCode}; retrying");
+                    await Task.Delay(TimeSpan.FromSeconds(3 * attempt), ct).ConfigureAwait(false);
+                }
             }
 
             progress?.Report(new UpdateProgress(UpdateStage.Verifying, 100));
@@ -140,7 +152,8 @@ public static class UpdateInstaller
         string tasks = settings.LaunchAtStartup ? "/TASKS=autostart" : "/TASKS=\"\"";
         // FORCECLOSEAPPLICATIONS makes Setup end this process itself; the AppMutex check
         // would otherwise stop a silent upgrade because we are still running.
-        return $"/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS /FORCECLOSEAPPLICATIONS {tasks}".Trim();
+        // /LOG keeps a record of the silent run next to update.log for support.
+        return $"/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS /FORCECLOSEAPPLICATIONS {tasks} /LOG=\"{InstallLogPath}\"".Trim();
     }
 
     private static async Task<UpdateInstallResult> DownloadAsync(
@@ -181,23 +194,37 @@ public static class UpdateInstaller
         return new UpdateInstallResult(true, InstallerPath: target);
     }
 
-    private static async Task<string?> TryGetExpectedHashAsync(
+    private const int DownloadAttempts = 2;
+    private const int ChecksumAttempts = 3;
+
+    /// <summary>Fetches the published checksum, retrying transient network failures.</summary>
+    private static async Task<(string? Hash, string? ErrorCode)> FetchExpectedHashAsync(
         HttpClient http, UpdateCheckResult update, string fileName, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(update.ChecksumUrl) || !IsAllowed(update.ChecksumUrl))
-            return null;
+            return (null, "noChecksum");
 
-        try
+        for (int attempt = 1; attempt <= ChecksumAttempts; attempt++)
         {
-            string text = await http.GetStringAsync(update.ChecksumUrl!, ct).ConfigureAwait(false);
-            return ParseChecksum(text, fileName);
-        }
-        catch (Exception ex)
-        {
-            Log("checksum fetch failed: " + ex.Message);
+            try
+            {
+                string text = await http.GetStringAsync(update.ChecksumUrl!, ct).ConfigureAwait(false);
+                string? hash = ParseChecksum(text, fileName);
+                return hash == null ? (null, "noChecksum") : (hash, null);
+            }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Log($"checksum fetch attempt {attempt} failed: {ex.Message}");
+                if (attempt == ChecksumAttempts) return (null, "checksumFetch");
+                await Task.Delay(TimeSpan.FromSeconds(attempt), ct).ConfigureAwait(false);
+            }
         }
 
-        return null;
+        return (null, "checksumFetch");
     }
 
     /// <summary>
