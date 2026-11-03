@@ -1,13 +1,13 @@
 # Peripheral Battery · 外设电量
 
-当前 Windows 版本 **v0.3.13**，提供“普通版”（默认）和“液态玻璃”两种外观，液态玻璃跟随 Windows 深色/浅色设置。
+当前 Windows 版本 **v0.3.14**，提供“普通版”（默认）和“液态玻璃”两种外观，液态玻璃跟随 Windows 深色/浅色设置。
 
 **两种安装方式**（都在 [Releases](https://github.com/XLJFZ/peripheral-battery/releases/latest) 里）：
 
 | 方式 | 文件 | 特点 |
 | --- | --- | --- |
-| 安装版（推荐） | `Peripheral-Battery-Setup-0.3.13.exe` | 向导安装到 `%LOCALAPPDATA%\Programs\PeripheralBattery`；开始菜单 / 桌面快捷方式；可在设置→应用中卸载；普通用户权限即可 |
-| 便携版 | `Peripheral-Battery-0.3.13-x64.exe` | 单个 EXE，双击即用，不需要安装运行时、不需要解压；删文件即卸载 |
+| 安装版（推荐） | `Peripheral-Battery-Setup-0.3.14.exe` | 向导安装到 `%LOCALAPPDATA%\Programs\PeripheralBattery`；开始菜单 / 桌面快捷方式；可在设置→应用中卸载；普通用户权限即可 |
+| 便携版 | `Peripheral-Battery-0.3.14-x64.exe` | 单个 EXE，双击即用，不需要安装运行时、不需要解压；删文件即卸载 |
 
 两种方式共用同一份程序与设置（`%APPDATA%\PeripheralBatteryNative`），可以互相切换。
 
@@ -15,7 +15,7 @@
 
 **第三种：目录版（不随 Release 提供）**。执行 `build-native.ps1` 自行构建，解压后双击 `启动托盘版.cmd`。它额外包含 Python HID 后端，其他品牌 HID 的覆盖更全；体积约 236 MB，因此不作为默认发布物。
 
-面板大小可在设置里选择紧凑 / 标准 / 宽松；浮窗无操作自动收起的时长（默认 5 秒，可选不自动隐藏～60 秒）在 设置 → 行为 里调节。设置页分「外观 / 行为 / 通知 / 高级」四组可折叠。界面支持简体中文 / 繁體中文 / English / Türkçe / Français / Deutsch / Español / Italiano 八种语言。详情见 [发布说明](notes/v0.3.13.md)。
+面板大小可在设置里选择紧凑 / 标准 / 宽松；浮窗无操作自动收起的时长（默认 5 秒，可选不自动隐藏～60 秒）在 设置 → 行为 里调节。设置页分「外观 / 行为 / 通知 / 高级」四组可折叠。界面支持简体中文 / 繁體中文 / English / Türkçe / Français / Deutsch / Español / Italiano 八种语言。详情见 [发布说明](notes/v0.3.14.md)。
 
 - [下载 Windows 版本](https://github.com/XLJFZ/peripheral-battery/releases/latest)
 - [在线网页面板](https://xljfz.github.io/peripheral-battery/)

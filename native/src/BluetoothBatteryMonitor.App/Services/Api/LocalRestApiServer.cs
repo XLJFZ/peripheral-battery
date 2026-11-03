@@ -36,6 +36,17 @@ public class LocalRestApiServer : IDisposable
     public static bool IsValidPort(int port) => port >= MinPort && port <= MaxPort;
     public static int ClampPort(int port) => IsValidPort(port) ? port : DefaultPort;
 
+    /// <summary>
+    /// True when the query string asks for connected devices only. Parsed as exact
+    /// key=value pairs — a raw Contains("connected=true") would also match
+    /// "?lastconnected=true" and silently filter the list.
+    /// </summary>
+    internal static bool ShouldFilterConnected(string? query)
+        => (query ?? string.Empty)
+            .TrimStart('?')
+            .Split('&', StringSplitOptions.RemoveEmptyEntries)
+            .Any(pair => string.Equals(pair, "connected=true", StringComparison.OrdinalIgnoreCase));
+
     public LocalRestApiServer(
         Func<IReadOnlyList<BluetoothDeviceModel>> getDevices,
         IAudioEndpointManager? audioManager = null,
@@ -143,11 +154,10 @@ public class LocalRestApiServer : IDisposable
             var req = context.Request;
             var res = context.Response;
 
-            // CORS headers
-            res.Headers.Add("Access-Control-Allow-Origin", "*");
-            res.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS");
-            res.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
-
+            // No CORS headers on purpose: this API is for local tools (curl, scripts). A wildcard
+            // would let any website open in any browser read the user's device list — names,
+            // ids and battery — via a drive-by fetch to 127.0.0.1. Same-origin pages have none,
+            // and non-browser clients ignore CORS entirely.
             if (req.HttpMethod.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase))
             {
                 res.StatusCode = (int)HttpStatusCode.NoContent;
@@ -179,7 +189,8 @@ public class LocalRestApiServer : IDisposable
                 {
                     status = "ok",
                     service = "BluetoothBatteryMonitor",
-                    version = "1.0.0",
+                    // Was hardcoded "1.0.0" and always lied about the running version.
+                    version = Update.UpdateCheckService.GetCurrentVersion(),
                     timestamp = DateTime.UtcNow.ToString("o")
                 }, token);
             }
@@ -205,8 +216,9 @@ public class LocalRestApiServer : IDisposable
     {
         var devices = _getDevices() ?? Array.Empty<BluetoothDeviceModel>();
 
-        string query = req.Url?.Query ?? string.Empty;
-        if (query.Contains("connected=true", StringComparison.OrdinalIgnoreCase))
+        // Exact key=value match on parsed pairs. A raw Contains() also matched values like
+        // "?lastconnected=true" and silently filtered the list.
+        if (ShouldFilterConnected(req.Url?.Query))
         {
             devices = devices.Where(d => d.IsConnected).ToList();
         }
