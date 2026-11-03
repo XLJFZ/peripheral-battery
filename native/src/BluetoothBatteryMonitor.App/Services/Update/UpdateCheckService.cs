@@ -23,15 +23,56 @@ public record UpdateCheckResult(
 public class UpdateCheckService
 {
     private const string GitHubApiLatestReleaseUrl = "https://api.github.com/repos/XLJFZ/peripheral-battery/releases/latest";
+
+    /// <summary>
+    /// Shared client for update checks: one handler instead of a new HttpClient per service
+    /// instance (settings page, about window and self-test each create one), which avoids
+    /// socket churn and reuses pooled connections. Tests can still inject their own client.
+    /// </summary>
+    private static readonly HttpClient SharedHttpClient = CreateSharedClient();
+
+    private static HttpClient CreateSharedClient()
+    {
+        var client = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+        client.DefaultRequestHeaders.Add("User-Agent", "BluetoothBatteryMonitor-DesktopApp");
+        return client;
+    }
+
     private readonly HttpClient _httpClient;
+    private readonly bool _cacheable;
+
+    /// <summary>
+    /// Unauthenticated GitHub API allows only 60 requests/hour per IP, and service instances
+    /// come and go with windows, so the throttle state must be process-wide.
+    /// </summary>
+    private static readonly TimeSpan ResultCacheTtl = TimeSpan.FromSeconds(60);
+    private static UpdateCheckResult? _cachedResult;
+    private static DateTimeOffset _cachedAtUtc = DateTimeOffset.MinValue;
+    private static readonly object CacheGate = new();
 
     public UpdateCheckService(HttpClient? httpClient = null)
     {
-        _httpClient = httpClient ?? new HttpClient();
+        _cacheable = httpClient == null;
+        _httpClient = httpClient ?? SharedHttpClient;
         if (!_httpClient.DefaultRequestHeaders.Contains("User-Agent"))
         {
             _httpClient.DefaultRequestHeaders.Add("User-Agent", "BluetoothBatteryMonitor-DesktopApp");
         }
+    }
+
+    /// <summary>Short-window cache so repeated clicks on "check for updates" do not burn the API quota.</summary>
+    public static bool HasFreshCache(DateTimeOffset? nowUtc = null)
+    {
+        lock (CacheGate)
+        {
+            return _cachedResult != null &&
+                   (nowUtc ?? DateTimeOffset.UtcNow) - _cachedAtUtc < ResultCacheTtl;
+        }
+    }
+
+    internal static void ResetCacheForTests()
+    {
+        lock (CacheGate) { _cachedResult = null; _cachedAtUtc = DateTimeOffset.MinValue; }
     }
 
     public static string GetCurrentVersion()
@@ -100,6 +141,11 @@ public class UpdateCheckService
     {
         string currentVerStr = GetCurrentVersion();
 
+        if (_cacheable && HasFreshCache())
+        {
+            lock (CacheGate) { return _cachedResult!; }
+        }
+
         try
         {
             using var req = new HttpRequestMessage(HttpMethod.Get, GitHubApiLatestReleaseUrl);
@@ -107,31 +153,45 @@ public class UpdateCheckService
 
             if (!res.IsSuccessStatusCode)
             {
-                return new UpdateCheckResult(
-                    HasUpdate: false,
-                    CurrentVersion: currentVerStr,
-                    LatestVersion: currentVerStr,
-                    ReleaseNotes: null,
-                    ReleaseUrl: null,
-                    DownloadUrl: null,
-                    ErrorMessage: $"GitHub API returned {res.StatusCode}");
+                return FailResult(currentVerStr, DescribeApiError((int)res.StatusCode));
             }
 
             var json = await res.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
-            return ParseReleaseJson(json, currentVerStr);
+            var result = ParseReleaseJson(json, currentVerStr);
+            if (_cacheable && string.IsNullOrEmpty(result.ErrorMessage))
+            {
+                lock (CacheGate)
+                {
+                    _cachedResult = result;
+                    _cachedAtUtc = DateTimeOffset.UtcNow;
+                }
+            }
+            return result;
         }
         catch (Exception ex)
         {
-            return new UpdateCheckResult(
-                HasUpdate: false,
-                CurrentVersion: currentVerStr,
-                LatestVersion: currentVerStr,
-                ReleaseNotes: null,
-                ReleaseUrl: null,
-                DownloadUrl: null,
-                ErrorMessage: ex.Message);
+            return FailResult(currentVerStr, ex.Message);
         }
     }
+
+    private static UpdateCheckResult FailResult(string currentVersion, string error)
+        => new(
+            HasUpdate: false,
+            CurrentVersion: currentVersion,
+            LatestVersion: currentVersion,
+            ReleaseNotes: null,
+            ReleaseUrl: null,
+            DownloadUrl: null,
+            ErrorMessage: error);
+
+    /// <summary>
+    /// For api.github.com without authentication, HTTP 403/429 means the per-IP quota is
+    /// exhausted; the user needs to know that repeating the check cannot help right now.
+    /// </summary>
+    internal static string DescribeApiError(int statusCode)
+        => statusCode is 403 or 429
+            ? $"GitHub API rate limit hit (HTTP {statusCode}); try again later"
+            : $"GitHub API returned HTTP {statusCode}";
 
     public static UpdateCheckResult ParseReleaseJson(string json, string currentVersionStr)
     {

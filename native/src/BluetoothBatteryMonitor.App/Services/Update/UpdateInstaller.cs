@@ -37,9 +37,59 @@ public static class UpdateInstaller
         "github-releases.githubusercontent.com"
     };
 
-    private static string ProgramDir => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "Programs", "PeripheralBattery");
+    /// <summary>
+    /// One client for the whole update chain (checksum fetch + installer download). A new,
+    /// disposed HttpClient per update used to churn sockets and re-handshake TLS against the
+    /// same release host for no benefit.
+    /// </summary>
+    private static readonly HttpClient DownloadHttp = new() { Timeout = TimeSpan.FromMinutes(10) };
+
+    static UpdateInstaller()
+    {
+        DownloadHttp.DefaultRequestHeaders.Add("User-Agent", "PeripheralBattery-Updater");
+    }
+
+    /// <summary>
+    /// The installer-managed program directory. The Setup writes its actual target into
+    /// HKCU\Software\PeripheralBattery\InstallDir (see installer/PeripheralBattery.iss), so a
+    /// "per-machine" install chosen in the dialog (Program Files) is recognized too. Copies
+    /// installed before v0.3.13 have no registry value and fall back to the historical
+    /// per-user location.
+    /// </summary>
+    internal static string ProgramDir => ResolveInstallDirectory(
+        ReadRegistryInstallDir(),
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "Programs", "PeripheralBattery"));
+
+    internal static string? ReadRegistryInstallDir()
+    {
+        try
+        {
+            using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\PeripheralBattery");
+            return key?.GetValue("InstallDir") as string;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    internal static string ResolveInstallDirectory(string? registryDir, string fallbackDir)
+    {
+        if (!string.IsNullOrWhiteSpace(registryDir))
+        {
+            try
+            {
+                string full = Path.GetFullPath(registryDir).TrimEnd(Path.DirectorySeparatorChar);
+                if (Directory.Exists(full)) return full;
+            }
+            catch
+            {
+                // Malformed registry value; use the fallback below.
+            }
+        }
+        return fallbackDir;
+    }
 
     /// <summary>True when this process runs from the installer-managed folder.</summary>
     public static bool IsInstalledCopy()
@@ -88,8 +138,7 @@ public static class UpdateInstaller
             Directory.CreateDirectory(UpdateFolder);
             string target = Path.Combine(UpdateFolder, fileName);
 
-            using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(10) };
-            http.DefaultRequestHeaders.Add("User-Agent", "PeripheralBattery-Updater");
+            var http = DownloadHttp;
 
             // Reuse a previously downloaded file only when its hash still matches.
             var (expectedHash, checksumError) = await FetchExpectedHashAsync(http, update, fileName, ct).ConfigureAwait(false);
@@ -131,6 +180,10 @@ public static class UpdateInstaller
             // Written before launching: if Setup never finishes, the next start of the old
             // version sees this marker and can tell the user the upgrade did not land.
             UpdatePendingUpdate.Record(UpdateCheckService.GetCurrentVersion(), update.LatestVersion, target);
+
+            // Setup's /LOG appends; rotate first so a silent upgrade never inherits an
+            // unbounded log from previous installs.
+            RotateLogIfNeeded(InstallLogPath);
 
             var startInfo = new ProcessStartInfo(target)
             {
@@ -374,11 +427,31 @@ public static class UpdateInstaller
         return new UpdateInstallResult(false, code);
     }
 
+    /// <summary>Keeps update.log from growing without bound: past 1 MiB it becomes .old (one generation kept).</summary>
+    internal const long MaxLogBytes = 1024 * 1024;
+
+    internal static void RotateLogIfNeeded(string path, long maxBytes = MaxLogBytes)
+    {
+        try
+        {
+            var info = new FileInfo(path);
+            if (!info.Exists || info.Length <= maxBytes) return;
+            string old = path + ".old";
+            if (File.Exists(old)) File.Delete(old);
+            File.Move(path, old);
+        }
+        catch
+        {
+            // Rotation must never break logging.
+        }
+    }
+
     internal static void Log(string message)
     {
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(LogPath)!);
+            RotateLogIfNeeded(LogPath);
             File.AppendAllText(LogPath, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} {message}{Environment.NewLine}");
         }
         catch { }

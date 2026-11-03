@@ -26,7 +26,7 @@ jobs:
       - run: node test_webhid.cjs
       - run: node test_web_state.cjs
       - name: Tray regression checks
-        run: dotnet test native/tests/BluetoothBatteryMonitor.Tests/BluetoothBatteryMonitor.Tests.csproj -c Release --filter "FullyQualifiedName~HidFreshnessTests|FullyQualifiedName~BluetoothBatteryEngine_HasAllProvidersRegistered|FullyQualifiedName~MultiRingTests|FullyQualifiedName~PeripheralAppearanceTests|FullyQualifiedName~ToastNotificationServiceTests|FullyQualifiedName~UpdateInstallerTests|FullyQualifiedName~UpdateAssetSelectionTests|FullyQualifiedName~UpdatePendingUpdateTests|FullyQualifiedName~SingleInstanceLockTests|FullyQualifiedName~FlyoutAutoHideTests|FullyQualifiedName~LocalizationCoverageTests"
+        run: dotnet test native/tests/BluetoothBatteryMonitor.Tests/BluetoothBatteryMonitor.Tests.csproj -c Release --filter "FullyQualifiedName~HidFreshnessTests|FullyQualifiedName~BluetoothBatteryEngine_HasAllProvidersRegistered|FullyQualifiedName~MultiRingTests|FullyQualifiedName~PeripheralAppearanceTests|FullyQualifiedName~ToastNotificationServiceTests|FullyQualifiedName~UpdateInstallerTests|FullyQualifiedName~UpdateAssetSelectionTests|FullyQualifiedName~UpdatePendingUpdateTests|FullyQualifiedName~UpdateHardeningTests|FullyQualifiedName~SingleInstanceLockTests|FullyQualifiedName~FlyoutAutoHideTests|FullyQualifiedName~LocalizationCoverageTests"
       - name: Publish and verify popup dependencies
         run: |
           dotnet publish native/src/BluetoothBatteryMonitor.App/BluetoothBatteryMonitor.App.csproj -c Release -r win-x64 --self-contained true -o dist/ci-native
@@ -34,6 +34,8 @@ jobs:
           python tools/check_native_package.py dist/ci-native --report dist/ui-smoke.json
       - name: Verify flyout content height
         run: python tools/check_flyout_layout.py --exe dist/ci-native/BluetoothBatteryMonitor.App.exe --report dist/flyout-layout.json
+      - name: Verify settings footer width in all languages
+        run: python tools/check_settings_footer.py --exe dist/ci-native/BluetoothBatteryMonitor.App.exe --report dist/settings-footer.json
       - name: Build installer
         run: |
           $v = (Select-String -Path installer\PeripheralBattery.iss -Pattern '#define AppVersion "([\d.]+)"').Matches.Groups[1].Value

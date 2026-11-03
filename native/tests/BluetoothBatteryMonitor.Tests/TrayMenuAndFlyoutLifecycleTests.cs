@@ -11,6 +11,7 @@ using H.NotifyIcon.Core;
 using Xunit;
 
 using AppTrayIconManager = MonitorApp::BluetoothBatteryMonitor.App.Services.Tray.TrayIconManager;
+using AppLocalization = MonitorApp::BluetoothBatteryMonitor.App.Services.Localization.LocalizationService;
 using AppFlyoutWindow = MonitorApp::BluetoothBatteryMonitor.App.Views.FlyoutWindow;
 using AppMainViewModel = MonitorApp::BluetoothBatteryMonitor.App.ViewModels.MainViewModel;
 using AppBluetoothEngine = MonitorApp::BluetoothBatteryMonitor.App.Services.Bluetooth.BluetoothBatteryEngine;
@@ -20,6 +21,10 @@ namespace BluetoothBatteryMonitor.Tests;
 
 public class TrayMenuAndFlyoutLifecycleTests
 {
+    // Menu item captions are asserted in English; LocalizationService is process-wide
+    // static state, so pin the language instead of depending on test order.
+    static TrayMenuAndFlyoutLifecycleTests() => AppLocalization.ApplyLanguage("en");
+
     private static void RunInSta(Action action)
     {
         Exception? ex = null;

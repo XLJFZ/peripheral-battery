@@ -3,7 +3,7 @@
 ; 说明：per-user 安装（%LOCALAPPDATA%\Programs），不需要管理员权限
 
 #define AppName "外设电量"
-#define AppVersion "0.3.12"
+#define AppVersion "0.3.13"
 #define AppPublisher "XLJFZ"
 #define AppUrl "https://github.com/XLJFZ/peripheral-battery"
 #define AppExe "外设电量.exe"
@@ -57,6 +57,11 @@ Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopicon
 
 [Registry]
+; The app reads this to locate its own install dir for in-app updates (works for the
+; per-machine "Program Files" choice too, not just the default per-user path).
+Root: HKCU; Subkey: "Software\PeripheralBattery"; ValueType: string; \
+    ValueName: "InstallDir"; ValueData: "{app}"; \
+    Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; \
     ValueName: "PeripheralBatteryNative"; ValueData: """{app}\{#AppExe}"" --minimized"; \
     Flags: uninsdeletevalue; Tasks: autostart

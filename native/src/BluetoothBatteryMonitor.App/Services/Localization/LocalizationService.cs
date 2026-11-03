@@ -759,7 +759,7 @@ public static class LocalizationService
         de["Theme_Glass"] = "Liquid Glass";
         de["Settings_ThresholdDefault"] = "Standard (global)";
         de["Settings_Seconds"] = "{0} Sekunden";
-        de["GamePolling_Title"] = "Game-Polling-Rate";
+        de["GamePolling_Title"] = "Polling-Rate";
         de["GamePolling_Note"] = "Verifiziert: DeathAdder V3 Pro · 00B7-Empfänger. Dieser Empfänger unterstützt 125-1000 Hz; 8000 Hz benötigt einen separat verifizierten Empfänger mit hoher Rate.";
         de["GamePolling_Enable"] = "Polling-Rate wechseln, wenn ein Spiel im Vollbild läuft";
         de["GamePolling_DesktopRate"] = "Desktop-Rate (Hz)";
@@ -810,8 +810,8 @@ public static class LocalizationService
         de["Settings_ThemeDesc"] = "Anwendungsdesign wählen";
         de["Settings_Language"] = "Sprache";
         de["Settings_LanguageDesc"] = "Anwendungssprache wählen";
-        de["Settings_SaveAndClose"] = "Speichern & schließen";
-        de["Settings_DiscardAndClose"] = "Schließen ohne Speichern";
+        de["Settings_SaveAndClose"] = "Speichern";
+        de["Settings_DiscardAndClose"] = "Verwerfen";
         de["About_Title"] = "Über - Bluetooth-Batterie";
         de["About_AppName"] = "Bluetooth Battery Monitor";
         de["About_Version"] = "Version 1.0.0 (x64)";

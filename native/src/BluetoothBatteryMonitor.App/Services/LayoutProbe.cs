@@ -52,6 +52,52 @@ public static class LayoutProbe
         await File.WriteAllTextAsync(path, JsonSerializer.Serialize(new { success = true, cases = report }, new JsonSerializerOptions { WriteIndented = true, NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals }));
     }
 
+    /// <summary>
+    /// Measures the settings footer buttons in every interface language. The footer is a
+    /// fixed-width window with four right-aligned buttons whose labels differ per language;
+    /// German historically overflowed until the strings were shortened by hand. This records
+    /// the desired width per language so the CI check can catch the next overflow.
+    /// </summary>
+    public static async Task RunSettingsFooter(string path)
+    {
+        string[] codes = { "zh", "zht", "en", "tr", "fr", "de", "es", "it" };
+        var report = new List<object>();
+
+        var window = new Views.SettingsWindow
+        {
+            WindowStartupLocation = WindowStartupLocation.Manual,
+            Left = -10000,
+            Top = -10000,
+            ShowInTaskbar = false,
+            ShowActivated = false
+        };
+        try
+        {
+            window.Show();
+            await Pump();
+            var footer = window.FindName("FooterButtons") as StackPanel
+                ?? throw new InvalidOperationException("FooterButtons not found in SettingsWindow");
+
+            foreach (string code in codes)
+            {
+                Localization.LocalizationService.ApplyLanguage(code);
+                await Pump();
+                footer.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+                var content = window.Content as FrameworkElement;
+                report.Add(new
+                {
+                    language = code,
+                    footerDesiredWidth = Math.Round(footer.DesiredSize.Width, 1),
+                    contentActualWidth = Math.Round(content?.ActualWidth ?? 0, 1),
+                    windowActualWidth = Math.Round(window.ActualWidth, 1)
+                });
+            }
+
+            await File.WriteAllTextAsync(path, JsonSerializer.Serialize(new { success = true, languages = report }, new JsonSerializerOptions { WriteIndented = true }));
+        }
+        finally { window.Close(); }
+    }
+
     private static DeviceItemViewModel Row(string id)
         => new(new BluetoothDeviceModel { Id = id, Name = "布局探针设备", Type = DeviceType.Mouse, BatteryLevel = 76, IsConnected = true });
 
