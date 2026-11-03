@@ -157,8 +157,9 @@
                                        FontSize="14"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                            <TextBlock Text="液态玻璃 / 普通版"
+                            <TextBlock Text="普通版（默认）· 液态玻璃跟随系统深色设置"
                                        FontSize="12"
+                                       TextWrapping="Wrap"
                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                         </StackPanel>
                         <ComboBox x:Name="AppearanceModeSelector" Grid.Column="1"

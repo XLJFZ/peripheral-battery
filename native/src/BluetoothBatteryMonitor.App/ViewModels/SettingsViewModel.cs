@@ -83,7 +83,7 @@ public partial class SettingsViewModel : ObservableObject
         _lowBatteryThreshold = _settings.LowBatteryThreshold;
         _criticalBatteryThreshold = _settings.CriticalBatteryThreshold;
         _refreshIntervalSeconds = _settings.RefreshIntervalSeconds;
-        _selectedTheme = _settings.Theme.StartsWith("液态玻璃",StringComparison.Ordinal)?"液态玻璃":"普通版";
+        _selectedTheme = ThemeManager.Normalize(_settings.Theme);
         _selectedLanguage = _settings.Language;
         _autoSwitchAudioEndpoint = _settings.AutoSwitchAudioEndpoint;
         _enableRestApi = _settings.EnableRestApi;
@@ -257,7 +257,7 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private string _selectedTheme;
 
-    public IReadOnlyList<string> AvailableThemes { get; } = new[] { "液态玻璃", "普通版" };
+    public IReadOnlyList<string> AvailableThemes { get; } = new[] { ThemeManager.AppearanceNormal, ThemeManager.AppearanceGlass };
 
     [ObservableProperty]
     private string _selectedLanguage;

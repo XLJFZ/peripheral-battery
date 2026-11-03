@@ -6,6 +6,18 @@ namespace BluetoothBatteryMonitor.App.Services.System;
 
 public static class ThemeManager
 {
+    public const string AppearanceGlass = "液态玻璃";
+    public const string AppearanceNormal = "普通版";
+
+    /// <summary>
+    /// Collapses legacy values (System / Dark / Light / 液态玻璃（低透明）) into the two
+    /// supported appearance modes. Anything unknown falls back to the default 普通版.
+    /// </summary>
+    public static string Normalize(string? theme)
+        => !string.IsNullOrWhiteSpace(theme) && theme.StartsWith(AppearanceGlass, StringComparison.Ordinal)
+            ? AppearanceGlass
+            : AppearanceNormal;
+
     private const string RegistryKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
     private const string RegistryValueName = "AppsUseLightTheme";
 
@@ -55,18 +67,16 @@ public static class ThemeManager
         return true; // Default to Dark Theme
     }
 
-    public static void ApplyTheme(string themePreference)
+    public static void ApplyTheme(string themePreference) => ApplyTheme(themePreference, null);
+
+    /// <param name="forcedDark">Preview/testing override; production callers pass null.</param>
+    public static void ApplyTheme(string themePreference, bool? forcedDark)
     {
         if(global::System.Windows.Application.Current is { } app && !app.Dispatcher.CheckAccess())
-        {app.Dispatcher.Invoke(()=>ApplyTheme(themePreference));return;}
-        bool isDark = themePreference switch
-        {
-            "Light" => false,
-            "Dark" => true,
-            "液态玻璃" or "液态玻璃（低透明）" => false,
-            "普通版" => true,
-            _ => IsWindowsDarkTheme()
-        };
+        {app.Dispatcher.Invoke(()=>ApplyTheme(themePreference,forcedDark));return;}
+        // 普通版 keeps its dark desktop UI; 液态玻璃 follows the Windows app theme so a
+        // dark desktop no longer produces a light panel.
+        bool isDark = forcedDark ?? (Normalize(themePreference) == AppearanceGlass ? IsWindowsDarkTheme() : true);
 
         try
         {

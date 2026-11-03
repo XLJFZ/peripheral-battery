@@ -54,7 +54,7 @@ public static class NativeRazerBattery
     public static async Task<List<BluetoothDeviceModel>> ReadAsync(CancellationToken ct)
     {
         var result=new List<BluetoothDeviceModel>();
-        using var catalog=JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory,"razer_devices.json"),ct));
+        using var catalog=JsonDocument.Parse(await RazerCatalog.ReadAllTextAsync(ct));
         var entries=catalog.RootElement.EnumerateArray().ToDictionary(e=>e.GetProperty("pid").GetInt32(),e=>e.Clone());
         var devices=await DeviceInformation.FindAllAsync(Selector).AsTask(ct);
         foreach(var d in devices)

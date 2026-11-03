@@ -14,7 +14,12 @@ public static class UiPackageSmoke
     public static async Task RunAsync(string reportPath)
     {
         var accessibility = Assembly.Load("Accessibility, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
-        if (!File.Exists(accessibility.Location))
+        // Single-file publish keeps assemblies inside the bundle, so Location is empty there.
+#pragma warning disable IL3000
+        string location = accessibility.Location;
+#pragma warning restore IL3000
+        bool onDisk = !string.IsNullOrEmpty(location);
+        if (onDisk && !File.Exists(location))
             throw new FileNotFoundException("Accessibility must be present in the published folder.");
         var button = new Button { Content = "Package popup check" };
         var window = new Window { Width=180, Height=90, Left=-10000, Top=-10000,
@@ -44,7 +49,8 @@ public static class UiPackageSmoke
             polling.Close();
             if(!menuOpened || !tooltipOpened)throw new InvalidOperationException("Published popup smoke check failed.");
             await File.WriteAllTextAsync(reportPath,JsonSerializer.Serialize(new {
-                success=true,menuOpened,tooltipOpened,pollingOpened,accessibilityAssembly=accessibility.Location
+                success=true,menuOpened,tooltipOpened,pollingOpened,singleFile=!onDisk,
+                accessibilityAssembly=onDisk?location:"(bundled)"
             }));
         }
         finally { tooltip.IsOpen=false;menu.IsOpen=false;window.Close(); }

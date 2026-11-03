@@ -30,6 +30,9 @@ public class AppSettings
     public bool EnableRestApi { get; set; } = false;
     public int RestApiPort { get; set; } = 23253;
     public string Theme { get; set; } = "普通版";
+    /// <summary>Appearance schema marker. Files written before v0.3.3 have no value (0).</summary>
+    public int ThemeVersion { get; set; }
+    public const int CurrentThemeVersion = 1;
     public string Language { get; set; } = "zh"; // "en", "tr"
 
     public Dictionary<string, int> DeviceSpecificThresholds { get; set; } = new(StringComparer.OrdinalIgnoreCase);
@@ -143,6 +146,7 @@ public class AppSettings
                     {
                         settings.DeviceNames = new Dictionary<string, string>(settings.DeviceNames, StringComparer.OrdinalIgnoreCase);
                     }
+                    settings.MigrateAppearance();
                     return settings;
                 }
             }
@@ -157,8 +161,26 @@ public class AppSettings
 
     public static event EventHandler<AppSettings>? SettingsChanged;
 
+    /// <summary>
+    /// Normalises the appearance value and once-per-profile returns profiles written by
+    /// v0.3.0/v0.3.1 (System / Dark / Light / 液态玻璃) to the 普通版 default. Only an
+    /// explicit choice saved from v0.3.3 onwards keeps 液态玻璃.
+    /// </summary>
+    public static string MigrateTheme(string? theme, int themeVersion)
+        => themeVersion < CurrentThemeVersion
+            ? Services.System.ThemeManager.AppearanceNormal
+            : Services.System.ThemeManager.Normalize(theme);
+
+    private void MigrateAppearance()
+    {
+        Theme = MigrateTheme(Theme, ThemeVersion);
+        ThemeVersion = CurrentThemeVersion;
+    }
+
     public void Save()
     {
+        Theme = Services.System.ThemeManager.Normalize(Theme);
+        ThemeVersion = CurrentThemeVersion;
         try
         {
             if (!Directory.Exists(SettingsFolder))
