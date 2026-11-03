@@ -56,6 +56,41 @@ public class UpdateAssetSelectionTests
     }
 
     [Fact]
+    public void PrefersTheCombinedChecksumOverPerFileOnes()
+    {
+        // Real v0.3.9 layout. The portable build's own .sha256 comes first and does not list the
+        // Setup, so picking it made every update abort with a misleading "no checksum published".
+        var (_, checksum) = Select("""
+        {
+          "assets": [
+            { "name": "Peripheral-Battery-0.3.9-x64.exe",       "browser_download_url": "https://github.com/x/portable.exe" },
+            { "name": "Peripheral-Battery-0.3.9-x64.sha256",    "browser_download_url": "https://github.com/x/portable.sha256" },
+            { "name": "Peripheral-Battery-Setup-0.3.9.exe",     "browser_download_url": "https://github.com/x/setup.exe" },
+            { "name": "Peripheral-Battery-Setup-0.3.9.sha256",  "browser_download_url": "https://github.com/x/setup.sha256" },
+            { "name": "sha256.txt",                              "browser_download_url": "https://github.com/x/sha256.txt" }
+          ]
+        }
+        """);
+        Assert.Equal("https://github.com/x/sha256.txt", checksum);
+    }
+
+    [Fact]
+    public void UsesTheSetupChecksumWhenThereIsNoCombinedFile()
+    {
+        var (_, checksum) = Select("""
+        {
+          "assets": [
+            { "name": "Peripheral-Battery-0.3.9-x64.exe",      "browser_download_url": "https://github.com/x/portable.exe" },
+            { "name": "Peripheral-Battery-0.3.9-x64.sha256",   "browser_download_url": "https://github.com/x/portable.sha256" },
+            { "name": "Peripheral-Battery-Setup-0.3.9.exe",    "browser_download_url": "https://github.com/x/setup.exe" },
+            { "name": "Peripheral-Battery-Setup-0.3.9.sha256", "browser_download_url": "https://github.com/x/setup.sha256" }
+          ]
+        }
+        """);
+        Assert.Equal("https://github.com/x/setup.sha256", checksum);
+    }
+
+    [Fact]
     public void DoesNotTreatAPortableExeAsAnInstaller()
     {
         // A portable build ignores /VERYSILENT and loses the single-instance race, so handing it
