@@ -12,17 +12,15 @@ namespace BluetoothBatteryMonitor.App.Views;
 public partial class FlyoutWindow : FluentWindow
 {
     private Point _dragStart;
-    private void GlassCardEnter(object sender,System.Windows.Input.MouseEventArgs e)=>AnimateGlassCard(sender,1.012);
-    private void GlassCardLeave(object sender,System.Windows.Input.MouseEventArgs e)=>AnimateGlassCard(sender,1);
-    private static void AnimateGlassCard(object sender,double target)
+    private void GlassCardEnter(object sender,System.Windows.Input.MouseEventArgs e)=>AnimateGlassCard(sender,true);
+    private void GlassCardLeave(object sender,System.Windows.Input.MouseEventArgs e)=>AnimateGlassCard(sender,false);
+    private static void AnimateGlassCard(object sender,bool hover)
     {
         if(sender is not System.Windows.Controls.Border card)return;
         card.RenderTransform=System.Windows.Media.Transform.Identity;
-        if(!GlassAppearance.Enabled || SystemParameters.HighContrast || target==1)
-        {
-            card.SetResourceReference(System.Windows.Controls.Border.BackgroundProperty,"PeripheralCardBrush");return;
-        }
-        card.Background=new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(95,255,255,255));
+        // Hover tint comes from the active palette, so dark glass stays dark on hover.
+        card.SetResourceReference(System.Windows.Controls.Border.BackgroundProperty,
+            hover && GlassAppearance.Enabled && !SystemParameters.HighContrast ? "PeripheralCardHoverBrush" : "PeripheralCardBrush");
     }    private void DeviceDragStart(object sender, System.Windows.Input.MouseButtonEventArgs e) => _dragStart=e.GetPosition(this);
     private void DeviceDragMove(object sender, System.Windows.Input.MouseEventArgs e)
     {

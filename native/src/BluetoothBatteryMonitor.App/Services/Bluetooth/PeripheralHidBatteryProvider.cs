@@ -9,7 +9,7 @@ namespace BluetoothBatteryMonitor.App.Services.Bluetooth;
 public sealed class PeripheralHidBatteryProvider : IBluetoothBatteryProvider
 {
     public string Name => "Peripheral HID";
-    public bool IsSupported => File.Exists(Path.Combine(AppContext.BaseDirectory,"razer_devices.json"));
+    public bool IsSupported => RazerCatalog.Exists;
     public event EventHandler<BluetoothDeviceModel>? DeviceUpdated { add { } remove { } }
     private static string BackendPath => Path.Combine(AppContext.BaseDirectory,"backend","UniversalBatteryTray.exe");
     private Dictionary<string,BluetoothDeviceModel> previous = new();

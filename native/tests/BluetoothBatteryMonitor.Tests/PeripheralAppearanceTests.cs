@@ -31,6 +31,27 @@ public class PeripheralAppearanceTests
         Assert.Equal(System.Drawing.ColorTranslator.FromHtml("#AABBCC").ToArgb(),Appearance.GetColor(2,s).ToArgb());
     }
     [Fact] public void InvalidColorFallsBack()=>Assert.Equal("#00C98D",Appearance.ValidColor("bad","#00C98D"));
+    [Theory]
+    [InlineData("System",0,"普通版")]
+    [InlineData("Dark",0,"普通版")]
+    [InlineData("Light",0,"普通版")]
+    [InlineData("",0,"普通版")]
+    [InlineData(null,0,"普通版")]
+    [InlineData("液态玻璃",0,"普通版")]
+    [InlineData("液态玻璃（低透明）",0,"普通版")]
+    [InlineData("液态玻璃",1,"液态玻璃")]
+    [InlineData("液态玻璃（低透明）",1,"液态玻璃")]
+    [InlineData("普通版",1,"普通版")]
+    [InlineData("未知值",1,"普通版")]
+    public void AppearanceDefaultsToNormalAndKeepsExplicitChoice(string? theme,int version,string expected)
+        => Assert.Equal(expected,Settings.MigrateTheme(theme,version));
+
+    [Fact] public void FreshProfileUsesNormalAppearance()
+    {
+        var settings=new Settings();
+        Assert.Equal("普通版",settings.Theme);
+        Assert.Equal("普通版",Settings.MigrateTheme(settings.Theme,settings.ThemeVersion));
+    }
     [Theory][InlineData("圆环")][InlineData("数字")][InlineData("圆环 + 数字")]
     public void IconRendersAtTaskbarSize(string style)
     {
