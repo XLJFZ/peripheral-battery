@@ -32,6 +32,11 @@ public class AppSettings
     public string Theme { get; set; } = "普通版";
     /// <summary>Panel size profile: 紧凑 / 标准 / 宽松.</summary>
     public string FlyoutDensity { get; set; } = "标准";
+    /// <summary>
+    /// Seconds of no input before the open flyout hides itself. 0 keeps it open until the user
+    /// clicks elsewhere or presses Escape.
+    /// </summary>
+    public int FlyoutAutoHideSeconds { get; set; } = 5;
     /// <summary>Appearance schema marker. Files written before v0.3.3 have no value (0).</summary>
     public int ThemeVersion { get; set; }
     public const int CurrentThemeVersion = 1;
@@ -177,8 +182,13 @@ public class AppSettings
     {
         Theme = MigrateTheme(Theme, ThemeVersion);
         FlyoutDensity = Services.System.FlyoutDensity.Normalize(FlyoutDensity);
+        FlyoutAutoHideSeconds = NormalizeAutoHide(FlyoutAutoHideSeconds);
         ThemeVersion = CurrentThemeVersion;
     }
+
+    /// <summary>Unknown or out-of-range values fall back to 5 s; only known steps survive.</summary>
+    public static int NormalizeAutoHide(int seconds)
+        => seconds is 0 or 3 or 5 or 10 or 15 or 30 or 60 ? seconds : 5;
 
     public void Save()
     {

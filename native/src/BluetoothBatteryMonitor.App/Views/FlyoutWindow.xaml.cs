@@ -59,6 +59,8 @@ public partial class FlyoutWindow : FluentWindow
     public bool DisableAutoClose { get; set; }
     private readonly System.Windows.Threading.DispatcherTimer _idleTimer = new() { Interval = TimeSpan.FromMilliseconds(250) };
     private DateTime _lastInteraction = DateTime.UtcNow;
+    /// <summary>Inactivity budget for the open flyout, re-read every time it is shown. 0 disables auto-hide.</summary>
+    private int _autoHideSeconds = Models.AppSettings.NormalizeAutoHide(Models.AppSettings.Load().FlyoutAutoHideSeconds);
     private void ResetIdle(object? sender = null, EventArgs? e = null) => _lastInteraction = DateTime.UtcNow;
 
     public FlyoutWindow(MainViewModel viewModel)
@@ -71,7 +73,8 @@ public partial class FlyoutWindow : FluentWindow
         PreviewKeyDown += (s,e) => ResetIdle();
         _idleTimer.Tick += (s,e) =>
         {
-            if (IsVisible && !DisableAutoClose && !_isChildContextMenuOpen && DateTime.UtcNow - _lastInteraction >= TimeSpan.FromSeconds(10))
+            if (IsVisible && !DisableAutoClose && !_isChildContextMenuOpen && _autoHideSeconds > 0 &&
+                DateTime.UtcNow - _lastInteraction >= TimeSpan.FromSeconds(_autoHideSeconds))
                 HideFlyout();
         };
         _idleTimer.Start();
@@ -237,6 +240,8 @@ public partial class FlyoutWindow : FluentWindow
 
     public void ShowFlyout()
     {
+        // Re-read on every open so a change in Settings applies without a restart.
+        _autoHideSeconds = Models.AppSettings.NormalizeAutoHide(Models.AppSettings.Load().FlyoutAutoHideSeconds);
         ResetIdle();
         if (IsVisible && Opacity > 0.95 && !_isOpening && !_isHiding)
         {
