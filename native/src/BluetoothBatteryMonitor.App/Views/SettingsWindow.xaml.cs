@@ -65,6 +65,12 @@ public partial class SettingsWindow : FluentWindow
         _viewModel.SaveCommand.Execute(null);
         Close();
     }
+    private void OnDiscardAndCloseClick(object sender, RoutedEventArgs e)
+    {
+        // Explicit "close without saving": the ✕ button already behaves this way, but an
+        // unmissable button beats hoping users guess that closing discards their edits.
+        Close();
+    }
     private void OpenGamePolling(object sender,RoutedEventArgs e)=>new GamePollingWindow{Owner=this}.ShowDialog();
     private void OpenRepository(object sender,RoutedEventArgs e)=>Services.RepositoryLink.Open();
 }
