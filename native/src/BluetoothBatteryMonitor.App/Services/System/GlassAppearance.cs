@@ -67,7 +67,14 @@ public static class GlassAppearance
             resources["PeripheralPanelRadius"]=new CornerRadius(PanelRadius);
             resources["PeripheralCardRadius"]=new CornerRadius(CardRadius);
         }
-        foreach(Window window in Application.Current.Windows)ApplyWindow(window);
+        foreach(Window window in Application.Current.Windows)
+        {
+            // Defer out of the current message frame: Apply() can run while the Dispatcher is
+            // inside a render pass (SystemEvents can be raised from one), and changing the
+            // WPF-UI backdrop property then throws (Freezable context) — crash fixed in v0.3.18.
+            var target=window;
+            target.Dispatcher.BeginInvoke(new Action(()=>ApplyWindow(target)),global::System.Windows.Threading.DispatcherPriority.Background);
+        }
     }
     private static LinearGradientBrush Gradient(string start,string end)
     {
@@ -99,10 +106,20 @@ public static class GlassAppearance
     public static void ApplyWindow(Window window)
     {
         if(window is not FluentWindow fluent)return;
-        Wpf.Ui.Appearance.ApplicationThemeManager.Apply(fluent);
-        if(window is Views.SettingsWindow or Views.AboutWindow)
-            fluent.SetResourceReference(global::System.Windows.Controls.Control.BackgroundProperty,"ApplicationBackgroundBrush");
-        // Acrylic uses the Windows compositor; no continuous rendering loop.
-        fluent.WindowBackdropType=SystemParameters.HighContrast||!BackdropSupported()?WindowBackdropType.None:Enabled && !Reduced?WindowBackdropType.Acrylic:WindowBackdropType.Mica;
+        try
+        {
+            Wpf.Ui.Appearance.ApplicationThemeManager.Apply(fluent);
+            if(window is Views.SettingsWindow or Views.AboutWindow)
+                fluent.SetResourceReference(global::System.Windows.Controls.Control.BackgroundProperty,"ApplicationBackgroundBrush");
+            // Acrylic uses the Windows compositor; no continuous rendering loop.
+            fluent.WindowBackdropType=SystemParameters.HighContrast||!BackdropSupported()?WindowBackdropType.None:Enabled && !Reduced?WindowBackdropType.Acrylic:WindowBackdropType.Mica;
+        }
+        catch(Exception ex)
+        {
+            // The backdrop is cosmetic. Touching the WPF-UI backdrop dependency properties from
+            // inside a WPF render pass throws (Freezable context) and used to take the whole
+            // process down; degrade to the previous backdrop instead.
+            global::System.Diagnostics.Debug.WriteLine($"[GlassAppearance] ApplyWindow failed: {ex}");
+        }
     }
 }

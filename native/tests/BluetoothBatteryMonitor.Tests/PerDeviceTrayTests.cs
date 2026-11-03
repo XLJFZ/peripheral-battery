@@ -1,5 +1,6 @@
 extern alias MonitorApp;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Xunit;
@@ -101,5 +102,73 @@ public class PerDeviceTrayTests : IDisposable
         var settings = new AppSettingsModel();
         Assert.False(settings.TrayPerDeviceIcons);   // opt-in: default keeps the single aggregate icon
         Assert.True(settings.TrayChargingPulse);
+    }
+
+    // ------------------------------------------------- aggregate icon breathing (v0.3.18)
+
+    [Fact]
+    public void AggregateRing_ChargingBreathesBetweenPulseExtremes()
+    {
+        var settings = new AppSettingsModel();
+        var devices = new List<(int Level, bool Charging)> { (80, false), (60, true), (40, false) };
+
+        using var faint = TrayIconGenerator.RenderMultiple(devices, dark: true, settings, pulseTick: 0);
+        using var bright = TrayIconGenerator.RenderMultiple(devices, dark: true, settings, pulseTick: TrayIconGenerator.PulseSteps / 2);
+
+        // Sample the top of the charging ring (device #2, second ring slot).
+        double SampleAlpha(System.Drawing.Bitmap bmp)
+        {
+            double sum = 0;
+            for (int x = 30; x <= 34; x++) sum += bmp.GetPixel(x, 14).A;
+            return sum / 5;
+        }
+        double SampleGreen(System.Drawing.Bitmap bmp)
+        {
+            double sum = 0;
+            for (int x = 30; x <= 34; x++) sum += bmp.GetPixel(x, 14).G;
+            return sum / 5;
+        }
+
+        Assert.True(SampleGreen(bright) > SampleGreen(faint) + 10,
+            $"breathing green should rise at mid-cycle: {SampleGreen(faint):F0} -> {SampleGreen(bright):F0}");
+        Assert.True(SampleAlpha(bright) >= SampleAlpha(faint),
+            $"breathing alpha should not fall at mid-cycle: {SampleAlpha(faint):F0} -> {SampleAlpha(bright):F0}");
+    }
+
+    [Fact]
+    public void AggregateRing_NonChargingRingIsUnaffectedByPulse()
+    {
+        var settings = new AppSettingsModel();
+        var devices = new List<(int Level, bool Charging)> { (80, false), (60, true) };
+
+        // Device #1 (first slot, not charging) must render identically at both extremes.
+        var faint = TrayIconGenerator.RenderMultiple(devices, dark: true, settings, pulseTick: 0);
+        var bright = TrayIconGenerator.RenderMultiple(devices, dark: true, settings, pulseTick: TrayIconGenerator.PulseSteps / 2);
+        using (faint) using (bright)
+        {
+            // First ring slot centre: inset = 2 + width/2 (width 10 for count==2) -> ring box
+            // (7,7,50,50); sample just outside the second ring's reach on the left edge of ring 1.
+            for (int y = 8; y <= 50; y += 6)
+            {
+                Assert.Equal(faint.GetPixel(9, y).A, bright.GetPixel(9, y).A);
+            }
+        }
+    }
+
+    [Fact]
+    public void AggregateRender_SmokeAllModes_WithPulse()
+    {
+        var settings = new AppSettingsModel();
+        // multi-ring (3 devices), dual-ring, single-device (routes to Render), digit style.
+        using (TrayIconGenerator.RenderMultiple(new[] { (80, false), (60, true), (30, false) }, true, settings, 4))
+        using (TrayIconGenerator.RenderMultiple(new[] { (80, false), (60, true) }, true, settings, 4))
+        using (TrayIconGenerator.RenderMultiple(new[] { (60, true) }, true, settings, 4))
+        {
+        }
+        var digit = new AppSettingsModel { TrayIconStyle = "数字" };
+        using (TrayIconGenerator.RenderMultiple(new[] { (80, false), (60, true) }, true, digit, 4))
+        using (TrayIconGenerator.RenderMultiple(new[] { (60, true) }, true, digit, 4))
+        {
+        }
     }
 }
