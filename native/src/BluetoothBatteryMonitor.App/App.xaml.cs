@@ -58,6 +58,19 @@ public partial class App : System.Windows.Application
             try{await Services.GamePollingService.VerifyAsync(e.Args[rateTest+1]);Shutdown(0);}
             catch(Exception ex){await global::System.IO.File.WriteAllTextAsync(e.Args[rateTest+1],ex.ToString());Shutdown(1);}return;
         }
+        int updateSelfTest = Array.IndexOf(e.Args, "--update-selftest");
+        if (updateSelfTest >= 0 && e.Args.Length > updateSelfTest + 1)
+        {
+            base.OnStartup(e); ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            try { await Services.Update.UpdateSelfTest.Run(e.Args[updateSelfTest + 1]); Shutdown(0); }
+            catch (Exception ex)
+            {
+                await global::System.IO.File.WriteAllTextAsync(e.Args[updateSelfTest + 1],
+                    global::System.Text.Json.JsonSerializer.Serialize(new { success = false, error = ex.ToString() }));
+                Shutdown(1);
+            }
+            return;
+        }
         int uiSmokeIndex=Array.IndexOf(e.Args,"--ui-smoke");
         if(uiSmokeIndex>=0 && e.Args.Length>uiSmokeIndex+1)
         {
