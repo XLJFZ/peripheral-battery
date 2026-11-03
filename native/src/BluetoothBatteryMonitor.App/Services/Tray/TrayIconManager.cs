@@ -18,6 +18,28 @@ namespace BluetoothBatteryMonitor.App.Services.Tray;
 
 public class TrayIconManager : IDisposable
 {
+    private const int MaxPerDeviceIcons = 4;
+    private const int PulseIntervalMs = 110;
+
+    private sealed class DeviceTrayIcon : IDisposable
+    {
+        public TaskbarIcon TrayIcon { get; }
+        public Icon? GdiIcon { get; set; }
+        public ContextMenu Menu { get; }
+
+        public DeviceTrayIcon(TaskbarIcon trayIcon, ContextMenu menu)
+        {
+            TrayIcon = trayIcon;
+            Menu = menu;
+        }
+
+        public void Dispose()
+        {
+            TrayIcon.Dispose();
+            GdiIcon?.Dispose();
+        }
+    }
+
     private readonly MainViewModel _mainViewModel;
     private readonly FlyoutWindow _flyoutWindow;
     private TaskbarIcon? _taskbarIcon;
@@ -26,6 +48,9 @@ public class TrayIconManager : IDisposable
     private DateTime _lastContextMenuClosedTime = DateTime.MinValue;
     private bool _flyoutWasOpenOnMouseDown;
     private IntPtr _contextMenuHwnd = IntPtr.Zero;
+    private readonly Dictionary<string, DeviceTrayIcon> _deviceIcons = new(StringComparer.OrdinalIgnoreCase);
+    private readonly global::System.Windows.Threading.DispatcherTimer? _pulseTimer;
+    private int _pulseTick;
 
     public TrayIconManager(MainViewModel mainViewModel, FlyoutWindow flyoutWindow)
     {
@@ -35,6 +60,16 @@ public class TrayIconManager : IDisposable
         _mainViewModel.BatteryStateChanged += OnBatteryStateChanged;
         ThemeManager.ThemeChanged += OnThemeChanged;
         LocalizationService.LanguageChanged += OnLanguageChanged;
+
+        _pulseTimer = new global::System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(PulseIntervalMs)
+        };
+        _pulseTimer.Tick += (_, _) =>
+        {
+            _pulseTick++;
+            UpdateTrayIcon();
+        };
     }
 
     private void OnLanguageChanged(object? sender, string lang)
@@ -46,6 +81,8 @@ public class TrayIconManager : IDisposable
             {
                 _taskbarIcon.ContextMenu = _contextMenu;
             }
+            // Per-device icons embed their own context menus; rebuild from scratch.
+            DisposeDeviceIcons();
             UpdateTrayIcon();
         });
     }
@@ -251,6 +288,98 @@ public class TrayIconManager : IDisposable
         {
             _taskbarIcon.ToolTipText = LocalizationService.GetString("Tray_TooltipNoDevices");
         }
+
+        UpdatePerDeviceIcons(settings, isDark);
+        UpdatePulseTimer(settings);
+    }
+
+    /// <summary>
+    /// Devices that get their own tray icon: connected with a battery reading, lowest battery
+    /// first, capped so the notification area cannot flood. Static + pure for unit tests.
+    /// </summary>
+    public static IReadOnlyList<DeviceItemViewModel> SelectPerDeviceIcons(IEnumerable<DeviceItemViewModel> devices, int max = MaxPerDeviceIcons)
+        => devices
+            .Where(d => d.IsConnected && d.HasBattery)
+            .OrderBy(d => d.BatteryProgress)
+            .ThenBy(d => d.Id, StringComparer.OrdinalIgnoreCase)
+            .Take(max)
+            .ToList();
+
+    private void UpdatePerDeviceIcons(AppSettings settings, bool isDark)
+    {
+        if (_taskbarIcon == null) return;
+
+        var desired = settings.TrayPerDeviceIcons
+            ? SelectPerDeviceIcons(_mainViewModel.Devices)
+            : (IReadOnlyList<DeviceItemViewModel>)Array.Empty<DeviceItemViewModel>();
+
+        // Remove icons for devices that vanished, disconnected or fell out of the top-N.
+        var desiredIds = desired.Select(d => d.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var stale in _deviceIcons.Where(kvp => !desiredIds.Contains(kvp.Key)).Select(kvp => kvp.Key).ToList())
+        {
+            if (_deviceIcons.Remove(stale, out var removed)) removed.Dispose();
+        }
+
+        int pulseTick = settings.TrayChargingPulse ? _pulseTick : -1;
+
+        foreach (var device in desired)
+        {
+            bool charging = device.IsCharging;
+            if (!_deviceIcons.TryGetValue(device.Id, out var entry))
+            {
+                var trayIcon = new TaskbarIcon
+                {
+                    ToolTipText = $"{ShortDeviceName(device.Name)} {device.BatteryText}",
+                    NoLeftClickDelay = true,
+                    MenuActivation = PopupActivationMode.RightClick,
+                    ContextMenu = CreateContextMenu()
+                };
+                trayIcon.TrayLeftMouseUp += (s, e) => _flyoutWindow.ShowFlyout();
+                trayIcon.TrayMouseDoubleClick += (s, e) => _flyoutWindow.ShowFlyout();
+                entry = new DeviceTrayIcon(trayIcon, (ContextMenu)trayIcon.ContextMenu);
+                _deviceIcons[device.Id] = entry;
+            }
+
+            var newIcon = TrayIconGenerator.GeneratePerDevice(device.BatteryProgress, charging, device.Model.Type, isDark, settings, charging ? pulseTick : -1);
+            entry.TrayIcon.Icon = newIcon;
+            entry.GdiIcon?.Dispose();
+            entry.GdiIcon = newIcon;
+            entry.TrayIcon.ToolTipText = $"{ShortDeviceName(device.Name)} {device.BatteryText}";
+
+            if (!entry.TrayIcon.IsCreated)
+            {
+                try { entry.TrayIcon.ForceCreate(); } catch { }
+            }
+        }
+    }
+
+    private void UpdatePulseTimer(AppSettings settings)
+    {
+        if (_pulseTimer == null) return;
+
+        bool anyCharging = settings.TrayChargingPulse &&
+            (settings.TrayPerDeviceIcons
+                ? SelectPerDeviceIcons(_mainViewModel.Devices).Any(d => d.IsCharging)
+                : _mainViewModel.IsLowestCharging);
+
+        if (anyCharging && !_pulseTimer.IsEnabled)
+        {
+            _pulseTick = 0;
+            _pulseTimer.Start();
+        }
+        else if (!anyCharging && _pulseTimer.IsEnabled)
+        {
+            _pulseTimer.Stop();
+            // Repaint once without the pulse so the ring does not freeze at a faded alpha.
+            _pulseTick = 0;
+            if (settings.TrayPerDeviceIcons) UpdatePerDeviceIcons(settings, ThemeManager.IsWindowsDarkTheme());
+        }
+    }
+
+    private void DisposeDeviceIcons()
+    {
+        foreach (var entry in _deviceIcons.Values) entry.Dispose();
+        _deviceIcons.Clear();
     }
 
     /// <summary>One short line per tray ring; extra connected devices collapse into one hint.</summary>
@@ -285,6 +414,12 @@ public class TrayIconManager : IDisposable
     {
         _mainViewModel.BatteryStateChanged -= OnBatteryStateChanged;
         ThemeManager.ThemeChanged -= OnThemeChanged;
+
+        if (_pulseTimer != null)
+        {
+            _pulseTimer.Stop();
+        }
+        DisposeDeviceIcons();
 
         _taskbarIcon?.Dispose();
         _currentIcon?.Dispose();

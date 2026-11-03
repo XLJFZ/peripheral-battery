@@ -177,6 +177,9 @@
                             </Grid>
                             <TextBlock Text="{DynamicResource Settings_TrayRingWidth}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                             <Slider Minimum="7" Maximum="13" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding TrayRingWidth}" Margin="0,8,0,0"/>
+                            <CheckBox Content="{DynamicResource Settings_TrayPerDevice}" IsChecked="{Binding TrayPerDeviceIcons}" Margin="0,10,0,4"/>
+                            <TextBlock Text="{DynamicResource Settings_TrayPerDeviceDesc}" FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                            <CheckBox Content="{DynamicResource Settings_TrayChargingPulse}" IsChecked="{Binding TrayChargingPulse}" Margin="0,8,0,0"/>
                         </StackPanel>
                     </Border>
                     </StackPanel>

@@ -38,6 +38,8 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private string _trayFixedColor = "#61B8FF";
     [ObservableProperty] private string _trayIconStyle = "圆环";
     [ObservableProperty] private double _trayRingWidth = 10;
+    [ObservableProperty] private bool _trayPerDeviceIcons;
+    [ObservableProperty] private bool _trayChargingPulse = true;
 
     private readonly IEnumerable<BluetoothDeviceModel>? _knownDevices;
 
@@ -78,6 +80,8 @@ public partial class SettingsViewModel : ObservableObject
         _trayMidColor=_settings.TrayMidColor; _trayLowColor=_settings.TrayLowColor;
         _trayFixedColor=_settings.TrayFixedColor; _trayIconStyle=_settings.TrayIconStyle;
         _trayRingWidth=_settings.TrayRingWidth;
+        _trayPerDeviceIcons=_settings.TrayPerDeviceIcons;
+        _trayChargingPulse=_settings.TrayChargingPulse;
         _knownDevices = knownDevices;
 
         _launchAtStartup = StartupManager.IsStartupEnabled();
@@ -458,6 +462,8 @@ public partial class SettingsViewModel : ObservableObject
         _settings.TrayFixedColor=Helpers.TrayAppearance.ValidColor(TrayFixedColor,"#61B8FF");
         _settings.TrayIconStyle=TrayIconStyle;
         _settings.TrayRingWidth=Math.Clamp(TrayRingWidth,7,13);
+        _settings.TrayPerDeviceIcons=TrayPerDeviceIcons;
+        _settings.TrayChargingPulse=TrayChargingPulse;
         var latest=AppSettings.Load();
         _settings.DeviceOrder=latest.DeviceOrder;
         _settings.EnableGamePolling=latest.EnableGamePolling;

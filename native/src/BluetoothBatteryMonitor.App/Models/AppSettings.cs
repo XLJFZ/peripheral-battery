@@ -20,6 +20,10 @@ public class AppSettings
     public string TrayFixedColor { get; set; } = "#61B8FF";
     public string TrayIconStyle { get; set; } = "圆环";
     public double TrayRingWidth { get; set; } = 10;
+    /// <summary>Show one tray icon per connected device (max 4) in addition to the aggregate icon.</summary>
+    public bool TrayPerDeviceIcons { get; set; }
+    /// <summary>Animate the battery ring with a breathing pulse while a device is charging.</summary>
+    public bool TrayChargingPulse { get; set; } = true;
     public bool LaunchAtStartup { get; set; } = false;
     public bool EnableNotifications { get; set; } = true;
     public int LowBatteryThreshold { get; set; } = 20;
