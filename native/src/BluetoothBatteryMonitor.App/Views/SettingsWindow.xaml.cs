@@ -21,7 +21,18 @@ public partial class SettingsWindow : FluentWindow
         catch { }
         _viewModel = new SettingsViewModel(knownDevices);
         DataContext = _viewModel;
-        _viewModel.PropertyChanged += (sender,args) => UpdateTrayPreview();
+        _viewModel.PropertyChanged += OnViewModelPropertyChanged;
+        UpdateTrayPreview();
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        // The update card lives in the collapsed "Advanced" group; open it when a new
+        // version shows up so the install button is not hidden from the user.
+        if (e.PropertyName == nameof(SettingsViewModel.HasUpdateAvailable) && _viewModel.HasUpdateAvailable)
+        {
+            GrpAdvancedToggle.IsChecked = true;
+        }
         UpdateTrayPreview();
     }
 

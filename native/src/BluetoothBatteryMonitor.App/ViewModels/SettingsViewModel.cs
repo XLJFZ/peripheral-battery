@@ -250,10 +250,24 @@ public partial class SettingsViewModel : ObservableObject
 
     public IReadOnlyList<string> AvailableThemes { get; } = new[] { ThemeManager.AppearanceNormal, ThemeManager.AppearanceGlass };
 
+    /// <summary>Same values as <see cref="AvailableThemes"/>, with localized display text.</summary>
+    public IReadOnlyList<TrayStyleOption> AvailableThemeOptions => new[]
+    {
+        new TrayStyleOption(ThemeManager.AppearanceNormal, LocalizationService.GetString("Theme_Normal")),
+        new TrayStyleOption(ThemeManager.AppearanceGlass, LocalizationService.GetString("Theme_Glass"))
+    };
+
     [ObservableProperty]
     private string _panelDensity;
 
     public IReadOnlyList<string> AvailableDensities => Services.System.FlyoutDensity.Options;
+
+    public IReadOnlyList<TrayStyleOption> AvailableDensityOptions => new[]
+    {
+        new TrayStyleOption(Services.System.FlyoutDensity.Compact, LocalizationService.GetString("Settings_PanelSizeCompact")),
+        new TrayStyleOption(Services.System.FlyoutDensity.Standard, LocalizationService.GetString("Settings_PanelSizeStandard")),
+        new TrayStyleOption(Services.System.FlyoutDensity.Spacious, LocalizationService.GetString("Settings_PanelSizeSpacious"))
+    };
 
     [ObservableProperty]
     private string _selectedLanguage;
@@ -364,6 +378,9 @@ public partial class SettingsViewModel : ObservableObject
 
     private readonly UpdateCheckService _updateService = new();
 
+    private UpdateCheckResult? _lastUpdate;
+    private CancellationTokenSource? _updateCts;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanCheckUpdates))]
     private bool _isCheckingUpdates;
@@ -371,7 +388,10 @@ public partial class SettingsViewModel : ObservableObject
     public bool CanCheckUpdates => !IsCheckingUpdates;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasUpdateStatusMessage))]
     private string? _updateStatusMessage;
+
+    public bool HasUpdateStatusMessage => !string.IsNullOrWhiteSpace(UpdateStatusMessage);
 
     [ObservableProperty]
     private bool _hasUpdateAvailable;
@@ -392,6 +412,7 @@ public partial class SettingsViewModel : ObservableObject
         try
         {
             var result = await _updateService.CheckForUpdatesAsync();
+            _lastUpdate = result;
             if (result.HasUpdate)
             {
                 HasUpdateAvailable = true;
@@ -418,6 +439,80 @@ public partial class SettingsViewModel : ObservableObject
         finally
         {
             IsCheckingUpdates = false;
+        }
+    }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanInstallUpdate))]
+    private bool _isInstallingUpdate;
+
+    [ObservableProperty]
+    private string? _updateProgressText;
+
+    [ObservableProperty]
+    private int _updateProgressPercent;
+
+    public bool CanInstallUpdate => !IsInstallingUpdate;
+
+    private static string StageText(UpdateProgress progress) => progress.Stage switch
+    {
+        UpdateStage.Downloading => LocalizationService.GetString("Update_Downloading", progress.Percent),
+        UpdateStage.Verifying => LocalizationService.GetString("Update_Verifying"),
+        UpdateStage.Launching => LocalizationService.GetString("Update_Launching"),
+        _ => string.Empty
+    };
+
+    private static string ErrorText(string? code) => LocalizationService.GetString(code switch
+    {
+        "blockedHost" => "Update_Err_BlockedHost",
+        "noInstaller" => "Update_Err_NoInstaller",
+        "noChecksum" => "Update_Err_NoChecksum",
+        "hashMismatch" => "Update_Err_HashMismatch",
+        "httpError" => "Update_Err_Http",
+        "cancelled" => "Update_Err_Cancelled",
+        _ => "Update_Err_Generic"
+    });
+
+    /// <summary>Downloads, verifies and launches the installer, then closes the app.</summary>
+    [RelayCommand]
+    public async Task InstallUpdateAsync()
+    {
+        if (IsInstallingUpdate || _lastUpdate == null || !_lastUpdate.HasUpdate) return;
+
+        if (!UpdateInstaller.IsInstalledCopy())
+        {
+            // Portable copy: there is no installer to run, so hand over to the browser.
+            UpdateProgressText = LocalizationService.GetString("Update_PortableHint");
+            OpenUpdateDownload();
+            return;
+        }
+
+        IsInstallingUpdate = true;
+        UpdateProgressPercent = 0;
+        UpdateProgressText = LocalizationService.GetString("Update_Preparing");
+        _updateCts?.Dispose();
+        _updateCts = new CancellationTokenSource();
+
+        try
+        {
+            var progress = new Progress<UpdateProgress>(p =>
+            {
+                UpdateProgressPercent = p.Percent;
+                UpdateProgressText = StageText(p);
+            });
+            var result = await UpdateInstaller.DownloadAndLaunchAsync(_lastUpdate, progress, _updateCts.Token);
+            if (result.Success)
+            {
+                UpdateProgressText = LocalizationService.GetString("Update_Installing");
+                await Task.Delay(1200);
+                System.Windows.Application.Current?.Shutdown();
+                return;
+            }
+            UpdateProgressText = ErrorText(result.ErrorCode);
+        }
+        finally
+        {
+            IsInstallingUpdate = false;
         }
     }
 

@@ -17,7 +17,8 @@ public record UpdateCheckResult(
     string? ReleaseNotes,
     string? ReleaseUrl,
     string? DownloadUrl,
-    string? ErrorMessage = null);
+    string? ErrorMessage = null,
+    string? ChecksumUrl = null);
 
 public class UpdateCheckService
 {
@@ -91,6 +92,7 @@ public class UpdateCheckService
             string body = root.TryGetProperty("body", out var bodyElem) ? (bodyElem.GetString() ?? "") : "";
 
             string? bestDownloadUrl = null;
+            string? checksumUrl = null;
             if (root.TryGetProperty("assets", out var assetsElem) && assetsElem.ValueKind == JsonValueKind.Array)
             {
                 // Prefer Setup installer first, fallback to standalone App.exe or zip archive
@@ -98,6 +100,13 @@ public class UpdateCheckService
                 {
                     string name = item.TryGetProperty("name", out var n) ? (n.GetString() ?? "") : "";
                     string dlUrl = item.TryGetProperty("browser_download_url", out var d) ? (d.GetString() ?? "") : "";
+
+                    if (checksumUrl == null &&
+                        (name.Equals("sha256.txt", StringComparison.OrdinalIgnoreCase) ||
+                         name.EndsWith(".sha256", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        checksumUrl = dlUrl;
+                    }
 
                     if (name.Contains("Setup", StringComparison.OrdinalIgnoreCase) && name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
                     {
@@ -123,7 +132,8 @@ public class UpdateCheckService
                 LatestVersion: string.IsNullOrEmpty(cleanTag) ? currentVersionStr : cleanTag,
                 ReleaseNotes: body,
                 ReleaseUrl: htmlUrl,
-                DownloadUrl: bestDownloadUrl ?? htmlUrl);
+                DownloadUrl: bestDownloadUrl ?? htmlUrl,
+                ChecksumUrl: checksumUrl);
         }
         catch (Exception ex)
         {

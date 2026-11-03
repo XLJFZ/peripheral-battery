@@ -1,7 +1,7 @@
 # Build the Windows installer: portable single file + Inno Setup wrapper.
 $ErrorActionPreference = 'Stop'
 Set-Location -LiteralPath $PSScriptRoot
-$version = '0.3.7'
+$version = '0.3.8'
 
 # 1) Portable base (also produces the sha256 used in the release folder)
 & ./build-portable.ps1
@@ -28,4 +28,16 @@ $setup = Join-Path $releaseDir "Peripheral-Battery-Setup-$version.exe"
 Copy-Item -LiteralPath $built -Destination $setup -Force
 $hash = (Get-FileHash -LiteralPath $setup -Algorithm SHA256).Hash.ToLower()
 Set-Content -LiteralPath (Join-Path $PSScriptRoot "releases\v$version\Peripheral-Battery-Setup-$version.sha256") -Value "$hash  Peripheral-Battery-Setup-$version.exe" -Encoding utf8
+
+# 4) Combined sha256.txt — the in-app updater fetches this asset and refuses to install
+#    anything whose hash is missing from it. Write without BOM: Setup is often line 1.
+$portable = Join-Path $releaseDir "Peripheral-Battery-$version-x64.exe"
+$portableHash = (Get-FileHash -LiteralPath $portable -Algorithm SHA256).Hash.ToLower()
+$lines = @(
+    "$portableHash *Peripheral-Battery-$version-x64.exe"
+    "$hash *Peripheral-Battery-Setup-$version.exe"
+)
+$checksum = Join-Path $releaseDir "sha256.txt"
+[System.IO.File]::WriteAllText($checksum, ($lines -join "`n") + "`n", (New-Object System.Text.UTF8Encoding($false)))
 Write-Host "Installer ready: $setup"
+Write-Host "Checksums ready: $checksum"

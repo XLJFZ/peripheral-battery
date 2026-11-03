@@ -211,7 +211,7 @@
                                                 <TextBlock Text="{Binding Name}" ToolTip="{Binding Name}"
                                                            FontSize="{DynamicResource FlyoutNameSize}"
                                                            FontWeight="SemiBold"
-                                                           TextTrimming="None" TextWrapping="Wrap"
+                                                           TextTrimming="{DynamicResource FlyoutNameTrimming}" TextWrapping="{DynamicResource FlyoutNameWrapping}"
                                                            Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                                            VerticalAlignment="Center" />
 

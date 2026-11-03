@@ -196,7 +196,7 @@ public static class ScreenshotCaptureService
         if (settingsWindow.DataContext is SettingsViewModel vm)
         {
             vm.SelectedLanguage = "en";
-            vm.SelectedTheme = "Dark";
+            vm.SelectedTheme = Services.System.ThemeManager.AppearanceNormal;
             vm.LaunchAtStartup = true;
             foreach (var dt in vm.DeviceThresholds)
             {

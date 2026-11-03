@@ -3,7 +3,7 @@
 ; 说明：per-user 安装（%LOCALAPPDATA%\Programs），不需要管理员权限
 
 #define AppName "外设电量"
-#define AppVersion "0.3.7"
+#define AppVersion "0.3.8"
 #define AppPublisher "XLJFZ"
 #define AppUrl "https://github.com/XLJFZ/peripheral-battery"
 #define AppExe "外设电量.exe"
@@ -62,7 +62,8 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
     Flags: uninsdeletevalue; Tasks: autostart
 
 [Run]
-Filename: "{app}\{#AppExe}"; Description: "立即启动 {#AppName}"; Flags: nowait postinstall skipifsilent
+; 注意：这里不能加 skipifsilent —— 应用内自动更新走静默安装，装完需要自己把托盘程序拉起来
+Filename: "{app}\{#AppExe}"; Description: "立即启动 {#AppName}"; Flags: nowait postinstall runascurrentuser
 
 [UninstallRun]
 Filename: "{cmd}"; Parameters: "/c taskkill /f /im ""{#AppExe}"""; Flags: runhidden; RunOnceId: "stopapp"

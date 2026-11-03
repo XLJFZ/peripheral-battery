@@ -31,6 +31,8 @@
             <sys:Double x:Key="FlyoutNameSize">13.5</sys:Double>
             <sys:Double x:Key="FlyoutMetaSize">11</sys:Double>
             <sys:Double x:Key="FlyoutBatterySize">14</sys:Double>
+            <TextWrapping x:Key="FlyoutNameWrapping">Wrap</TextWrapping>
+            <TextTrimming x:Key="FlyoutNameTrimming">None</TextTrimming>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
