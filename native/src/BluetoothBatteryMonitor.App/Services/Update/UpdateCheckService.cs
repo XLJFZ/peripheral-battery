@@ -45,11 +45,16 @@ public class UpdateCheckService
     /// Picks the installer and the checksum asset out of a GitHub release payload.
     /// The whole asset list is scanned: the checksum often comes last, so stopping at
     /// the installer would lose it.
+    /// <para>
+    /// Only a real Setup executable counts as the installer. The portable single file and the
+    /// zip archive are deliberately not returned here — running them as an updater does nothing
+    /// useful (they ignore /VERYSILENT and lose the single-instance race), so the caller falls
+    /// back to the release page instead.
+    /// </para>
     /// </summary>
     internal static (string? Download, string? Checksum) SelectAssets(JsonElement root)
     {
         string? setupUrl = null;
-        string? fallbackUrl = null;
         string? checksumUrl = null;
 
         if (!root.TryGetProperty("assets", out var assets) || assets.ValueKind != JsonValueKind.Array)
@@ -69,17 +74,14 @@ public class UpdateCheckService
                 continue;
             }
 
-            bool isExe = name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase);
-            bool isZip = name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase);
-            if (!isExe && !isZip) continue;
+            if (setupUrl != null) continue;
+            if (!name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) continue;
+            if (!name.Contains("Setup", StringComparison.OrdinalIgnoreCase)) continue;
 
-            if (isExe && name.Contains("Setup", StringComparison.OrdinalIgnoreCase))
-                setupUrl ??= url;               // the installer beats a bare EXE
-            else
-                fallbackUrl ??= url;            // portable EXE or zip archive
+            setupUrl = url;
         }
 
-        return (setupUrl ?? fallbackUrl, checksumUrl);
+        return (setupUrl, checksumUrl);
     }
 
     public async Task<UpdateCheckResult> CheckForUpdatesAsync(CancellationToken ct = default)

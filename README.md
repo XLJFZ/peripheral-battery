@@ -1,21 +1,21 @@
 # Peripheral Battery · 外设电量
 
-当前 Windows 版本 **v0.3.8**，提供“普通版”（默认）和“液态玻璃”两种外观，液态玻璃跟随 Windows 深色/浅色设置。
+当前 Windows 版本 **v0.3.9**，提供“普通版”（默认）和“液态玻璃”两种外观，液态玻璃跟随 Windows 深色/浅色设置。
 
 **两种安装方式**（都在 [Releases](https://github.com/XLJFZ/peripheral-battery/releases/latest) 里）：
 
 | 方式 | 文件 | 特点 |
 | --- | --- | --- |
-| 安装版（推荐） | `Peripheral-Battery-Setup-0.3.8.exe` | 向导安装到 `%LOCALAPPDATA%\Programs\PeripheralBattery`；开始菜单 / 桌面快捷方式；可在设置→应用中卸载；普通用户权限即可 |
-| 便携版 | `Peripheral-Battery-0.3.8-x64.exe` | 单个 EXE，双击即用，不需要安装运行时、不需要解压；删文件即卸载 |
+| 安装版（推荐） | `Peripheral-Battery-Setup-0.3.9.exe` | 向导安装到 `%LOCALAPPDATA%\Programs\PeripheralBattery`；开始菜单 / 桌面快捷方式；可在设置→应用中卸载；普通用户权限即可 |
+| 便携版 | `Peripheral-Battery-0.3.9-x64.exe` | 单个 EXE，双击即用，不需要安装运行时、不需要解压；删文件即卸载 |
 
 两种方式共用同一份程序与设置（`%APPDATA%\PeripheralBatteryNative`），可以互相切换。
 
-安装版支持**应用内升级**：设置 → 高级 → 软件更新 → 检查更新 → 「下载并安装」。程序会下载 Setup、比对 release 里的 `sha256.txt`（拿不到校验值就中止）、去掉 MOTW 后静默安装并自动重启；便携版没有安装器，只会打开下载页。
+安装版支持**应用内升级**：设置 → 高级 → 软件更新 → 检查更新 → 「下载并安装」。程序会下载 Setup、比对 release 里的 `sha256.txt`（拿不到校验值就中止）、去掉 MOTW 后静默安装并自动重启；便携版没有安装器，只会打开下载页。升级是否真的装成功会被核对：安装前写入 `update-pending.json`，下次启动时比对版本，成功发一条通知，失败则保留红色提示并在设置页给出重试入口。
 
 **第三种：目录版（不随 Release 提供）**。执行 `build-native.ps1` 自行构建，解压后双击 `启动托盘版.cmd`。它额外包含 Python HID 后端，其他品牌 HID 的覆盖更全；体积约 236 MB，因此不作为默认发布物。
 
-面板大小可在设置里选择紧凑 / 标准 / 宽松；设置页分「外观 / 行为 / 通知 / 高级」四组可折叠。界面支持中文 / English / Türkçe 三语。详情见 [发布说明](notes/v0.3.8.md)。
+面板大小可在设置里选择紧凑 / 标准 / 宽松；设置页分「外观 / 行为 / 通知 / 高级」四组可折叠。界面支持中文 / English / Türkçe 三语。详情见 [发布说明](notes/v0.3.9.md)。
 
 - [下载 Windows 版本](https://github.com/XLJFZ/peripheral-battery/releases/latest)
 - [在线网页面板](https://xljfz.github.io/peripheral-battery/)

@@ -56,8 +56,10 @@ public class UpdateAssetSelectionTests
     }
 
     [Fact]
-    public void FallsBackToThePortableWhenThereIsNoSetup()
+    public void DoesNotTreatAPortableExeAsAnInstaller()
     {
+        // A portable build ignores /VERYSILENT and loses the single-instance race, so handing it
+        // to the updater looked like "installing" while the app simply disappeared.
         var (download, checksum) = Select("""
         {
           "assets": [
@@ -66,17 +68,31 @@ public class UpdateAssetSelectionTests
           ]
         }
         """);
-        Assert.Equal("https://github.com/x/portable.exe", download);
+        Assert.Null(download);
         Assert.NotNull(checksum);
     }
 
     [Fact]
-    public void FallsBackToAZipArchive()
+    public void DoesNotTreatAZipArchiveAsAnInstaller()
     {
         var (download, _) = Select("""
         { "assets": [ { "name": "build-0.3.8.zip", "browser_download_url": "https://github.com/x/b.zip" } ] }
         """);
-        Assert.Equal("https://github.com/x/b.zip", download);
+        Assert.Null(download);
+    }
+
+    [Fact]
+    public void TakesTheFirstSetupWhenTheReleaseShipsSeveral()
+    {
+        var (download, _) = Select("""
+        {
+          "assets": [
+            { "name": "Peripheral-Battery-Setup-0.3.8-arm64.exe", "browser_download_url": "https://github.com/x/arm.exe" },
+            { "name": "Peripheral-Battery-Setup-0.3.8.exe",       "browser_download_url": "https://github.com/x/x64.exe" }
+          ]
+        }
+        """);
+        Assert.Equal("https://github.com/x/arm.exe", download);
     }
 
     [Fact]
