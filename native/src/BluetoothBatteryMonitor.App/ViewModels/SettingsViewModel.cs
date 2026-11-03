@@ -467,6 +467,7 @@ public partial class SettingsViewModel : ObservableObject
         "blockedHost" => "Update_Err_BlockedHost",
         "noInstaller" => "Update_Err_NoInstaller",
         "noChecksum" => "Update_Err_NoChecksum",
+        "checksumFetch" => "Update_Err_ChecksumFetch",
         "hashMismatch" => "Update_Err_HashMismatch",
         "httpError" => "Update_Err_Http",
         "cancelled" => "Update_Err_Cancelled",

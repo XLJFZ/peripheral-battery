@@ -132,6 +132,7 @@ public static class LocalizationService
             ["Update_Err_BlockedHost"] = "Download host is not allowed; update cancelled.",
             ["Update_Err_NoInstaller"] = "This release has no installer; download it manually.",
             ["Update_Err_NoChecksum"] = "No SHA-256 published for this release; update cancelled for safety.",
+            ["Update_Err_ChecksumFetch"] = "Could not download the checksum file; please retry or install manually.",
             ["Update_Err_HashMismatch"] = "Installer checksum mismatch; file deleted, please download manually.",
             ["Update_Err_Http"] = "Download failed (HTTP error).",
             ["Update_Err_Cancelled"] = "Update cancelled.",
@@ -297,6 +298,7 @@ public static class LocalizationService
             ["Update_Err_BlockedHost"] = "İndirme adresi izinli değil; güncelleme iptal edildi.",
             ["Update_Err_NoInstaller"] = "Bu sürümde kurulum yok; elle indirin.",
             ["Update_Err_NoChecksum"] = "Bu sürüm için SHA-256 yayınlanmamış; güvenlik için iptal edildi.",
+            ["Update_Err_ChecksumFetch"] = "Özet dosyası indirilemedi; tekrar deneyin veya elle kurun.",
             ["Update_Err_HashMismatch"] = "Kurulum özeti uyuşmadı; dosya silindi, elle indirin.",
             ["Update_Err_Http"] = "İndirme başarısız (HTTP hatası).",
             ["Update_Err_Cancelled"] = "Güncelleme iptal edildi.",
@@ -441,6 +443,7 @@ public static class LocalizationService
         zh["Update_Err_BlockedHost"] = "下载地址不在允许范围内，已取消更新。";
         zh["Update_Err_NoInstaller"] = "该版本没有安装包，请手动下载。";
         zh["Update_Err_NoChecksum"] = "该版本没有发布 SHA-256 校验值，出于安全考虑已取消更新。";
+        zh["Update_Err_ChecksumFetch"] = "校验文件下载失败，请重试或手动安装。";
         zh["Update_Err_HashMismatch"] = "安装包校验失败，已删除，请手动下载。";
         zh["Update_Err_Http"] = "下载失败（HTTP 错误）。";
         zh["Update_Err_Cancelled"] = "已取消更新。";
