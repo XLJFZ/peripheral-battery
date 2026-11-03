@@ -30,6 +30,8 @@ public class AppSettings
     public bool EnableRestApi { get; set; } = false;
     public int RestApiPort { get; set; } = 23253;
     public string Theme { get; set; } = "普通版";
+    /// <summary>Panel size profile: 紧凑 / 标准 / 宽松.</summary>
+    public string FlyoutDensity { get; set; } = "标准";
     /// <summary>Appearance schema marker. Files written before v0.3.3 have no value (0).</summary>
     public int ThemeVersion { get; set; }
     public const int CurrentThemeVersion = 1;
@@ -174,6 +176,7 @@ public class AppSettings
     private void MigrateAppearance()
     {
         Theme = MigrateTheme(Theme, ThemeVersion);
+        FlyoutDensity = Services.System.FlyoutDensity.Normalize(FlyoutDensity);
         ThemeVersion = CurrentThemeVersion;
     }
 

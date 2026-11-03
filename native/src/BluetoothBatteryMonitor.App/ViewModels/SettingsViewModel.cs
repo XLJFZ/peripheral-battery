@@ -84,6 +84,7 @@ public partial class SettingsViewModel : ObservableObject
         _criticalBatteryThreshold = _settings.CriticalBatteryThreshold;
         _refreshIntervalSeconds = _settings.RefreshIntervalSeconds;
         _selectedTheme = ThemeManager.Normalize(_settings.Theme);
+        _panelDensity = Services.System.FlyoutDensity.Normalize(_settings.FlyoutDensity);
         _selectedLanguage = _settings.Language;
         _autoSwitchAudioEndpoint = _settings.AutoSwitchAudioEndpoint;
         _enableRestApi = _settings.EnableRestApi;
@@ -260,6 +261,11 @@ public partial class SettingsViewModel : ObservableObject
     public IReadOnlyList<string> AvailableThemes { get; } = new[] { ThemeManager.AppearanceNormal, ThemeManager.AppearanceGlass };
 
     [ObservableProperty]
+    private string _panelDensity;
+
+    public IReadOnlyList<string> AvailableDensities => Services.System.FlyoutDensity.Options;
+
+    [ObservableProperty]
     private string _selectedLanguage;
 
     public IReadOnlyList<LanguageOption> AvailableLanguages => LocalizationService.SupportedLanguages;
@@ -336,6 +342,7 @@ public partial class SettingsViewModel : ObservableObject
         _settings.CriticalBatteryThreshold = CriticalBatteryThreshold;
         _settings.RefreshIntervalSeconds = RefreshIntervalSeconds;
         _settings.Theme = SelectedTheme;
+        _settings.FlyoutDensity = PanelDensity;
         _settings.Language = SelectedLanguage;
         _settings.LaunchAtStartup = LaunchAtStartup;
 
@@ -357,8 +364,9 @@ public partial class SettingsViewModel : ObservableObject
         // Update startup registry configuration
         StartupManager.SetStartup(LaunchAtStartup);
 
-        // Apply theme
+        // Apply theme and panel size
         ThemeManager.ApplyTheme(SelectedTheme);
+        Services.System.FlyoutDensity.Apply(PanelDensity);
 
         // Apply language
         LocalizationService.ApplyLanguage(SelectedLanguage);

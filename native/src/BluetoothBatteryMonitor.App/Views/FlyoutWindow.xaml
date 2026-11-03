@@ -7,8 +7,9 @@
         xmlns:vm="clr-namespace:BluetoothBatteryMonitor.App.ViewModels"
         mc:Ignorable="d"
         Title="{DynamicResource App_Title}"
-        Width="416"
+        Width="{DynamicResource FlyoutWidth}"
         Height="240"
+        MinWidth="0"
         MinHeight="0"
         MaxHeight="660"
         SizeToContent="Manual"
@@ -47,7 +48,7 @@
 
             <!-- 1. Başlık Çubuğu -->
             <Border Grid.Row="0"
-                    Padding="16,14,16,10"
+                    Padding="{DynamicResource FlyoutHeaderPadding}"
                     BorderThickness="0,0,0,1"
                     BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}">
                 <Grid>
@@ -63,13 +64,13 @@
                                            Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
                                            Margin="0,0,8,0" />
                             <TextBlock Text="{DynamicResource Flyout_Header}"
-                                       FontSize="16"
+                                       FontSize="{DynamicResource FlyoutTitleSize}"
                                        FontWeight="SemiBold"
                                        VerticalAlignment="Center"
                                        Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
                         </StackPanel>
                         <TextBlock Text="{Binding StatusText}"
-                                   FontSize="12"
+                                   FontSize="{DynamicResource FlyoutStatusSize}"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                    Margin="28,2,0,0" />
                     </StackPanel>
@@ -90,13 +91,13 @@
                           Grid.Row="1"
                           VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled"
-                          Padding="12,8">
+                          Padding="{DynamicResource FlyoutListPadding}">
                 <ItemsControl x:Name="DeviceList" ItemsSource="{Binding Devices}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="{x:Type vm:DeviceItemViewModel}">
                             <!-- Cihaz Kartı -->
-                            <Border Margin="0,4,0,6" AllowDrop="True" PreviewMouseLeftButtonDown="DeviceDragStart" PreviewMouseMove="DeviceDragMove" Drop="DeviceDrop" MouseEnter="GlassCardEnter" MouseLeave="GlassCardLeave" RenderTransformOrigin="0.5,0.5"
-                                    Padding="14,12"
+                            <Border Margin="{DynamicResource FlyoutCardMargin}" AllowDrop="True" PreviewMouseLeftButtonDown="DeviceDragStart" PreviewMouseMove="DeviceDragMove" Drop="DeviceDrop" MouseEnter="GlassCardEnter" MouseLeave="GlassCardLeave" RenderTransformOrigin="0.5,0.5"
+                                    Padding="{DynamicResource FlyoutCardPadding}"
                                     CornerRadius="{DynamicResource PeripheralCardRadius}"
                                     Background="{DynamicResource PeripheralCardBrush}"
                                     BorderThickness="1"
@@ -172,8 +173,8 @@
 
                                         <!-- Cihaz İkonu ve Bağlantı Rozeti -->
                                         <Grid Grid.Column="0" Margin="0,0,12,0" VerticalAlignment="Center">
-                                            <Border Width="36" Height="36"
-                                                    CornerRadius="18"
+                                            <Border Width="{DynamicResource FlyoutIconSize}" Height="{DynamicResource FlyoutIconSize}"
+                                                    CornerRadius="{DynamicResource FlyoutIconRadius}"
                                                     Background="{DynamicResource SubtleFillColorSecondaryBrush}">
                                                 <ui:SymbolIcon Symbol="{Binding IconSymbol}"
                                                                 FontSize="20"
@@ -208,7 +209,7 @@
                                                     <ColumnDefinition Width="Auto" />
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="{Binding Name}" ToolTip="{Binding Name}"
-                                                           FontSize="13.5"
+                                                           FontSize="{DynamicResource FlyoutNameSize}"
                                                            FontWeight="SemiBold"
                                                            TextTrimming="None" TextWrapping="Wrap"
                                                            Foreground="{DynamicResource TextFillColorPrimaryBrush}"
@@ -280,16 +281,16 @@
 
                                             <TextBlock TextTrimming="CharacterEllipsis">
                                                 <Run Text="{Binding ConnectionStatusText, Mode=OneWay}"
-                                                     FontSize="11"
+                                                     FontSize="{DynamicResource FlyoutMetaSize}"
                                                      Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                                                 <Run Text=" • "
-                                                     FontSize="11"
+                                                     FontSize="{DynamicResource FlyoutMetaSize}"
                                                      Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
                                                 <Run Text="{Binding ProviderSource, Mode=OneWay}"
-                                                     FontSize="11"
+                                                     FontSize="{DynamicResource FlyoutMetaSize}"
                                                      Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
                                                 <Run Text="{Binding CustomThresholdBadgeText, Mode=OneWay}"
-                                                     FontSize="11"
+                                                     FontSize="{DynamicResource FlyoutMetaSize}"
                                                      FontWeight="SemiBold"
                                                      Foreground="#F59E0B" />
                                             </TextBlock>
@@ -308,7 +309,7 @@
                                                            Visibility="{Binding IsCharging, Converter={StaticResource BoolToVis}}" />
                                             <!-- Yüzde Metni -->
                                             <TextBlock Text="{Binding BatteryText}" ToolTip="{Binding BatteryReadingDetails}"
-                                                       FontSize="14"
+                                                       FontSize="{DynamicResource FlyoutBatterySize}"
                                                        FontWeight="Bold"
                                                        Foreground="{Binding BatteryTextBrush}"
                                                        VerticalAlignment="Center" />
@@ -496,7 +497,7 @@
 
             <!-- 4. Alt Araç Çubuğu (Footer) -->
             <Border Grid.Row="3"
-                    Padding="14,10"
+                    Padding="{DynamicResource FlyoutFooterPadding}"
                     BorderThickness="0,1,0,0"
                     BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}"
                     Background="{DynamicResource SubtleFillColorSecondaryBrush}"
