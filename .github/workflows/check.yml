@@ -34,6 +34,16 @@ jobs:
           python tools/check_native_package.py dist/ci-native --report dist/ui-smoke.json
       - name: Verify flyout content height
         run: python tools/check_flyout_layout.py --exe dist/ci-native/BluetoothBatteryMonitor.App.exe --report dist/flyout-layout.json
+      - name: Build installer
+        run: |
+          $v = (Select-String -Path installer\PeripheralBattery.iss -Pattern '#define AppVersion "([\d.]+)"').Matches.Groups[1].Value
+          dotnet publish native/src/BluetoothBatteryMonitor.App/BluetoothBatteryMonitor.App.csproj -c Release -r win-x64 --self-contained true -o "dist/portable-$v" `
+            -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=none
+          if ($LASTEXITCODE) { throw 'Portable publish failed' }
+          choco install innosetup --no-progress -y
+          & "C://Program Files (x86)//Inno Setup 6//ISCC.exe" "installer\PeripheralBattery.iss"
+          if ($LASTEXITCODE) { throw 'Installer build failed' }
+          if (-not (Test-Path "dist\installer\Peripheral-Battery-Setup-$v.exe")) { throw 'Installer output missing' }
       - name: Publish and verify portable single file
         run: |
           dotnet publish native/src/BluetoothBatteryMonitor.App/BluetoothBatteryMonitor.App.csproj -c Release -r win-x64 --self-contained true -o dist/ci-portable `
