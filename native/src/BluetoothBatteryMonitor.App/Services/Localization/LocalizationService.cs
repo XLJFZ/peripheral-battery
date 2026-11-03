@@ -88,7 +88,7 @@ public static class LocalizationService
 
             // Settings Window
             ["Settings_TrayAutoColor"] = "Color by battery level",
-            ["Settings_RepoButton"] = "GitHub repository",
+            ["Settings_RepoButton"] = "GitHub repo",
             ["Tray_StyleRing"] = "Ring",
             ["Tray_StyleNumber"] = "Number",
             ["Tray_StyleBoth"] = "Ring + number",
@@ -117,7 +117,7 @@ public static class LocalizationService
             ["Theme_Glass"] = "Liquid glass",
             ["Settings_ThresholdDefault"] = "Default (global)",
             ["Settings_Seconds"] = "{0} seconds",
-            ["GamePolling_Title"] = "Game polling rate",
+            ["GamePolling_Title"] = "Polling rate",
             ["GamePolling_Note"] = "Verified: DeathAdder V3 Pro · 00B7 receiver. This receiver opens 125-1000 Hz; 8000 Hz needs a separately verified high-rate receiver.",
             ["GamePolling_Enable"] = "Switch polling rate while a game is fullscreen",
             ["GamePolling_DesktopRate"] = "Desktop rate (Hz)",
@@ -168,8 +168,8 @@ public static class LocalizationService
             ["Settings_ThemeDesc"] = "Choose application theme",
             ["Settings_Language"] = "Language",
             ["Settings_LanguageDesc"] = "Choose application language",
-            ["Settings_SaveAndClose"] = "Save & Close",
-            ["Settings_DiscardAndClose"] = "Close without saving",
+            ["Settings_SaveAndClose"] = "Save",
+            ["Settings_DiscardAndClose"] = "Discard",
 
             // About Window
             ["About_Title"] = "About - Bluetooth Battery Monitor",
@@ -263,7 +263,7 @@ public static class LocalizationService
 
             // Settings Window
             ["Settings_TrayAutoColor"] = "Seviyeye göre renk",
-            ["Settings_RepoButton"] = "GitHub deposu",
+            ["Settings_RepoButton"] = "GitHub repo",
             ["Tray_StyleRing"] = "Halka",
             ["Tray_StyleNumber"] = "Sayı",
             ["Tray_StyleBoth"] = "Halka + sayı",
@@ -348,8 +348,8 @@ public static class LocalizationService
             ["Settings_ThemeDesc"] = "Arayüz görünümünü belirleyin",
             ["Settings_Language"] = "Dil Seçimi",
             ["Settings_LanguageDesc"] = "Uygulama dilini belirleyin",
-            ["Settings_SaveAndClose"] = "Kaydet ve Kapat",
-            ["Settings_DiscardAndClose"] = "Kaydetmeden kapat",
+            ["Settings_SaveAndClose"] = "Kaydet",
+            ["Settings_DiscardAndClose"] = "Geri al",
 
             // About Window
             ["About_Title"] = "Hakkında - Bluetooth Pil Monitörü",
@@ -446,7 +446,7 @@ public static class LocalizationService
         zh["Theme_Glass"] = "液态玻璃";
         zh["Settings_ThresholdDefault"] = "默认（全局）";
         zh["Settings_Seconds"] = "{0} 秒";
-        zh["GamePolling_Title"] = "游戏回报率调度";
+        zh["GamePolling_Title"] = "回报率调度";
         zh["GamePolling_Note"] = "已验证：炼狱蝰蛇 V3 Pro · 00B7 接收器。该接收器开放 125–1000Hz；8000Hz 需要另行验证高回报率接收器。";
         zh["GamePolling_Enable"] = "开启游戏前台全屏调度";
         zh["GamePolling_DesktopRate"] = "桌面回报率（Hz）";
@@ -600,7 +600,7 @@ public static class LocalizationService
         fr["Theme_Glass"] = "Verre liquide";
         fr["Settings_ThresholdDefault"] = "Par défaut (global)";
         fr["Settings_Seconds"] = "{0} secondes";
-        fr["GamePolling_Title"] = "Taux de rafraîchissement en jeu";
+        fr["GamePolling_Title"] = "Fréquence en jeu";
         fr["GamePolling_Note"] = "Vérifié : DeathAdder V3 Pro · récepteur 00B7. Ce récepteur couvre 125-1000 Hz ; 8000 Hz nécessite un récepteur haut débit vérifié séparément.";
         fr["GamePolling_Enable"] = "Changer le taux de rafraîchissement quand un jeu est en plein écran";
         fr["GamePolling_DesktopRate"] = "Taux bureau (Hz)";
@@ -651,8 +651,8 @@ public static class LocalizationService
         fr["Settings_ThemeDesc"] = "Choisissez le thème de l’application";
         fr["Settings_Language"] = "Langue";
         fr["Settings_LanguageDesc"] = "Choisissez la langue de l’application";
-        fr["Settings_SaveAndClose"] = "Enregistrer et fermer";
-        fr["Settings_DiscardAndClose"] = "Fermer sans enregistrer";
+        fr["Settings_SaveAndClose"] = "Enregistrer";
+        fr["Settings_DiscardAndClose"] = "Annuler";
         fr["About_Title"] = "À propos - Batterie Bluetooth";
         fr["About_AppName"] = "Bluetooth Battery Monitor";
         fr["About_Version"] = "Version 1.0.0 (x64)";
@@ -730,7 +730,7 @@ public static class LocalizationService
         de["Tray_TooltipTitle"] = "Batterie";
         de["Tray_MoreDevices"] = "+{0} weitere, zum Anzeigen klicken";
         de["Settings_TrayAutoColor"] = "Farbe nach Batteriestand";
-        de["Settings_RepoButton"] = "GitHub-Repository";
+        de["Settings_RepoButton"] = "GitHub-Repo";
         de["Tray_StyleRing"] = "Ring";
         de["Tray_StyleNumber"] = "Zahl";
         de["Tray_StyleBoth"] = "Ring + Zahl";
@@ -889,7 +889,7 @@ public static class LocalizationService
         es["Tray_TooltipTitle"] = "Batería";
         es["Tray_MoreDevices"] = "+{0} más, haz clic para ver";
         es["Settings_TrayAutoColor"] = "Color según nivel de batería";
-        es["Settings_RepoButton"] = "Repositorio de GitHub";
+        es["Settings_RepoButton"] = "Repo GitHub";
         es["Tray_StyleRing"] = "Anillo";
         es["Tray_StyleNumber"] = "Número";
         es["Tray_StyleBoth"] = "Anillo + número";
@@ -918,7 +918,7 @@ public static class LocalizationService
         es["Theme_Glass"] = "Cristal líquido";
         es["Settings_ThresholdDefault"] = "Predeterminado (global)";
         es["Settings_Seconds"] = "{0} segundos";
-        es["GamePolling_Title"] = "Frecuencia de sondeo en juegos";
+        es["GamePolling_Title"] = "Sondeo en juego";
         es["GamePolling_Note"] = "Verificado: DeathAdder V3 Pro · receptor 00B7. Este receptor admite 125-1000 Hz; 8000 Hz requiere un receptor de alta frecuencia verificado por separado.";
         es["GamePolling_Enable"] = "Cambiar la frecuencia de sondeo cuando un juego esté a pantalla completa";
         es["GamePolling_DesktopRate"] = "Frecuencia en escritorio (Hz)";
@@ -969,8 +969,8 @@ public static class LocalizationService
         es["Settings_ThemeDesc"] = "Elige el tema de la aplicación";
         es["Settings_Language"] = "Idioma";
         es["Settings_LanguageDesc"] = "Elige el idioma de la aplicación";
-        es["Settings_SaveAndClose"] = "Guardar y cerrar";
-        es["Settings_DiscardAndClose"] = "Cerrar sin guardar";
+        es["Settings_SaveAndClose"] = "Guardar";
+        es["Settings_DiscardAndClose"] = "Descartar";
         es["About_Title"] = "Acerca de - Batería Bluetooth";
         es["About_AppName"] = "Bluetooth Battery Monitor";
         es["About_Version"] = "Versión 1.0.0 (x64)";
@@ -1048,7 +1048,7 @@ public static class LocalizationService
         it["Tray_TooltipTitle"] = "Batteria";
         it["Tray_MoreDevices"] = "+{0} altri, fai clic per vedere";
         it["Settings_TrayAutoColor"] = "Colore in base al livello";
-        it["Settings_RepoButton"] = "Repository GitHub";
+        it["Settings_RepoButton"] = "Repo GitHub";
         it["Tray_StyleRing"] = "Anello";
         it["Tray_StyleNumber"] = "Numero";
         it["Tray_StyleBoth"] = "Anello + numero";
@@ -1077,7 +1077,7 @@ public static class LocalizationService
         it["Theme_Glass"] = "Vetro liquido";
         it["Settings_ThresholdDefault"] = "Predefinito (globale)";
         it["Settings_Seconds"] = "{0} secondi";
-        it["GamePolling_Title"] = "Frequenza di polling in gioco";
+        it["GamePolling_Title"] = "Polling in gioco";
         it["GamePolling_Note"] = "Verificato: DeathAdder V3 Pro · ricevente 00B7. Questo ricevente copre 125-1000 Hz; 8000 Hz richiede un ricevente alta frequenza verificato separatamente.";
         it["GamePolling_Enable"] = "Cambia frequenza di polling quando un gioco è a schermo intero";
         it["GamePolling_DesktopRate"] = "Frequenza desktop (Hz)";
@@ -1128,8 +1128,8 @@ public static class LocalizationService
         it["Settings_ThemeDesc"] = "Scegli il tema dell’app";
         it["Settings_Language"] = "Lingua";
         it["Settings_LanguageDesc"] = "Scegli la lingua dell’app";
-        it["Settings_SaveAndClose"] = "Salva e chiudi";
-        it["Settings_DiscardAndClose"] = "Chiudi senza salvare";
+        it["Settings_SaveAndClose"] = "Salva";
+        it["Settings_DiscardAndClose"] = "Annulla";
         it["About_Title"] = "Informazioni - Batteria Bluetooth";
         it["About_AppName"] = "Bluetooth Battery Monitor";
         it["About_Version"] = "Versione 1.0.0 (x64)";
