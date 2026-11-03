@@ -192,6 +192,10 @@ public class BluetoothBatteryEngine : IDisposable
         // Aggregate dual-mode (Classic + BLE GATT) devices
         AggregateDualModeDevices();
 
+        // Apply user-assigned display names after aggregation so every consumer (flyout,
+        // tray tooltip, notifications, REST) sees the same name.
+        ApplyCustomNames(settings);
+
         // Finalize live connection status of all devices
         BluetoothConnectionChecker.UpdateConnectionStatuses(_devices.Values, connectionSnapshot);
 
@@ -202,7 +206,10 @@ public class BluetoothBatteryEngine : IDisposable
             {
                 activeDev.AudioCodec = _codecDetector.DetectCodec(activeDev);
             }
-            _notificationService.CheckAndNotifyBattery(activeDev, settings);
+            if (!settings.IsHidden(activeDev.Id, activeDev.BluetoothAddress))
+            {
+                _notificationService.CheckAndNotifyBattery(activeDev, settings);
+            }
         }
 
         StatusChanged?.Invoke(this, $"{_devices.Count} device(s) found.");
@@ -225,6 +232,8 @@ public class BluetoothBatteryEngine : IDisposable
             await _eventGate.WaitAsync();
             try
             {
+                var settings = AppSettings.Load();
+
                 BluetoothConnectionChecker.BluetoothConnectionSnapshot? snapshot;
                 lock (_eventSnapshotLock)
                 {
@@ -242,12 +251,18 @@ public class BluetoothBatteryEngine : IDisposable
                 dev.IsConnected = await BluetoothConnectionChecker.IsDeviceConnectedAsync(dev, snapshot);
 
                 var activeDev = MergeOrAddDevice(dev);
+
+                // Reapply the rename: the merge just restored the raw provider name (L674).
+                activeDev.CustomName = settings.GetCustomName(activeDev.Id, activeDev.BluetoothAddress);
+
                 if (activeDev.IsConnected && (activeDev.Type is DeviceType.Headphones or DeviceType.Earbuds or DeviceType.Speaker))
                 {
                     activeDev.AudioCodec = _codecDetector.DetectCodec(activeDev);
                 }
-                var settings = AppSettings.Load();
-                _notificationService.CheckAndNotifyBattery(activeDev, settings);
+                if (!settings.IsHidden(activeDev.Id, activeDev.BluetoothAddress))
+                {
+                    _notificationService.CheckAndNotifyBattery(activeDev, settings);
+                }
                 NotifyDevicesUpdated();
             }
             finally
@@ -715,6 +730,14 @@ public class BluetoothBatteryEngine : IDisposable
             }
 
             return master;
+        }
+    }
+
+    private void ApplyCustomNames(AppSettings settings)
+    {
+        foreach (var dev in _devices.Values)
+        {
+            dev.CustomName = settings.GetCustomName(dev.Id, dev.BluetoothAddress);
         }
     }
 

@@ -154,6 +154,9 @@
                                                   IsChecked="{Binding IsThreshold40, Mode=OneWay}"
                                                   Command="{Binding SetThresholdCommand}"
                                                   CommandParameter="40" />
+                                        <Separator />
+                                        <MenuItem Header="{DynamicResource Menu_RenameDevice}" Click="OnRenameDeviceClick" />
+                                        <MenuItem Header="{DynamicResource Menu_HideDevice}" Click="OnHideDeviceClick" />
                                     </ContextMenu>
                                 </Border.ContextMenu>
                                 <Grid>

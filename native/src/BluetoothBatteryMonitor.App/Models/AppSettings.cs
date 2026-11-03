@@ -45,6 +45,15 @@ public class AppSettings
     public Dictionary<string, int> DeviceSpecificThresholds { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public Dictionary<string, string> DeviceNames { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>User-assigned display names, keyed by device id or MAC hex. Removing a key restores the raw name.</summary>
+    public Dictionary<string, string> CustomDeviceNames { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    /// <summary>Hidden device keys (device id or MAC hex). Hidden devices are excluded from the flyout, tray and notifications.</summary>
+    public HashSet<string> HiddenDevices { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    /// <summary>Last known display name per hidden device id, so the settings page can list them.</summary>
+    public Dictionary<string, string> HiddenDeviceNames { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    /// <summary>Hide devices that report no battery level at all.</summary>
+    public bool HideUnknownBatteryDevices { get; set; }
+
     /// <summary>
     /// Returns device-specific custom threshold if defined, otherwise falls back to global LowBatteryThreshold.
     /// </summary>
@@ -196,6 +205,18 @@ public class AppSettings
             {
                 parsed.DeviceNames = new Dictionary<string, string>(parsed.DeviceNames, StringComparer.OrdinalIgnoreCase);
             }
+            if (parsed.CustomDeviceNames != null)
+            {
+                parsed.CustomDeviceNames = new Dictionary<string, string>(parsed.CustomDeviceNames, StringComparer.OrdinalIgnoreCase);
+            }
+            if (parsed.HiddenDevices != null)
+            {
+                parsed.HiddenDevices = new HashSet<string>(parsed.HiddenDevices, StringComparer.OrdinalIgnoreCase);
+            }
+            if (parsed.HiddenDeviceNames != null)
+            {
+                parsed.HiddenDeviceNames = new Dictionary<string, string>(parsed.HiddenDeviceNames, StringComparer.OrdinalIgnoreCase);
+            }
             parsed.MigrateAppearance();
             settings = parsed;
             return true;
@@ -245,6 +266,78 @@ public class AppSettings
     /// <summary>Unknown or out-of-range values fall back to 5 s; only known steps survive.</summary>
     public static int NormalizeAutoHide(int seconds)
         => seconds is 0 or 3 or 5 or 10 or 15 or 30 or 60 ? seconds : 5;
+
+    /// <summary>
+    /// Custom display name for a device, matching by device id first and MAC hex second
+    /// (same dual-key scheme as DeviceSpecificThresholds). Null when no rename is stored.
+    /// </summary>
+    public string? GetCustomName(string? deviceId, ulong macAddress = 0)
+    {
+        if (!string.IsNullOrWhiteSpace(deviceId) && CustomDeviceNames.TryGetValue(deviceId, out var byId))
+        {
+            return byId;
+        }
+
+        ulong mac = macAddress != 0 ? macAddress : (deviceId != null ? BluetoothDeviceModel.ExtractMacAddress(deviceId) : 0);
+        if (mac != 0 && CustomDeviceNames.TryGetValue(mac.ToString("X12"), out var byMac))
+        {
+            return byMac;
+        }
+
+        return null;
+    }
+
+    /// <summary>Sets (or clears when <paramref name="name"/> is empty) the custom display name and persists.</summary>
+    public void SetCustomName(string deviceId, ulong macAddress, string? name)
+    {
+        if (string.IsNullOrWhiteSpace(deviceId)) return;
+        string macHex = macAddress != 0 ? macAddress.ToString("X12") : BluetoothDeviceModel.ExtractMacAddress(deviceId).ToString("X12");
+
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            CustomDeviceNames.Remove(deviceId);
+            CustomDeviceNames.Remove(macHex);
+        }
+        else
+        {
+            CustomDeviceNames[deviceId] = name.Trim();
+            if (!string.IsNullOrEmpty(macHex))
+            {
+                CustomDeviceNames[macHex] = name!.Trim();
+            }
+        }
+        Save();
+    }
+
+    public bool IsHidden(string? deviceId, ulong macAddress = 0)
+    {
+        if (string.IsNullOrWhiteSpace(deviceId)) return false;
+        if (HiddenDevices.Contains(deviceId)) return true;
+
+        ulong mac = macAddress != 0 ? macAddress : BluetoothDeviceModel.ExtractMacAddress(deviceId);
+        return mac != 0 && HiddenDevices.Contains(mac.ToString("X12"));
+    }
+
+    /// <summary>Hides (or unhides) a device, remembering its display name for the settings list, and persists.</summary>
+    public void SetHidden(string deviceId, ulong macAddress, bool hidden, string? displayName = null)
+    {
+        if (string.IsNullOrWhiteSpace(deviceId)) return;
+        string macHex = macAddress != 0 ? macAddress.ToString("X12") : BluetoothDeviceModel.ExtractMacAddress(deviceId).ToString("X12");
+
+        if (hidden)
+        {
+            HiddenDevices.Add(deviceId);
+            if (!string.IsNullOrEmpty(macHex)) HiddenDevices.Add(macHex);
+            if (!string.IsNullOrWhiteSpace(displayName)) HiddenDeviceNames[deviceId] = displayName!;
+        }
+        else
+        {
+            HiddenDevices.Remove(deviceId);
+            HiddenDevices.Remove(macHex);
+            HiddenDeviceNames.Remove(deviceId);
+        }
+        Save();
+    }
 
     public void Save()
     {

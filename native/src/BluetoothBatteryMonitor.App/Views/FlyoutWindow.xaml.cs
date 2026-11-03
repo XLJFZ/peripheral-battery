@@ -47,6 +47,25 @@ public partial class FlyoutWindow : FluentWindow
         settings.DeviceOrder=vm.Devices.Select(d=>d.Id).Concat(settings.DeviceOrder ?? new()).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         settings.Save(); e.Handled=true;
     }
+    private void OnRenameDeviceClick(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is not DeviceItemViewModel item) return;
+        var dialog = new RenameDeviceWindow(item.Name) { Owner = this };
+        if (dialog.ShowDialog() == true)
+        {
+            item.ApplyCustomName(string.IsNullOrWhiteSpace(dialog.DeviceName) ? null : dialog.DeviceName);
+        }
+    }
+
+    private void OnHideDeviceClick(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is not DeviceItemViewModel item) return;
+        if (DataContext is MainViewModel vm)
+        {
+            vm.HideDevice(item);
+        }
+    }
+
     private bool _isOpening;
     private bool _isHiding;
     private int _animationGeneration;
