@@ -16,6 +16,7 @@ namespace BluetoothBatteryMonitor.App.ViewModels;
 public record ThresholdOption(int Value, string DisplayName);
 public record TrayStyleOption(string Value, string Display);
 public record RefreshIntervalOption(int Seconds, string DisplayName);
+public record AutoHideOption(int Seconds, string DisplayName);
 
 public partial class SettingsViewModel : ObservableObject
 {
@@ -59,6 +60,17 @@ public partial class SettingsViewModel : ObservableObject
         new RefreshIntervalOption(300, LocalizationService.GetString("Settings_Seconds", 300))
     };
 
+    public static IReadOnlyList<AutoHideOption> AvailableAutoHideOptions => new[]
+    {
+        new AutoHideOption(0, LocalizationService.GetString("Settings_AutoHideOff")),
+        new AutoHideOption(3, LocalizationService.GetString("Settings_Seconds", 3)),
+        new AutoHideOption(5, LocalizationService.GetString("Settings_Seconds", 5)),
+        new AutoHideOption(10, LocalizationService.GetString("Settings_Seconds", 10)),
+        new AutoHideOption(15, LocalizationService.GetString("Settings_Seconds", 15)),
+        new AutoHideOption(30, LocalizationService.GetString("Settings_Seconds", 30)),
+        new AutoHideOption(60, LocalizationService.GetString("Settings_Seconds", 60))
+    };
+
     public SettingsViewModel(IEnumerable<BluetoothDeviceModel>? knownDevices = null)
     {
         _settings = AppSettings.Load();
@@ -73,6 +85,7 @@ public partial class SettingsViewModel : ObservableObject
         _lowBatteryThreshold = _settings.LowBatteryThreshold;
         _criticalBatteryThreshold = _settings.CriticalBatteryThreshold;
         _refreshIntervalSeconds = _settings.RefreshIntervalSeconds;
+        _flyoutAutoHideSeconds = AppSettings.NormalizeAutoHide(_settings.FlyoutAutoHideSeconds);
         _selectedTheme = ThemeManager.Normalize(_settings.Theme);
         _panelDensity = Services.System.FlyoutDensity.Normalize(_settings.FlyoutDensity);
         _selectedLanguage = _settings.Language;
@@ -268,6 +281,12 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private int _refreshIntervalSeconds;
 
+    /// <summary>0 means the flyout stays open until dismissed manually.</summary>
+    [ObservableProperty]
+    private int _flyoutAutoHideSeconds;
+
+    public IReadOnlyList<AutoHideOption> AutoHideOptions => AvailableAutoHideOptions;
+
     [ObservableProperty]
     private string _selectedTheme;
 
@@ -368,6 +387,7 @@ public partial class SettingsViewModel : ObservableObject
         _settings.LowBatteryThreshold = LowBatteryThreshold;
         _settings.CriticalBatteryThreshold = CriticalBatteryThreshold;
         _settings.RefreshIntervalSeconds = RefreshIntervalSeconds;
+        _settings.FlyoutAutoHideSeconds = AppSettings.NormalizeAutoHide(FlyoutAutoHideSeconds);
         _settings.Theme = SelectedTheme;
         _settings.FlyoutDensity = PanelDensity;
         _settings.Language = SelectedLanguage;

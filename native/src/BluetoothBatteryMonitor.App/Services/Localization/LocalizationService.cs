@@ -142,6 +142,9 @@ public static class LocalizationService
             ["Settings_SubHeader"] = "Customize battery tracking and notification preferences.",
             ["Settings_LaunchAtStartup"] = "Launch with Windows",
             ["Settings_LaunchAtStartupDesc"] = "Start minimized in system tray on PC startup",
+            ["Settings_AutoHideLabel"] = "Auto-hide flyout",
+            ["Settings_AutoHideDesc"] = "Hide the panel after this many seconds without input; moving the mouse resets the timer",
+            ["Settings_AutoHideOff"] = "Never",
             ["Settings_Notifications"] = "Low Battery Notifications",
             ["Settings_NotificationsDesc"] = "Send Windows Toast alerts when battery is low",
             ["Settings_AudioRouter"] = "Smart Audio Router",
@@ -318,6 +321,9 @@ public static class LocalizationService
             ["Settings_SubHeader"] = "Pil takibi ve bildirim tercihlerinizi özelleştirin.",
             ["Settings_LaunchAtStartup"] = "Windows ile Başlat",
             ["Settings_LaunchAtStartupDesc"] = "Bilgisayar açıldığında arka planda başlasın",
+            ["Settings_AutoHideLabel"] = "Paneli otomatik gizle",
+            ["Settings_AutoHideDesc"] = "Bu kadar saniye girdi olmazsa panel gizlenir; fareyi hareket ettirmek sayacı sıfırlar",
+            ["Settings_AutoHideOff"] = "Asla",
             ["Settings_Notifications"] = "Düşük Pil Bildirimleri",
             ["Settings_NotificationsDesc"] = "Pil azaldığında Windows Toast uyarısı gönder",
             ["Settings_AudioRouter"] = "Akıllı Ses Yönlendirici",
@@ -468,6 +474,9 @@ public static class LocalizationService
         zh["Settings_SubHeader"] = "自定义外观、设备电量与通知。";
         zh["Settings_LaunchAtStartup"] = "开机启动";
         zh["Settings_LaunchAtStartupDesc"] = "登录 Windows 后在托盘后台运行";
+        zh["Settings_AutoHideLabel"] = "浮窗自动隐藏";
+        zh["Settings_AutoHideDesc"] = "打开浮窗后无操作达到该时长即自动收起；鼠标在浮窗内移动会重置计时";
+        zh["Settings_AutoHideOff"] = "不自动隐藏";
         zh["Settings_Notifications"] = "低电量通知";
         zh["Settings_NotificationsDesc"] = "电量较低时显示 Windows 提醒";
         zh["Settings_AudioRouter"] = "自动切换音频设备";

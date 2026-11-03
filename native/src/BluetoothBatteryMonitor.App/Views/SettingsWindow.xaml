@@ -224,6 +224,37 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{DynamicResource Settings_AutoHideLabel}"
+                                           FontSize="14"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                                <TextBlock Text="{DynamicResource Settings_AutoHideDesc}"
+                                           FontSize="12"
+                                           TextWrapping="Wrap"
+                                           Margin="0,0,12,0"
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                            <ComboBox Grid.Column="1"
+                                      ItemsSource="{Binding AutoHideOptions}"
+                                      SelectedValuePath="Seconds"
+                                      DisplayMemberPath="DisplayName"
+                                      SelectedValue="{Binding FlyoutAutoHideSeconds, Mode=TwoWay}"
+                                      Width="130"
+                                      VerticalAlignment="Center" />
+                        </Grid>
+                    </Border>
+                    <Border Margin="0,0,0,12"
+                            Padding="14,10"
+                            CornerRadius="8"
+                            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                            BorderThickness="1"
+                            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center">
                                 <TextBlock Text="{DynamicResource Settings_Language}"
                                            FontSize="14"
                                            FontWeight="SemiBold"
