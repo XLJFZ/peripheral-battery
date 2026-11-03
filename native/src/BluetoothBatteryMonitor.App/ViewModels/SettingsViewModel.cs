@@ -14,6 +14,7 @@ using BluetoothBatteryMonitor.App.Services.Update;
 namespace BluetoothBatteryMonitor.App.ViewModels;
 
 public record ThresholdOption(int Value, string DisplayName);
+public record TrayStyleOption(string Value, string Display);
 public record RefreshIntervalOption(int Seconds, string DisplayName);
 
 public partial class SettingsViewModel : ObservableObject
@@ -21,6 +22,14 @@ public partial class SettingsViewModel : ObservableObject
     private readonly AppSettings _settings;
 
     public static string[] AvailableTrayStyles => new[] { "圆环", "数字", "圆环 + 数字" };
+
+    /// <summary>Stored values stay language-neutral keys; only the display text is localized.</summary>
+    public static IReadOnlyList<TrayStyleOption> AvailableTrayStyleOptions => new[]
+    {
+        new TrayStyleOption("圆环", LocalizationService.GetString("Tray_StyleRing")),
+        new TrayStyleOption("数字", LocalizationService.GetString("Tray_StyleNumber")),
+        new TrayStyleOption("圆环 + 数字", LocalizationService.GetString("Tray_StyleBoth"))
+    };
     [ObservableProperty] private bool _trayAutoColor;
     [ObservableProperty] private string _trayHighColor = "#00C98D";
     [ObservableProperty] private string _trayMidColor = "#FFC048";
@@ -31,43 +40,24 @@ public partial class SettingsViewModel : ObservableObject
 
     private readonly IEnumerable<BluetoothDeviceModel>? _knownDevices;
 
-    public static IReadOnlyList<ThresholdOption> AvailableThresholds => LocalizationService.CurrentLanguage == "tr"
-        ? new[]
-        {
-            new ThresholdOption(0, "Varsayılan (Global)"),
-            new ThresholdOption(10, "%10 (Fare / Düşük)"),
-            new ThresholdOption(15, "%15"),
-            new ThresholdOption(20, "%20 (Standart)"),
-            new ThresholdOption(25, "%25"),
-            new ThresholdOption(30, "%30"),
-            new ThresholdOption(40, "%40 (Erken Uyarı)")
-        }
-        : new[]
-        {
-            new ThresholdOption(0, "Default (Global)"),
-            new ThresholdOption(10, "10% (Mouse / Low Power)"),
-            new ThresholdOption(15, "15%"),
-            new ThresholdOption(20, "20% (Standard)"),
-            new ThresholdOption(25, "25%"),
-            new ThresholdOption(30, "30%"),
-            new ThresholdOption(40, "40% (Early Warning)")
-        };
+    public static IReadOnlyList<ThresholdOption> AvailableThresholds => new[]
+    {
+        new ThresholdOption(0, LocalizationService.GetString("Settings_ThresholdDefault")),
+        new ThresholdOption(10, "10%"),
+        new ThresholdOption(15, "15%"),
+        new ThresholdOption(20, "20%"),
+        new ThresholdOption(25, "25%"),
+        new ThresholdOption(30, "30%"),
+        new ThresholdOption(40, "40%")
+    };
 
-    public static IReadOnlyList<RefreshIntervalOption> AvailableRefreshIntervals => LocalizationService.CurrentLanguage == "tr"
-        ? new[]
-        {
-            new RefreshIntervalOption(30, "30 Saniye"),
-            new RefreshIntervalOption(60, "60 Saniye"),
-            new RefreshIntervalOption(120, "120 Saniye"),
-            new RefreshIntervalOption(300, "300 Saniye")
-        }
-        : new[]
-        {
-            new RefreshIntervalOption(30, "30 Seconds"),
-            new RefreshIntervalOption(60, "60 Seconds"),
-            new RefreshIntervalOption(120, "120 Seconds"),
-            new RefreshIntervalOption(300, "300 Seconds")
-        };
+    public static IReadOnlyList<RefreshIntervalOption> AvailableRefreshIntervals => new[]
+    {
+        new RefreshIntervalOption(30, LocalizationService.GetString("Settings_Seconds", 30)),
+        new RefreshIntervalOption(60, LocalizationService.GetString("Settings_Seconds", 60)),
+        new RefreshIntervalOption(120, LocalizationService.GetString("Settings_Seconds", 120)),
+        new RefreshIntervalOption(300, LocalizationService.GetString("Settings_Seconds", 300))
+    };
 
     public SettingsViewModel(IEnumerable<BluetoothDeviceModel>? knownDevices = null)
     {
