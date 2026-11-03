@@ -15,3 +15,8 @@ macos/diagnostics/
 .dotnet-sdk.zip
 .dotnet-install.sh
 .dotnet-install.ps1
+
+# Release binaries are build artifacts; keep sha256/x out of git too.
+releases/**/*.exe
+releases/**/*.sha256
+releases/**/sha256.txt
