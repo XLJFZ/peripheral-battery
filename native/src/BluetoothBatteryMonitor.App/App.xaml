@@ -1,7 +1,8 @@
 <Application x:Class="BluetoothBatteryMonitor.App.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -15,6 +16,21 @@
             <SolidColorBrush x:Key="PeripheralGlintBrush" Color="Transparent" />
             <CornerRadius x:Key="PeripheralPanelRadius">12</CornerRadius>
             <CornerRadius x:Key="PeripheralCardRadius">8</CornerRadius>
+
+            <!-- Panel size profile (标准); FlyoutDensity.Apply overwrites these at runtime. -->
+            <sys:Double x:Key="FlyoutWidth">416</sys:Double>
+            <Thickness x:Key="FlyoutHeaderPadding">16,14,16,10</Thickness>
+            <Thickness x:Key="FlyoutListPadding">12,8,12,8</Thickness>
+            <Thickness x:Key="FlyoutCardPadding">14,12,14,12</Thickness>
+            <Thickness x:Key="FlyoutCardMargin">0,4,0,6</Thickness>
+            <Thickness x:Key="FlyoutFooterPadding">14,10,14,10</Thickness>
+            <sys:Double x:Key="FlyoutIconSize">36</sys:Double>
+            <CornerRadius x:Key="FlyoutIconRadius">18</CornerRadius>
+            <sys:Double x:Key="FlyoutTitleSize">16</sys:Double>
+            <sys:Double x:Key="FlyoutStatusSize">12</sys:Double>
+            <sys:Double x:Key="FlyoutNameSize">13.5</sys:Double>
+            <sys:Double x:Key="FlyoutMetaSize">11</sys:Double>
+            <sys:Double x:Key="FlyoutBatterySize">14</sys:Double>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

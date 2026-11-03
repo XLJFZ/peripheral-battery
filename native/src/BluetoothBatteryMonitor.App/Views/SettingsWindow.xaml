@@ -170,6 +170,35 @@
                     </Grid>
                 </Border>
 
+                <!-- 3b. Panel boyutu -->
+                <Border Margin="0,0,0,12"
+                        Padding="14,10"
+                        CornerRadius="8"
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        BorderThickness="1"
+                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="面板大小"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                            <TextBlock Text="紧凑 / 标准 / 宽松，保存后立即生效"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                        <ComboBox Grid.Column="1"
+                                  ItemsSource="{Binding AvailableDensities}"
+                                  SelectedItem="{Binding PanelDensity, Mode=TwoWay}"
+                                  Width="130"
+                                  VerticalAlignment="Center" />
+                    </Grid>
+                </Border>
+
                 <!-- 4. Bildirimleri Etkinleştir -->
                 <Border Margin="0,0,0,12"
                         Padding="14,10"

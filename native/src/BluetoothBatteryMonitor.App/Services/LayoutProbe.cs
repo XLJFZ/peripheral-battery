@@ -107,6 +107,11 @@ public static class LayoutProbe
         {
             label,
             windowHeight = Math.Round(window.ActualHeight, 1),
+            windowWidth = Math.Round(window.ActualWidth, 1),
+            windowWidthProperty = Math.Round(window.Width, 1),
+            windowMinWidth = Math.Round(window.MinWidth, 1),
+            windowMaxWidth = double.IsInfinity(window.MaxWidth) ? "Infinity" : Math.Round(window.MaxWidth, 1).ToString(),
+            flyoutWidthResource = Application.Current.TryFindResource("FlyoutWidth"),
             windowHeightProperty = double.IsNaN(window.Height) ? "NaN" : Math.Round(window.Height, 1).ToString(),
             sizeToContent = window.SizeToContent.ToString(),
             windowMaxHeight = double.IsInfinity(window.MaxHeight) ? "Infinity" : Math.Round(window.MaxHeight, 1).ToString(),

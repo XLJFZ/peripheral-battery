@@ -148,10 +148,17 @@ public partial class FlyoutWindow : FluentWindow
     /// relying on SizeToContent, which keeps the height it measured first and leaves the
     /// remaining space to the `*` device row.
     /// </summary>
-    public double FitToContent()
+    /// <summary>Applies a panel size and re-fits the height to the new width.</summary>
+    public void ApplyDensity(double width)
+    {
+        Width = width;
+        FitToContent(width);
+    }
+
+    public double FitToContent(double? widthOverride = null)
     {
         if (Content is not FrameworkElement content) return 0;
-        double width = ActualWidth > 0 ? ActualWidth : (Width > 0 ? Width : 416);
+        double width = widthOverride ?? (ActualWidth > 0 ? ActualWidth : (Width > 0 ? Width : 416));
         content.Measure(new Size(width, double.PositiveInfinity));
         double desired = Math.Ceiling(content.DesiredSize.Height);
         if (desired <= 0 || double.IsInfinity(desired)) return 0;

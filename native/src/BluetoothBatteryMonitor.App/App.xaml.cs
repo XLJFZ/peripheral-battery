@@ -163,6 +163,7 @@ public partial class App : System.Windows.Application
         // 2. Initialize System Services, Theme, and Localization
         var initialSettings = AppSettings.Load();
         ThemeManager.Initialize();
+        FlyoutDensity.Apply(initialSettings.FlyoutDensity);
         LocalizationService.Initialize(initialSettings.Language);
 
         // 3. Audio Endpoint Manager & Smart Audio Router
