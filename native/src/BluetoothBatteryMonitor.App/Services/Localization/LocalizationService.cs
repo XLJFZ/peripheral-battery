@@ -78,6 +78,8 @@ public static class LocalizationService
             ["Tray_About"] = "About",
             ["Tray_Exit"] = "Exit",
             ["Tray_TooltipNoDevices"] = "Bluetooth Battery Monitor (No devices connected)",
+            ["Tray_TooltipTitle"] = "Battery",
+            ["Tray_MoreDevices"] = "+{0} more, click to view",
 
             // Settings Window
             ["Settings_Title"] = "Settings - Bluetooth Battery Monitor",
@@ -187,6 +189,8 @@ public static class LocalizationService
             ["Tray_About"] = "Hakkında",
             ["Tray_Exit"] = "Çıkış",
             ["Tray_TooltipNoDevices"] = "Bluetooth Pil Monitörü (Bağlı cihaz yok)",
+            ["Tray_TooltipTitle"] = "Pil",
+            ["Tray_MoreDevices"] = "+{0} cihaz, görmek için tıklayın",
 
             // Settings Window
             ["Settings_Title"] = "Ayarlar - Bluetooth Pil Monitörü",
@@ -277,6 +281,8 @@ public static class LocalizationService
         zh["Tray_About"] = "关于";
         zh["Tray_Exit"] = "退出";
         zh["Tray_TooltipNoDevices"] = "外设电量（尚无已连接设备）";
+        zh["Tray_TooltipTitle"] = "外设电量";
+        zh["Tray_MoreDevices"] = "+{0} 台，点击查看";
         zh["Settings_Title"] = "设置 · 外设电量";
         zh["Settings_Header"] = "应用设置";
         zh["Settings_SubHeader"] = "自定义外观、设备电量与通知。";

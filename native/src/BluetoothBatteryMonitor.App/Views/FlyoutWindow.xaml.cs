@@ -88,6 +88,11 @@ public partial class FlyoutWindow : FluentWindow
         ContentRendered += OnContentRendered;
         SizeChanged += OnSizeChanged;
 
+        // SizeToContent alone leaves the panel at its first measured height: with a single
+        // device the `*` row kept a whole extra card of empty space. Fit explicitly whenever
+        // the device list changes.
+        ((System.Collections.Specialized.INotifyCollectionChanged)DeviceList.Items).CollectionChanged += (s, e) => ScheduleFit();
+
         // Track opening and closing of child context menus (e.g. device card threshold menu)
         AddHandler(System.Windows.Controls.ContextMenuService.ContextMenuOpeningEvent,
             new System.Windows.Controls.ContextMenuEventHandler((s, e) => _isChildContextMenuOpen = true));
@@ -122,6 +127,41 @@ public partial class FlyoutWindow : FluentWindow
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         ApplyModernWindowStyling();
+        FitToContent();
+    }
+
+    private bool _fitQueued;
+
+    private void ScheduleFit()
+    {
+        if (_fitQueued) return;
+        _fitQueued = true;
+        Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(() =>
+        {
+            _fitQueued = false;
+            FitToContent();
+        }));
+    }
+
+    /// <summary>
+    /// Sets the window height to the measured content height (capped by MaxHeight) instead of
+    /// relying on SizeToContent, which keeps the height it measured first and leaves the
+    /// remaining space to the `*` device row.
+    /// </summary>
+    public double FitToContent()
+    {
+        if (Content is not FrameworkElement content) return 0;
+        double width = ActualWidth > 0 ? ActualWidth : (Width > 0 ? Width : 416);
+        content.Measure(new Size(width, double.PositiveInfinity));
+        double desired = Math.Ceiling(content.DesiredSize.Height);
+        if (desired <= 0 || double.IsInfinity(desired)) return 0;
+
+        double target = Math.Min(desired, MaxHeight);
+        if (SizeToContent != SizeToContent.Manual) SizeToContent = SizeToContent.Manual;
+        if (Math.Abs(Height - target) > 0.5) Height = target;
+        UpdateLayout();
+        RepositionFlyout();
+        return target;
     }
 
     private void OnContentRendered(object? sender, EventArgs e)
@@ -223,6 +263,7 @@ public partial class FlyoutWindow : FluentWindow
             // On initial show, position and display after layout finishes measuring
             Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(() =>
             {
+                FitToContent();
                 RepositionFlyout();
                 Activate();
                 BringToFront();
@@ -232,6 +273,7 @@ public partial class FlyoutWindow : FluentWindow
         }
         else
         {
+            FitToContent();
             UpdateLayout();
             RepositionFlyout();
             Activate();

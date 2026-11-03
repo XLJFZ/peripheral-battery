@@ -32,6 +32,8 @@ jobs:
           dotnet publish native/src/BluetoothBatteryMonitor.App/BluetoothBatteryMonitor.App.csproj -c Release -r win-x64 --self-contained true -o dist/ci-native
           if ($LASTEXITCODE -ne 0) { throw 'Publish failed' }
           python tools/check_native_package.py dist/ci-native --report dist/ui-smoke.json
+      - name: Verify flyout content height
+        run: python tools/check_flyout_layout.py --exe dist/ci-native/BluetoothBatteryMonitor.App.exe --report dist/flyout-layout.json
       - name: Publish and verify portable single file
         run: |
           dotnet publish native/src/BluetoothBatteryMonitor.App/BluetoothBatteryMonitor.App.csproj -c Release -r win-x64 --self-contained true -o dist/ci-portable `
