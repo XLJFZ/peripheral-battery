@@ -96,87 +96,27 @@ public class BluetoothBatteryEngine : IDisposable
 
         try
         {
-            StatusChanged?.Invoke(this, "Scanning Bluetooth devices...");
-
-            var connectionSnapshot = await BluetoothConnectionChecker.CaptureSnapshotAsync(_audioManager);
-
-            // Update connection state of cached devices with live snapshot
-            BluetoothConnectionChecker.UpdateConnectionStatuses(_devices.Values, connectionSnapshot);
-
-            var scanTasks = _providers.Select(async p =>
+            try
             {
-                try
-                {
-                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-                    return await p.GetDevicesAsync(cts.Token);
-                }
-                catch
-                {
-                    return (IReadOnlyList<BluetoothDeviceModel>)Array.Empty<BluetoothDeviceModel>();
-                }
-            });
-
-            var results = await Task.WhenAll(scanTasks);
-            var allResults=results.SelectMany(r=>r).ToList();
-            var uniqueResults=ControllerIdentity.Filter(allResults);
-            var retainedIds=uniqueResults.Select(d=>d.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
-            foreach(var alias in allResults.Where(d=>!retainedIds.Contains(d.Id)))
-                _devices.TryRemove(alias.Id,out _);
-            results=new IReadOnlyList<BluetoothDeviceModel>[] { uniqueResults };
-            var settings = AppSettings.Load();
-
-            foreach (var devList in results)
-            {
-                // Validate provider devices with live snapshot
-                BluetoothConnectionChecker.UpdateConnectionStatuses(devList, connectionSnapshot);
-
-                foreach (var dev in devList)
-                {
-                    MergeOrAddDevice(dev);
-                }
+                await ScanOnceAsync();
             }
-
-            // Update stale devices or closed-lid beacons
-            var now = DateTime.Now;
-            foreach (var kvp in _devices)
+            catch (Exception ex)
             {
-                // Apple AirPods / Beats and Google Fast Pair beacons stop advertising when case is closed.
-                // For disconnected beacons only: purge device if no advertisement received for 30 seconds.
-                if (!kvp.Value.IsConnected && kvp.Value.IsTws && (kvp.Value.ProviderSource.Contains("Apple Beacon") || kvp.Value.ProviderSource.Contains("Fast Pair")))
-                {
-                    if (now - kvp.Value.LastUpdated > TimeSpan.FromSeconds(30))
-                    {
-                        _devices.TryRemove(kvp.Key, out _);
-                    }
-                }
-                else if (now - kvp.Value.LastUpdated > TimeSpan.FromMinutes(10) && !kvp.Value.IsConnected)
-                {
-                    _devices.TryRemove(kvp.Key, out _);
-                }
+                // A scan must never escape into the timer's async-void context and take the
+                // process down; report and wait for the next scheduled poll instead.
+                StatusChanged?.Invoke(this, $"Scan failed: {ex.Message}");
             }
-
-            // Aggregate dual-mode (Classic + BLE GATT) devices
-            AggregateDualModeDevices();
-
-            // Finalize live connection status of all devices
-            BluetoothConnectionChecker.UpdateConnectionStatuses(_devices.Values, connectionSnapshot);
-
-            // Run codec detection and notification checks ONLY on confirmed connected devices
-            foreach (var activeDev in CurrentDevices)
-            {
-                if (activeDev.IsConnected && (activeDev.Type is DeviceType.Headphones or DeviceType.Earbuds or DeviceType.Speaker))
-                {
-                    activeDev.AudioCodec = _codecDetector.DetectCodec(activeDev);
-                }
-                _notificationService.CheckAndNotifyBattery(activeDev, settings);
-            }
-
-            StatusChanged?.Invoke(this, $"{_devices.Count} device(s) found.");
-            NotifyDevicesUpdated();
         }
         finally
         {
-            _scanLock.Release();
+            try
+            {
+                _scanLock.Release();
+            }
+            catch (ObjectDisposedException)
+            {
+                // Dispose raced with an in-flight scan; nothing to release.
+            }
 
             // Schedule next poll intelligently
             int interval = AppSettings.Load().RefreshIntervalSeconds;
@@ -188,19 +128,137 @@ public class BluetoothBatteryEngine : IDisposable
         }
     }
 
+    private async Task ScanOnceAsync()
+    {
+        StatusChanged?.Invoke(this, "Scanning Bluetooth devices...");
+
+        var connectionSnapshot = await BluetoothConnectionChecker.CaptureSnapshotAsync(_audioManager);
+
+        // Update connection state of cached devices with live snapshot
+        BluetoothConnectionChecker.UpdateConnectionStatuses(_devices.Values, connectionSnapshot);
+
+        var scanTasks = _providers.Select(async p =>
+        {
+            try
+            {
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+                return await p.GetDevicesAsync(cts.Token);
+            }
+            catch
+            {
+                return (IReadOnlyList<BluetoothDeviceModel>)Array.Empty<BluetoothDeviceModel>();
+            }
+        });
+
+        var results = await Task.WhenAll(scanTasks);
+        var allResults=results.SelectMany(r=>r).ToList();
+        var uniqueResults=ControllerIdentity.Filter(allResults);
+        var retainedIds=uniqueResults.Select(d=>d.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach(var alias in allResults.Where(d=>!retainedIds.Contains(d.Id)))
+            _devices.TryRemove(alias.Id,out _);
+        results=new IReadOnlyList<BluetoothDeviceModel>[] { uniqueResults };
+        var settings = AppSettings.Load();
+
+        foreach (var devList in results)
+        {
+            // Validate provider devices with live snapshot
+            BluetoothConnectionChecker.UpdateConnectionStatuses(devList, connectionSnapshot);
+
+            foreach (var dev in devList)
+            {
+                MergeOrAddDevice(dev);
+            }
+        }
+
+        // Update stale devices or closed-lid beacons
+        var now = DateTime.Now;
+        foreach (var kvp in _devices)
+        {
+            // Apple AirPods / Beats and Google Fast Pair beacons stop advertising when case is closed.
+            // For disconnected beacons only: purge device if no advertisement received for 30 seconds.
+            if (!kvp.Value.IsConnected && kvp.Value.IsTws && (kvp.Value.ProviderSource.Contains("Apple Beacon") || kvp.Value.ProviderSource.Contains("Fast Pair")))
+            {
+                if (now - kvp.Value.LastUpdated > TimeSpan.FromSeconds(30))
+                {
+                    _devices.TryRemove(kvp.Key, out _);
+                }
+            }
+            else if (now - kvp.Value.LastUpdated > TimeSpan.FromMinutes(10) && !kvp.Value.IsConnected)
+            {
+                _devices.TryRemove(kvp.Key, out _);
+            }
+        }
+
+        // Aggregate dual-mode (Classic + BLE GATT) devices
+        AggregateDualModeDevices();
+
+        // Finalize live connection status of all devices
+        BluetoothConnectionChecker.UpdateConnectionStatuses(_devices.Values, connectionSnapshot);
+
+        // Run codec detection and notification checks ONLY on confirmed connected devices
+        foreach (var activeDev in CurrentDevices)
+        {
+            if (activeDev.IsConnected && (activeDev.Type is DeviceType.Headphones or DeviceType.Earbuds or DeviceType.Speaker))
+            {
+                activeDev.AudioCodec = _codecDetector.DetectCodec(activeDev);
+            }
+            _notificationService.CheckAndNotifyBattery(activeDev, settings);
+        }
+
+        StatusChanged?.Invoke(this, $"{_devices.Count} device(s) found.");
+        NotifyDevicesUpdated();
+    }
+
+    // Provider events (BLE notifications, PnP watcher updates) can arrive in bursts. Each event
+    // used to trigger a full system snapshot (~seconds of Win32/WinRT enumeration); now events
+    // are serialized through a gate and share one snapshot for a short window.
+    private readonly SemaphoreSlim _eventGate = new(1, 1);
+    private readonly object _eventSnapshotLock = new();
+    private BluetoothConnectionChecker.BluetoothConnectionSnapshot? _lastEventSnapshot;
+    private DateTime _lastEventSnapshotAt = DateTime.MinValue;
+    private static readonly TimeSpan EventSnapshotTtl = TimeSpan.FromSeconds(2);
+
     private async void OnProviderDeviceUpdated(object? sender, BluetoothDeviceModel dev)
     {
-        // Verify live connection status of incoming event
-        dev.IsConnected = await BluetoothConnectionChecker.IsDeviceConnectedAsync(dev);
-
-        var activeDev = MergeOrAddDevice(dev);
-        if (activeDev.IsConnected && (activeDev.Type is DeviceType.Headphones or DeviceType.Earbuds or DeviceType.Speaker))
+        try
         {
-            activeDev.AudioCodec = _codecDetector.DetectCodec(activeDev);
+            await _eventGate.WaitAsync();
+            try
+            {
+                BluetoothConnectionChecker.BluetoothConnectionSnapshot? snapshot;
+                lock (_eventSnapshotLock)
+                {
+                    snapshot = DateTime.Now - _lastEventSnapshotAt < EventSnapshotTtl ? _lastEventSnapshot : null;
+                }
+
+                snapshot ??= await BluetoothConnectionChecker.CaptureSnapshotAsync(_audioManager);
+                lock (_eventSnapshotLock)
+                {
+                    _lastEventSnapshot = snapshot;
+                    _lastEventSnapshotAt = DateTime.Now;
+                }
+
+                // Verify live connection status of incoming event
+                dev.IsConnected = await BluetoothConnectionChecker.IsDeviceConnectedAsync(dev, snapshot);
+
+                var activeDev = MergeOrAddDevice(dev);
+                if (activeDev.IsConnected && (activeDev.Type is DeviceType.Headphones or DeviceType.Earbuds or DeviceType.Speaker))
+                {
+                    activeDev.AudioCodec = _codecDetector.DetectCodec(activeDev);
+                }
+                var settings = AppSettings.Load();
+                _notificationService.CheckAndNotifyBattery(activeDev, settings);
+                NotifyDevicesUpdated();
+            }
+            finally
+            {
+                _eventGate.Release();
+            }
         }
-        var settings = AppSettings.Load();
-        _notificationService.CheckAndNotifyBattery(activeDev, settings);
-        NotifyDevicesUpdated();
+        catch
+        {
+            // Never let a provider event burst crash the process (this handler is async void).
+        }
     }
 
     private readonly object _deviceLockObj = new();
@@ -672,7 +730,14 @@ public class BluetoothBatteryEngine : IDisposable
 
         _pollingTimer = new Timer(async _ =>
         {
-            await RefreshAllDevicesAsync();
+            try
+            {
+                await RefreshAllDevicesAsync();
+            }
+            catch
+            {
+                // Timer callbacks are async void; a scan failure must not crash the process.
+            }
         }, null, delay, Timeout.InfiniteTimeSpan);
     }
 
@@ -699,6 +764,19 @@ public class BluetoothBatteryEngine : IDisposable
 
         SystemEvents.SessionSwitch -= OnSessionSwitch;
         _pollingTimer?.Dispose();
+
+        // Let an in-flight scan finish before tearing down the semaphore it will release.
+        try
+        {
+            if (_scanLock.Wait(TimeSpan.FromSeconds(5)))
+            {
+                _scanLock.Release();
+            }
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+
         _scanLock.Dispose();
 
         foreach (var provider in _providers)

@@ -9,6 +9,7 @@ namespace BluetoothBatteryMonitor.App.Services.Audio;
 public class SmartAudioRouter : IDisposable
 {
     private readonly IAudioEndpointManager _endpointManager;
+    private readonly object _stateLock = new();
     private string? _previousDefaultEndpointId;
     private string? _activeAudioDeviceId;
     private string? _activeEndpointId;
@@ -31,6 +32,17 @@ public class SmartAudioRouter : IDisposable
     {
         if (_isDisposed || devices == null) return;
 
+        // Called from the engine's background thread and from UI-thread settings changes;
+        // the router state (endpoint ids + _knownConnectedDeviceIds) must not be touched
+        // concurrently.
+        lock (_stateLock)
+        {
+            OnDevicesUpdatedCore(devices, settings);
+        }
+    }
+
+    private void OnDevicesUpdatedCore(IReadOnlyList<BluetoothDeviceModel> devices, AppSettings settings)
+    {
         if (!settings.AutoSwitchAudioEndpoint)
         {
             // If feature is disabled and an active override exists, revert to previous endpoint
@@ -166,6 +178,9 @@ public class SmartAudioRouter : IDisposable
         _isDisposed = true;
 
         // Restore endpoint when shutting down
-        FallbackToPreviousEndpoint();
+        lock (_stateLock)
+        {
+            FallbackToPreviousEndpoint();
+        }
     }
 }
