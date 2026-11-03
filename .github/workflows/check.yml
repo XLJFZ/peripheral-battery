@@ -43,7 +43,7 @@ jobs:
           choco install innosetup --no-progress -y
           & "C://Program Files (x86)//Inno Setup 6//ISCC.exe" "installer\PeripheralBattery.iss"
           if ($LASTEXITCODE) { throw 'Installer build failed' }
-          if (-not (Test-Path "releases\v$v\Peripheral-Battery-Setup-$v.exe")) { throw 'Installer output missing' }
+          if (-not (Test-Path "dist\installer\Peripheral-Battery-Setup-$v.exe")) { throw 'Installer output missing' }
       - name: Publish and verify portable single file
         run: |
           dotnet publish native/src/BluetoothBatteryMonitor.App/BluetoothBatteryMonitor.App.csproj -c Release -r win-x64 --self-contained true -o dist/ci-portable `
