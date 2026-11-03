@@ -56,8 +56,7 @@ public class ToastNotificationService
         return ShowToast(device, isCritical);
     }
 
-    protected virtual bool ShowToast(BluetoothDeviceModel device, bool isCritical)
-    {
+    protected virtual bool ShowToast(BluetoothDeviceModel device, bool isCritical)    {
         int? displayLevel = device.EffectiveBatteryLevel ?? device.BatteryLevel;
 
         string title = isCritical
@@ -80,6 +79,27 @@ public class ToastNotificationService
         catch
         {
             // Suppress error if notification permissions are denied or shell service is unavailable
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Plain informational toast (update finished / update did not finish). Ignores the battery
+    /// thresholds and the notification preference: these are one-off messages about the app itself.
+    /// </summary>
+    public virtual bool ShowMessage(string title, string message)
+    {
+        try
+        {
+            new ToastContentBuilder()
+                .AddText(title)
+                .AddText(message)
+                .AddAttributionText(Localization.LocalizationService.GetString("App_Title"))
+                .Show();
+            return true;
+        }
+        catch
+        {
             return false;
         }
     }

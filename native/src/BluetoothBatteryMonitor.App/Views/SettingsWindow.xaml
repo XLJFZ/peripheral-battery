@@ -535,6 +535,20 @@
                                        TextWrapping="Wrap"
                                        Visibility="{Binding HasUpdateStatusMessage, Converter={StaticResource BoolToVis}}" />
 
+                            <!-- Önceki güncelleme tamamlanmadı: kalıcı uyarı -->
+                            <Border Margin="0,8,0,0"
+                                    Padding="10,8"
+                                    CornerRadius="6"
+                                    Background="#33E24B4A"
+                                    BorderThickness="1"
+                                    BorderBrush="#66E24B4A"
+                                    Visibility="{Binding HasUpdatePendingWarning, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Text="{Binding UpdatePendingWarning}"
+                                           FontSize="12"
+                                           Foreground="#E24B4A"
+                                           TextWrapping="Wrap" />
+                            </Border>
+
                             <!-- Yeni sürüm: indir ve kur / manuel indir -->
                             <ProgressBar Value="{Binding UpdateProgressPercent}"
                                          Maximum="100"

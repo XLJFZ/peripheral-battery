@@ -1,5 +1,6 @@
 extern alias MonitorApp;
 using System;
+using System.IO;
 using Xunit;
 using UpdateInstaller = MonitorApp::BluetoothBatteryMonitor.App.Services.Update.UpdateInstaller;
 using UpdateStage = MonitorApp::BluetoothBatteryMonitor.App.Services.Update.UpdateStage;
@@ -40,7 +41,8 @@ public class UpdateInstallerTests
     }
 
     [Fact]
-    public void ParseChecksum_IgnoresLinesThatAreNotHex()    {
+    public void ParseChecksum_IgnoresLinesThatAreNotHex()
+    {
         string text = new string('z', 64) + " *Peripheral-Battery-Setup-0.3.7.exe\n" +
                       HashA + " *Peripheral-Battery-Setup-0.3.7.exe\n";
         Assert.Equal(HashA, UpdateInstaller.ParseChecksum(text, "Peripheral-Battery-Setup-0.3.7.exe"));
@@ -101,5 +103,58 @@ public class UpdateInstallerTests
         Assert.True(result.Success);
         Assert.Null(result.ErrorCode);
         Assert.Equal(@"C:\x\setup.exe", result.InstallerPath);
+    }
+
+    [Theory]
+    [InlineData("https://github.com/x/Peripheral-Battery-Setup-0.3.9.exe", "Peripheral-Battery-Setup-0.3.9.exe")]
+    [InlineData("https://github.com/x/Peripheral%20Battery%20Setup%200.3.9.exe", "Peripheral Battery Setup 0.3.9.exe")]
+    [InlineData("https://github.com/x/%E5%A4%96%E8%AE%BE-Setup.exe", "外设-Setup.exe")]
+    public void LocalFileName_DecodesPercentEncodedAssets(string url, string expected)
+    {
+        // The name has to match the sha256.txt entry, which holds the decoded asset name.
+        Assert.Equal(expected, UpdateInstaller.LocalFileName(url));
+    }
+
+    [Theory]
+    [InlineData("Peripheral-Battery-Setup-0.3.9.exe", true)]
+    [InlineData("peripheral-battery-setup-0.3.9.EXE", true)]
+    [InlineData("Peripheral-Battery-0.3.9-x64.exe", false)]
+    [InlineData("build-0.3.9.zip", false)]
+    [InlineData("Setup", false)]
+    [InlineData("", false)]
+    public void IsInstallerFileName_RejectsAnythingButASetup(string fileName, bool expected)
+    {
+        Assert.Equal(expected, UpdateInstaller.IsInstallerFileName(fileName));
+    }
+
+    [Fact]
+    public void PruneStaleDownloads_DropsPartialFilesAndOldInstallers()
+    {
+        string dir = Path.Combine(Path.GetTempPath(), "pb-prune-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            string stale = Path.Combine(dir, "Peripheral-Battery-Setup-0.3.7.exe");
+            string fresh = Path.Combine(dir, "Peripheral-Battery-Setup-0.3.9.exe");
+            string partial = Path.Combine(dir, "Peripheral-Battery-Setup-0.3.9.exe.part");
+            File.WriteAllText(stale, "old");
+            File.WriteAllText(fresh, "new");
+            File.WriteAllText(partial, "half");
+
+            var now = DateTime.UtcNow;
+            File.SetLastWriteTimeUtc(stale, now.AddDays(-10));
+            File.SetLastWriteTimeUtc(fresh, now);
+
+            int removed = UpdateInstaller.PruneStaleDownloads(TimeSpan.FromDays(2), now, dir);
+
+            Assert.Equal(2, removed);
+            Assert.False(File.Exists(stale));
+            Assert.False(File.Exists(partial));
+            Assert.True(File.Exists(fresh));
+        }
+        finally
+        {
+            try { Directory.Delete(dir, true); } catch { }
+        }
     }
 }

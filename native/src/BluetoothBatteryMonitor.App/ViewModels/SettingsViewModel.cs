@@ -81,6 +81,29 @@ public partial class SettingsViewModel : ObservableObject
         _restApiPort = _settings.RestApiPort;
 
         PopulateDeviceThresholds(knownDevices);
+        LoadPendingUpdateWarning();
+    }
+
+    /// <summary>
+    /// Surfaces a failed upgrade even when the user never presses "check for updates": the marker
+    /// is written before the installer starts and is only cleared once the new version is running.
+    /// </summary>
+    private void LoadPendingUpdateWarning()
+    {
+        try
+        {
+            var pending = UpdatePendingUpdate.Read();
+            if (pending == null || string.IsNullOrWhiteSpace(pending.ToVersion)) return;
+
+            string current = UpdateCheckService.GetCurrentVersion();
+            if (UpdateCheckService.CompareVersions(current, pending.ToVersion) >= 0) return;
+
+            UpdatePendingWarning = LocalizationService.GetString("Update_PendingFailed", pending.ToVersion, current);
+        }
+        catch
+        {
+            // A malformed marker must never block the settings page.
+        }
     }
 
     private void PopulateDeviceThresholds(IEnumerable<BluetoothDeviceModel>? knownDevices)
@@ -392,6 +415,13 @@ public partial class SettingsViewModel : ObservableObject
     private string? _updateStatusMessage;
 
     public bool HasUpdateStatusMessage => !string.IsNullOrWhiteSpace(UpdateStatusMessage);
+
+    /// <summary>Persistent banner for an update that was started but never landed.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasUpdatePendingWarning))]
+    private string? _updatePendingWarning;
+
+    public bool HasUpdatePendingWarning => !string.IsNullOrWhiteSpace(UpdatePendingWarning);
 
     [ObservableProperty]
     private bool _hasUpdateAvailable;

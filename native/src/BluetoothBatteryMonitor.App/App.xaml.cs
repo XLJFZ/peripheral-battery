@@ -102,17 +102,12 @@ public partial class App : System.Windows.Application
         }
 
         // 1. Single Instance Check
-        bool isNewInstance;
-        try
-        {
-            _singleInstanceMutex = new Mutex(true, MutexName, out isNewInstance);
-        }
-        catch
-        {
-            isNewInstance = true;
-        }
+        // Retries for a few seconds on purpose: an in-app update relaunches this process while
+        // the previous copy is still shutting down, and a one-shot probe would lose that race
+        // and leave the user with no tray icon after the upgrade.
+        _singleInstanceMutex = Helpers.SingleInstanceLock.Acquire(MutexName);
 
-        if (!isNewInstance)
+        if (_singleInstanceMutex == null)
         {
             // Signal the already running instance to bring the Flyout window to foreground
             try
@@ -190,6 +185,10 @@ public partial class App : System.Windows.Application
         {
             _smartAudioRouter?.OnDevicesUpdated(devices, AppSettings.Load());
         };
+
+        // Report how the last in-app update ended, then drop stale installers in the background.
+        ReportPendingUpdate();
+        _ = global::System.Threading.Tasks.Task.Run(() => Services.Update.UpdateInstaller.PruneStaleDownloads());
         // 5. ViewModel & Windows
         _mainViewModel = new MainViewModel(_engine, _audioEndpointManager);
         _flyoutWindow = new FlyoutWindow(_mainViewModel);
@@ -251,6 +250,38 @@ public partial class App : System.Windows.Application
         {
             _flyoutWindow.ShowFlyout();
         }
+    }
+
+    /// <summary>
+    /// A silent install is fire-and-forget, so an aborted upgrade used to look exactly like
+    /// "the app just closed". Report both outcomes once, at the next start.
+    /// </summary>
+    private void ReportPendingUpdate()
+    {
+        var state = Services.Update.UpdatePendingUpdate.Reconcile(
+            Services.Update.UpdateCheckService.GetCurrentVersion(), out var pending);
+
+        if (pending == null || state == Services.Update.PendingUpdateState.None) return;
+
+        if (state == Services.Update.PendingUpdateState.Completed)
+        {
+            Notify(LocalizationService.GetString("Update_CompletedTitle"),
+                   LocalizationService.GetString("Update_CompletedBody", pending.ToVersion));
+            return;
+        }
+
+        // Failure stays visible in the settings banner; the toast only fires once.
+        if (pending.Notified) return;
+
+        Notify(LocalizationService.GetString("Update_FailedTitle"),
+               LocalizationService.GetString("Update_FailedBody", pending.ToVersion));
+        Services.Update.UpdatePendingUpdate.MarkNotified(pending);
+    }
+
+    private void Notify(string title, string message)
+    {
+        try { _notificationService?.ShowMessage(title, message); }
+        catch { }
     }
 
     private void ListenForShowSignals()

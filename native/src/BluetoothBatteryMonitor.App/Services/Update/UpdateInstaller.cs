@@ -56,9 +56,12 @@ public static class UpdateInstaller
         }
     }
 
-    public static string UpdateFolder => Path.Combine(
+    /// <summary>Our own state folder (%LOCALAPPDATA%\PeripheralBattery) — logs and the pending marker.</summary>
+    public static string StateFolder => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "PeripheralBattery", "updates");
+        "PeripheralBattery");
+
+    public static string UpdateFolder => Path.Combine(StateFolder, "updates");
 
     public static string InstallLogPath => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -78,8 +81,8 @@ public static class UpdateInstaller
             if (string.IsNullOrWhiteSpace(update.DownloadUrl) || !IsAllowed(update.DownloadUrl))
                 return Fail("blockedHost");
 
-            string fileName = Path.GetFileName(new Uri(update.DownloadUrl).AbsolutePath);
-            if (!fileName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+            string fileName = LocalFileName(update.DownloadUrl);
+            if (!IsInstallerFileName(fileName))
                 return Fail("noInstaller");
 
             Directory.CreateDirectory(UpdateFolder);
@@ -124,6 +127,11 @@ public static class UpdateInstaller
             RemoveMarkOfTheWeb(target);
 
             progress?.Report(new UpdateProgress(UpdateStage.Launching, 100));
+
+            // Written before launching: if Setup never finishes, the next start of the old
+            // version sees this marker and can tell the user the upgrade did not land.
+            UpdatePendingUpdate.Record(UpdateCheckService.GetCurrentVersion(), update.LatestVersion, target);
+
             var startInfo = new ProcessStartInfo(target)
             {
                 // No shell execute: avoids a SmartScreen prompt in the middle of an update.
@@ -259,6 +267,76 @@ public static class UpdateInstaller
            uri.Scheme == Uri.UriSchemeHttps &&
            Array.Exists(AllowedHosts, h => string.Equals(uri.Host, h, StringComparison.OrdinalIgnoreCase));
 
+    /// <summary>
+    /// File name of a release asset URL, percent-decoded. GitHub encodes non-ASCII asset names, so
+    /// comparing the raw URL path against the sha256.txt entries would fail to find the hash and
+    /// abort the update with a misleading "noChecksum".
+    /// </summary>
+    internal static string LocalFileName(string url)
+    {
+        string raw;
+        try { raw = new Uri(url).AbsolutePath; }
+        catch { return string.Empty; }
+
+        string decoded;
+        try { decoded = Uri.UnescapeDataString(raw); }
+        catch { decoded = raw; }
+
+        // Decoding can reveal a separator again; Path.GetFileName strips both '/' and '\'.
+        return Path.GetFileName(decoded);
+    }
+
+    /// <summary>
+    /// Only a Setup executable may be launched as an updater. A release without a Setup asset used
+    /// to fall back to the portable single file, which silently ignores /VERYSILENT, starts a
+    /// second tray instance that then loses the single-instance race — the user sees "installing"
+    /// and ends up with no app at all.
+    /// </summary>
+    internal static bool IsInstallerFileName(string fileName)
+        => !string.IsNullOrEmpty(fileName) &&
+           fileName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) &&
+           fileName.Contains("setup", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Drops left-over downloads: interrupted transfers (*.part) right away, and installers older
+    /// than <paramref name="keepFor"/>. Each installer is ~72 MB, so a few upgrades otherwise leave
+    /// hundreds of megabytes behind in %LOCALAPPDATA%.
+    /// </summary>
+    internal static int PruneStaleDownloads(TimeSpan? keepFor = null, DateTime? nowUtc = null, string? folder = null)
+    {
+        folder ??= UpdateFolder;
+        if (!Directory.Exists(folder)) return 0;
+
+        var cutoff = (nowUtc ?? DateTime.UtcNow) - (keepFor ?? TimeSpan.FromDays(2));
+
+        string[] files;
+        try { files = Directory.GetFiles(folder); }
+        catch { return 0; }
+
+        int removed = 0;
+        foreach (string file in files)
+        {
+            try
+            {
+                string extension = Path.GetExtension(file);
+                bool stale = extension.Equals(".part", StringComparison.OrdinalIgnoreCase) ||
+                             (extension.Equals(".exe", StringComparison.OrdinalIgnoreCase) &&
+                              File.GetLastWriteTimeUtc(file) < cutoff);
+                if (!stale) continue;
+
+                File.Delete(file);
+                removed++;
+            }
+            catch
+            {
+                // Locked by a running installer; the next start tries again.
+            }
+        }
+
+        if (removed > 0) Log($"pruned {removed} stale update file(s)");
+        return removed;
+    }
+
     private static bool IsHex(string value)
     {
         foreach (char c in value)
@@ -296,7 +374,7 @@ public static class UpdateInstaller
         return new UpdateInstallResult(false, code);
     }
 
-    private static void Log(string message)
+    internal static void Log(string message)
     {
         try
         {

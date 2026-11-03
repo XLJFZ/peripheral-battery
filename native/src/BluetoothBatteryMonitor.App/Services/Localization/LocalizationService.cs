@@ -190,7 +190,12 @@ public static class LocalizationService
             ["Update_UpToDate"] = "You are using the latest version (v{0}).",
             ["Update_Available"] = "New version available: v{0}!",
             ["Update_Download"] = "Open download page",
-            ["Update_Error"] = "Could not check for updates. Please try again later."
+            ["Update_Error"] = "Could not check for updates. Please try again later.",
+            ["Update_CompletedTitle"] = "Update finished",
+            ["Update_CompletedBody"] = "You are now running v{0}.",
+            ["Update_FailedTitle"] = "Update did not finish",
+            ["Update_FailedBody"] = "v{0} was not installed, so the previous version is still running. Retry from Settings - Updates.",
+            ["Update_PendingFailed"] = "The update to v{0} did not finish; you are still on v{1}. Use \"Check for updates\" to retry."
         },
 
         ["tr"] = new(StringComparer.OrdinalIgnoreCase)
@@ -303,6 +308,11 @@ public static class LocalizationService
             ["Update_Err_Http"] = "İndirme başarısız (HTTP hatası).",
             ["Update_Err_Cancelled"] = "Güncelleme iptal edildi.",
             ["Update_Err_Generic"] = "Güncelleme başarısız. Kurulumu elle indirin.",
+            ["Update_CompletedTitle"] = "Güncelleme tamamlandı",
+            ["Update_CompletedBody"] = "Artık v{0} çalışıyor.",
+            ["Update_FailedTitle"] = "Güncelleme tamamlanmadı",
+            ["Update_FailedBody"] = "v{0} yüklenemedi; önceki sürüm çalışmaya devam ediyor. Ayarlar - Güncellemeler'den tekrar deneyin.",
+            ["Update_PendingFailed"] = "v{0} güncellemesi tamamlanmadı; hâlâ v{1}. Yeniden denemek için \"Güncellemeleri denetle\"yi kullanın.",
             ["Settings_Title"] = "Ayarlar - Bluetooth Pil Monitörü",
             ["Settings_Header"] = "Uygulama Ayarları",
             ["Settings_SubHeader"] = "Pil takibi ve bildirim tercihlerinizi özelleştirin.",
@@ -448,6 +458,11 @@ public static class LocalizationService
         zh["Update_Err_Http"] = "下载失败（HTTP 错误）。";
         zh["Update_Err_Cancelled"] = "已取消更新。";
         zh["Update_Err_Generic"] = "更新失败，请手动下载安装包。";
+        zh["Update_CompletedTitle"] = "更新完成";
+        zh["Update_CompletedBody"] = "已升级到 v{0}。";
+        zh["Update_FailedTitle"] = "更新未完成";
+        zh["Update_FailedBody"] = "v{0} 没有装成功，当前仍是原来的版本。可在设置 → 更新里重试。";
+        zh["Update_PendingFailed"] = "上次更新到 v{0} 未完成，当前仍是 v{1}，请点「检查更新」重试。";
         zh["Settings_Title"] = "设置 · 外设电量";
         zh["Settings_Header"] = "应用设置";
         zh["Settings_SubHeader"] = "自定义外观、设备电量与通知。";
