@@ -85,6 +85,9 @@ public static class LocalizationService
             ["Tray_TooltipNoDevices"] = "Bluetooth Battery Monitor (No devices connected)",
             ["Tray_TooltipTitle"] = "Battery",
             ["Tray_MoreDevices"] = "+{0} more, click to view",
+            ["Settings_TrayPerDevice"] = "One tray icon per device",
+            ["Settings_TrayPerDeviceDesc"] = "Shows an extra tray icon for each connected device with a battery reading (max 4).",
+            ["Settings_TrayChargingPulse"] = "Breathing ring while charging",
             ["Menu_RenameDevice"] = "Rename device",
             ["Menu_HideDevice"] = "Hide this device",
             ["Rename_Title"] = "Rename device",
@@ -274,6 +277,9 @@ public static class LocalizationService
             ["Tray_TooltipNoDevices"] = "Bluetooth Pil Monitörü (Bağlı cihaz yok)",
             ["Tray_TooltipTitle"] = "Pil",
             ["Tray_MoreDevices"] = "+{0} cihaz, görmek için tıklayın",
+            ["Settings_TrayPerDevice"] = "Cihaz başına bir tepsi simgesi",
+            ["Settings_TrayPerDeviceDesc"] = "Pil verisi olan her bağlı cihaz için ek bir tepsi simgesi gösterir (en fazla 4).",
+            ["Settings_TrayChargingPulse"] = "Şarj sırasında nefes alan halka",
             ["Menu_RenameDevice"] = "Cihazı yeniden adlandır",
             ["Menu_HideDevice"] = "Bu cihazı gizle",
             ["Rename_Title"] = "Cihazı yeniden adlandır",
@@ -444,6 +450,9 @@ public static class LocalizationService
         zh["Tray_TooltipNoDevices"] = "外设电量（尚无已连接设备）";
         zh["Tray_TooltipTitle"] = "外设电量";
         zh["Tray_MoreDevices"] = "+{0} 台，点击查看";
+        zh["Settings_TrayPerDevice"] = "每设备独立托盘图标";
+        zh["Settings_TrayPerDeviceDesc"] = "为每台有电量读数的已连接设备显示一个额外托盘图标（最多 4 个）。";
+        zh["Settings_TrayChargingPulse"] = "充电时电量环呼吸动画";
         zh["Menu_RenameDevice"] = "重命名设备";
         zh["Menu_HideDevice"] = "隐藏此设备";
         zh["Rename_Title"] = "重命名设备";
@@ -612,6 +621,9 @@ public static class LocalizationService
         fr["Tray_TooltipNoDevices"] = "Batterie Bluetooth (aucun appareil connecté)";
         fr["Tray_TooltipTitle"] = "Batterie";
         fr["Tray_MoreDevices"] = "+{0} autres, cliquez pour afficher";
+        fr["Settings_TrayPerDevice"] = "Une icône de barre des tâches par appareil";
+        fr["Settings_TrayPerDeviceDesc"] = "Affiche une icône supplémentaire pour chaque appareil connecté avec un niveau de batterie (max 4).";
+        fr["Settings_TrayChargingPulse"] = "Anneau respirant pendant la charge";
         fr["Menu_RenameDevice"] = "Renommer l'appareil";
         fr["Menu_HideDevice"] = "Masquer cet appareil";
         fr["Rename_Title"] = "Renommer l'appareil";
@@ -785,6 +797,9 @@ public static class LocalizationService
         de["Tray_TooltipNoDevices"] = "Bluetooth-Batterie (keine Geräte verbunden)";
         de["Tray_TooltipTitle"] = "Batterie";
         de["Tray_MoreDevices"] = "+{0} weitere, zum Anzeigen klicken";
+        de["Settings_TrayPerDevice"] = "Ein Tray-Symbol pro Gerät";
+        de["Settings_TrayPerDeviceDesc"] = "Zeigt für jedes verbundene Gerät mit Batteriedaten ein zusätzliches Tray-Symbol (max. 4).";
+        de["Settings_TrayChargingPulse"] = "Atmender Ring beim Laden";
         de["Menu_RenameDevice"] = "Gerät umbenennen";
         de["Menu_HideDevice"] = "Dieses Gerät ausblenden";
         de["Rename_Title"] = "Gerät umbenennen";
@@ -958,6 +973,9 @@ public static class LocalizationService
         es["Tray_TooltipNoDevices"] = "Batería Bluetooth (sin dispositivos conectados)";
         es["Tray_TooltipTitle"] = "Batería";
         es["Tray_MoreDevices"] = "+{0} más, haz clic para ver";
+        es["Settings_TrayPerDevice"] = "Un icono de bandeja por dispositivo";
+        es["Settings_TrayPerDeviceDesc"] = "Muestra un icono adicional para cada dispositivo conectado con nivel de batería (máx. 4).";
+        es["Settings_TrayChargingPulse"] = "Anillo que respira mientras carga";
         es["Menu_RenameDevice"] = "Renombrar dispositivo";
         es["Menu_HideDevice"] = "Ocultar este dispositivo";
         es["Rename_Title"] = "Renombrar dispositivo";
@@ -1131,6 +1149,9 @@ public static class LocalizationService
         it["Tray_TooltipNoDevices"] = "Batteria Bluetooth (nessun dispositivo connesso)";
         it["Tray_TooltipTitle"] = "Batteria";
         it["Tray_MoreDevices"] = "+{0} altri, fai clic per vedere";
+        it["Settings_TrayPerDevice"] = "Un'icona nella tray per dispositivo";
+        it["Settings_TrayPerDeviceDesc"] = "Mostra un'icona aggiuntiva per ogni dispositivo collegato con livello di batteria (max 4).";
+        it["Settings_TrayChargingPulse"] = "Anello che respira durante la ricarica";
         it["Menu_RenameDevice"] = "Rinomina dispositivo";
         it["Menu_HideDevice"] = "Nascondi questo dispositivo";
         it["Rename_Title"] = "Rinomina dispositivo";
@@ -1304,6 +1325,9 @@ public static class LocalizationService
         zht["Tray_TooltipNoDevices"] = "外設電量（未連接裝置）";
         zht["Tray_TooltipTitle"] = "電量";
         zht["Tray_MoreDevices"] = "還有 {0} 個，點擊查看";
+        zht["Settings_TrayPerDevice"] = "每裝置獨立系統匣圖示";
+        zht["Settings_TrayPerDeviceDesc"] = "為每台有電量讀數的已連線裝置顯示一個額外系統匣圖示（最多 4 個）。";
+        zht["Settings_TrayChargingPulse"] = "充電時電量環呼吸動畫";
         zht["Menu_RenameDevice"] = "重新命名裝置";
         zht["Menu_HideDevice"] = "隱藏此裝置";
         zht["Rename_Title"] = "重新命名裝置";
