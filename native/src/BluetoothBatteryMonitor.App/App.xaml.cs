@@ -51,6 +51,13 @@ public partial class App : System.Windows.Application
             try{await Services.LayoutProbe.Run(e.Args[layoutProbe+1]);Shutdown(0);}
             catch(Exception ex){await global::System.IO.File.WriteAllTextAsync(e.Args[layoutProbe+1]+"-error.txt",ex.ToString());Shutdown(1);}return;
         }
+        int settingsProbe=Array.IndexOf(e.Args,"--settings-probe");
+        if(settingsProbe>=0 && e.Args.Length>settingsProbe+1)
+        {
+            base.OnStartup(e);ShutdownMode=ShutdownMode.OnExplicitShutdown;
+            try{await Services.LayoutProbe.RunSettingsFooter(e.Args[settingsProbe+1]);Shutdown(0);}
+            catch(Exception ex){await global::System.IO.File.WriteAllTextAsync(e.Args[settingsProbe+1]+"-error.txt",ex.ToString());Shutdown(1);}return;
+        }
         int rateTest=Array.IndexOf(e.Args,"--rate-self-test");
         if(rateTest>=0 && e.Args.Length>rateTest+1)
         {

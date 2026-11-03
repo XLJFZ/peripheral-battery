@@ -135,6 +135,14 @@ public class AppSettings
 
     private static readonly string SettingsFilePath = Path.Combine(SettingsFolder, "settings.json");
 
+    /// <summary>
+    /// Last-write time (UTC) of settings.json, or DateTime.MinValue when it does not exist yet.
+    /// Lets hot-path callers (e.g. the flyout opening on every tray click) cache a loaded
+    /// instance and only pay a re-read when the file actually changed.
+    /// </summary>
+    public static DateTime GetSettingsStampUtc()
+        => File.Exists(SettingsFilePath) ? File.GetLastWriteTimeUtc(SettingsFilePath) : DateTime.MinValue;
+
     public static AppSettings Load()
     {
         try

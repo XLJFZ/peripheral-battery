@@ -59,14 +59,41 @@ public partial class FlyoutWindow : FluentWindow
     public bool DisableAutoClose { get; set; }
     private readonly System.Windows.Threading.DispatcherTimer _idleTimer = new() { Interval = TimeSpan.FromMilliseconds(250) };
     private DateTime _lastInteraction = DateTime.UtcNow;
-    /// <summary>Inactivity budget for the open flyout, re-read every time it is shown. 0 disables auto-hide.</summary>
-    private int _autoHideSeconds = Models.AppSettings.NormalizeAutoHide(Models.AppSettings.Load().FlyoutAutoHideSeconds);
+    /// <summary>Inactivity budget for the open flyout, refreshed on every show. 0 disables auto-hide.</summary>
+    private int _autoHideSeconds = 5;
+    private Models.AppSettings? _cachedSettings;
+    private DateTime _settingsStampUtc = DateTime.MinValue;
+
+    /// <summary>
+    /// Reads FlyoutAutoHideSeconds through a stamp-checked cache. ShowFlyout runs on the UI
+    /// thread on every tray click, so it must not pay a disk read plus JSON deserialize each
+    /// time; the cache re-loads only when settings.json's last-write time changed.
+    /// </summary>
+    private int ReadAutoHideSeconds()
+    {
+        try
+        {
+            DateTime stamp = Models.AppSettings.GetSettingsStampUtc();
+            if (_cachedSettings == null || stamp != _settingsStampUtc)
+            {
+                _cachedSettings = Models.AppSettings.Load();
+                _settingsStampUtc = stamp;
+            }
+            return Models.AppSettings.NormalizeAutoHide(_cachedSettings.FlyoutAutoHideSeconds);
+        }
+        catch
+        {
+            return 5;
+        }
+    }
+
     private void ResetIdle(object? sender = null, EventArgs? e = null) => _lastInteraction = DateTime.UtcNow;
 
     public FlyoutWindow(MainViewModel viewModel)
     {
         InitializeComponent();
         DataContext = viewModel;
+        _autoHideSeconds = ReadAutoHideSeconds();
         PreviewMouseMove += (s,e) => ResetIdle();
         PreviewMouseDown += (s,e) => ResetIdle();
         PreviewMouseWheel += (s,e) => ResetIdle();
@@ -240,8 +267,9 @@ public partial class FlyoutWindow : FluentWindow
 
     public void ShowFlyout()
     {
-        // Re-read on every open so a change in Settings applies without a restart.
-        _autoHideSeconds = Models.AppSettings.NormalizeAutoHide(Models.AppSettings.Load().FlyoutAutoHideSeconds);
+        // Re-read on every open so a change in Settings applies without a restart; the
+        // stamp-checked cache keeps this off the disk when settings.json did not change.
+        _autoHideSeconds = ReadAutoHideSeconds();
         ResetIdle();
         if (IsVisible && Opacity > 0.95 && !_isOpening && !_isHiding)
         {

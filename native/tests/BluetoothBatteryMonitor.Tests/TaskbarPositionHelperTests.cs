@@ -5,11 +5,16 @@ using Xunit;
 using AppTaskbarHelper = MonitorApp::BluetoothBatteryMonitor.App.Services.System.TaskbarPositionHelper;
 using AppDeviceItemViewModel = MonitorApp::BluetoothBatteryMonitor.App.ViewModels.DeviceItemViewModel;
 using AppDeviceModel = MonitorApp::BluetoothBatteryMonitor.App.Models.BluetoothDeviceModel;
+using AppLocalization = MonitorApp::BluetoothBatteryMonitor.App.Services.Localization.LocalizationService;
 
 namespace BluetoothBatteryMonitor.Tests;
 
 public class TaskbarPositionHelperTests
 {
+    // BatteryText asserts like "Unknown" are English UI strings; LocalizationService is
+    // process-wide static state, so pin the language instead of depending on test order.
+    static TaskbarPositionHelperTests() => AppLocalization.ApplyLanguage("en");
+
     [Fact]
     public void CalculateFlyoutPosition_DoesNotReturnNegativeCoordinates()
     {

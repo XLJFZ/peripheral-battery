@@ -13,12 +13,17 @@ using AppEngine = MonitorApp::BluetoothBatteryMonitor.App.Services.Bluetooth.Blu
 using AppToast = MonitorApp::BluetoothBatteryMonitor.App.Services.Notification.ToastNotificationService;
 using AppItemVM = MonitorApp::BluetoothBatteryMonitor.App.ViewModels.DeviceItemViewModel;
 using AppAirPods = MonitorApp::BluetoothBatteryMonitor.App.Services.Bluetooth.AppleAirPodsBeaconProvider;
+using AppLocalization = MonitorApp::BluetoothBatteryMonitor.App.Services.Localization.LocalizationService;
 
 namespace BluetoothBatteryMonitor.Tests;
 
 public class BluetoothConnectionCheckerTests
 {
     private readonly ITestOutputHelper _output;
+
+    // These tests assert English UI strings. LocalizationService is process-wide static
+    // state and other test classes switch languages, so pin it explicitly.
+    static BluetoothConnectionCheckerTests() => AppLocalization.ApplyLanguage("en");
 
     public BluetoothConnectionCheckerTests(ITestOutputHelper output)
     {

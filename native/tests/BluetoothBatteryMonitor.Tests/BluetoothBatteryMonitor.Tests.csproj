@@ -32,6 +32,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\BluetoothBatteryMonitor\BluetoothBatteryMonitor.csproj" />
     <ProjectReference Include="..\..\src\BluetoothBatteryMonitor.App\BluetoothBatteryMonitor.App.csproj" Aliases="MonitorApp" />
   </ItemGroup>

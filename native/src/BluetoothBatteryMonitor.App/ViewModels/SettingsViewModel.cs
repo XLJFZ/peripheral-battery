@@ -287,6 +287,16 @@ public partial class SettingsViewModel : ObservableObject
 
     public IReadOnlyList<AutoHideOption> AutoHideOptions => AvailableAutoHideOptions;
 
+    /// <summary>
+    /// Instance facades over the static option lists. The XAML binds these instead of
+    /// <c>{x:Static}</c>, because a static binding is evaluated once and would keep the
+    /// previous language's display strings after a language switch. Raising PropertyChanged
+    /// for these names in <see cref="SaveCommand"/> re-evaluates them in the new language.
+    /// </summary>
+    public IReadOnlyList<TrayStyleOption> TrayStyleOptions => AvailableTrayStyleOptions;
+    public IReadOnlyList<ThresholdOption> ThresholdOptions => AvailableThresholds;
+    public IReadOnlyList<RefreshIntervalOption> RefreshIntervalOptions => AvailableRefreshIntervals;
+
     [ObservableProperty]
     private string _selectedTheme;
 
@@ -417,6 +427,16 @@ public partial class SettingsViewModel : ObservableObject
 
         // Apply language
         LocalizationService.ApplyLanguage(SelectedLanguage);
+
+        // The dropdowns' display strings were composed in the previous language at binding
+        // time; re-evaluate them now that the localization dictionary has been replaced.
+        OnPropertyChanged(nameof(AvailableThemeOptions));
+        OnPropertyChanged(nameof(AvailableDensityOptions));
+        OnPropertyChanged(nameof(AvailableLanguages));
+        OnPropertyChanged(nameof(AutoHideOptions));
+        OnPropertyChanged(nameof(TrayStyleOptions));
+        OnPropertyChanged(nameof(ThresholdOptions));
+        OnPropertyChanged(nameof(RefreshIntervalOptions));
     }
 
     private readonly UpdateCheckService _updateService = new();

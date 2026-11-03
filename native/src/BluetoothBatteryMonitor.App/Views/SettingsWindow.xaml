@@ -173,7 +173,7 @@
                             <TextBlock Text="{DynamicResource Settings_TrayColorHint}" FontSize="11" Margin="0,8,0,8" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                             <Grid Margin="0,4,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="135"/></Grid.ColumnDefinitions>
                                 <TextBlock Text="{DynamicResource Settings_TrayStyle}" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                                <ComboBox Grid.Column="1" ItemsSource="{x:Static vm:SettingsViewModel.AvailableTrayStyleOptions}" SelectedValuePath="Value" DisplayMemberPath="Display" SelectedValue="{Binding TrayIconStyle, Mode=TwoWay}"/>
+                                <ComboBox Grid.Column="1" ItemsSource="{Binding TrayStyleOptions}" SelectedValuePath="Value" DisplayMemberPath="Display" SelectedValue="{Binding TrayIconStyle, Mode=TwoWay}"/>
                             </Grid>
                             <TextBlock Text="{DynamicResource Settings_TrayRingWidth}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                             <Slider Minimum="7" Maximum="13" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding TrayRingWidth}" Margin="0,8,0,0"/>
@@ -318,7 +318,7 @@
                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                             </StackPanel>
                             <ComboBox Grid.Column="1"
-                                      ItemsSource="{x:Static vm:SettingsViewModel.AvailableRefreshIntervals}"
+                                      ItemsSource="{Binding RefreshIntervalOptions}"
                                       SelectedValuePath="Seconds"
                                       DisplayMemberPath="DisplayName"
                                       SelectedValue="{Binding RefreshIntervalSeconds, Mode=TwoWay}"
@@ -418,7 +418,7 @@
                                                        Margin="0,0,10,0"
                                                        Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
                                             <ComboBox Grid.Column="1"
-                                                      ItemsSource="{x:Static vm:SettingsViewModel.AvailableThresholds}"
+                                                      ItemsSource="{Binding DataContext.ThresholdOptions, RelativeSource={RelativeSource AncestorType=Window}}"
                                                       SelectedValuePath="Value"
                                                       DisplayMemberPath="DisplayName"
                                                       SelectedValue="{Binding SelectedThreshold, Mode=TwoWay}"
@@ -615,7 +615,7 @@
         <!-- Kaydet Butonu -->
         <Border Grid.Row="2"
                 Margin="0,16,0,0">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <StackPanel x:Name="FooterButtons" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button Content="{DynamicResource Settings_RepoButton}" ToolTip="https://github.com/XLJFZ/peripheral-battery" Click="OpenRepository" Margin="0,0,8,0" Padding="10,7" />
             <Button Content="{DynamicResource GamePolling_Title}" Click="OpenGamePolling" Margin="0,0,8,0" Padding="10,7" />
             <Button Content="{DynamicResource Settings_DiscardAndClose}"
