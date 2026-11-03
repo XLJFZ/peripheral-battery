@@ -16,6 +16,9 @@ public partial class DeviceItemViewModel : ObservableObject
     public void RefreshAppearance()=>OnPropertyChanged(nameof(BatteryTextBrush));
     partial void OnBatteryBrushChanged(Brush value)=>RefreshAppearance();
     private readonly BluetoothDeviceModel _model;
+
+    /// <summary>Underlying engine model (shared instance — mutations are visible to the engine).</summary>
+    public BluetoothDeviceModel Model => _model;
     private readonly IAudioEndpointManager? _audioManager;
     private bool _isUpdatingVolumeInternally;
 
@@ -173,6 +176,18 @@ public partial class DeviceItemViewModel : ObservableObject
         ? LocalizationService.GetString("Device_ThresholdCustom", CustomThreshold!)
         : LocalizationService.GetString("Device_ThresholdDefault", GlobalThreshold);
 
+    /// <summary>
+    /// Persists a user rename (empty/whitespace clears the override) and updates the card label
+    /// immediately. The engine model instance is shared, so the change is visible engine-wide.
+    /// </summary>
+    public void ApplyCustomName(string? customName)
+    {
+        var settings = AppSettings.Load();
+        settings.SetCustomName(Id, _model.BluetoothAddress, customName);
+        _model.CustomName = customName;
+        Name = _model.DisplayName;
+    }
+
     [RelayCommand]
     public void SetThreshold(object? parameter)
     {
@@ -242,7 +257,7 @@ public partial class DeviceItemViewModel : ObservableObject
     public void UpdateFromModel(BluetoothDeviceModel model)
     {
         Id = model.Id;
-        Name = model.Name;
+        Name = model.DisplayName;
         ProviderSource = model.ProviderSource;
         BatteryReadingDetails = !string.IsNullOrWhiteSpace(model.BatteryReadError)
             ? "本次未读取到电量；旧读数已清除。" + model.BatteryReadError

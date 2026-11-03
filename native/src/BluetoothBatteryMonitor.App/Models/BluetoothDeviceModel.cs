@@ -6,6 +6,10 @@ public class BluetoothDeviceModel
 {
     public string Id { get; set; } = string.Empty;
     public string Name { get; set; } = "Bilinmeyen Cihaz";
+    /// <summary>User-assigned name override (settings → CustomDeviceNames). Null keeps the raw name.</summary>
+    public string? CustomName { get; set; }
+    /// <summary>Name shown everywhere in the UI: the user rename when set, otherwise the raw name.</summary>
+    public string DisplayName => string.IsNullOrWhiteSpace(CustomName) ? Name : CustomName!;
     public string? ModelName { get; set; }
     public DeviceType DeviceType { get; set; } = DeviceType.Generic;
     public DeviceType Type { get => DeviceType; set => DeviceType = value; }
@@ -40,6 +44,10 @@ public class BluetoothDeviceModel
         }
     }
     public string? AudioCodec { get; set; }
+
+    /// <summary>True when the device reports any battery level at all (main or TWS component).</summary>
+    public bool HasAnyBatteryReport =>
+        BatteryLevel.HasValue || LeftBatteryLevel.HasValue || RightBatteryLevel.HasValue || CaseBatteryLevel.HasValue;
 
     // TWS (Dedicated channels for AirPods, Beats, Galaxy Buds, etc.)
     public bool IsTws { get; set; }

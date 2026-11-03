@@ -202,6 +202,15 @@ public partial class MainViewModel : ObservableObject
     private void OnEngineDevicesUpdated(object? sender, IReadOnlyList<BluetoothDeviceModel> deviceModels)
     {
         var orderSettings=AppSettings.Load();
+        // Visibility filters: hidden devices and (optionally) devices with no battery report
+        // never reach the flyout — the tray icon and its tooltip follow this same collection.
+        deviceModels = deviceModels
+            .Where(d => !orderSettings.IsHidden(d.Id, d.BluetoothAddress))
+            .ToList();
+        if (orderSettings.HideUnknownBatteryDevices)
+        {
+            deviceModels = deviceModels.Where(d => d.HasAnyBatteryReport).ToList();
+        }
         deviceModels=deviceModels.OrderBy(d=>orderSettings.DeviceRank(d.Id)).ThenByDescending(d=>d.IsConnected).ToList();
         System.Windows.Application.Current.Dispatcher.Invoke(() =>
         {
@@ -253,6 +262,21 @@ public partial class MainViewModel : ObservableObject
 
             UpdateStatusMessage();
         });
+    }
+
+    /// <summary>
+    /// Hides a device from the flyout/tray/notifications (persists immediately) and removes its
+    /// card at once; the next engine update would filter it anyway.
+    /// </summary>
+    public void HideDevice(DeviceItemViewModel device)
+    {
+        if (device == null) return;
+        var settings = AppSettings.Load();
+        settings.SetHidden(device.Id, device.Model.BluetoothAddress, true, device.Name);
+        Devices.Remove(device);
+        HasDevices = Devices.Count > 0;
+        CalculateLowestBattery();
+        UpdateStatusMessage();
     }
 
     private void UpdateStatusMessage()

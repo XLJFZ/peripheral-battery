@@ -20,7 +20,7 @@ public record AutoHideOption(int Seconds, string DisplayName);
 
 public partial class SettingsViewModel : ObservableObject
 {
-    private readonly AppSettings _settings;
+    private AppSettings _settings;
 
     public static string[] AvailableTrayStyles => new[] { "圆环", "数字", "圆环 + 数字" };
 
@@ -92,9 +92,56 @@ public partial class SettingsViewModel : ObservableObject
         _autoSwitchAudioEndpoint = _settings.AutoSwitchAudioEndpoint;
         _enableRestApi = _settings.EnableRestApi;
         _restApiPort = _settings.RestApiPort;
+        _hideUnknownBatteryDevices = _settings.HideUnknownBatteryDevices;
 
         PopulateDeviceThresholds(knownDevices);
+        LoadHiddenDevices();
         LoadPendingUpdateWarning();
+    }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasNoHiddenDevices))]
+    private ObservableCollection<HiddenDeviceItem> _hiddenDeviceItems = new();
+
+    public bool HasNoHiddenDevices => HiddenDeviceItems.Count == 0;
+
+    [ObservableProperty]
+    private bool _hideUnknownBatteryDevices;
+
+    private void LoadHiddenDevices()
+    {
+        // HiddenDeviceNames is the canonical list (id → last display name); any stray hidden key
+        // without a remembered name is shown by its raw key so it can still be unhid.
+        var items = new List<HiddenDeviceItem>();
+        var covered = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var kvp in _settings.HiddenDeviceNames)
+        {
+            items.Add(new HiddenDeviceItem { Id = kvp.Key, DisplayName = kvp.Value });
+            covered.Add(kvp.Key);
+            ulong mac = BluetoothDeviceModel.ExtractMacAddress(kvp.Key);
+            if (mac != 0) covered.Add(mac.ToString("X12"));
+        }
+        foreach (var key in _settings.HiddenDevices)
+        {
+            if (!covered.Contains(key))
+            {
+                items.Add(new HiddenDeviceItem { Id = key, DisplayName = key });
+            }
+        }
+
+        HiddenDeviceItems = new ObservableCollection<HiddenDeviceItem>(
+            items.OrderBy(i => i.DisplayName, StringComparer.OrdinalIgnoreCase));
+    }
+
+    [RelayCommand]
+    public void UnhideDevice(string? id)
+    {
+        if (string.IsNullOrWhiteSpace(id)) return;
+
+        var settings = AppSettings.Load();
+        settings.SetHidden(id, 0, false);
+        _settings = settings;
+        LoadHiddenDevices();
     }
 
     /// <summary>
@@ -402,6 +449,7 @@ public partial class SettingsViewModel : ObservableObject
         _settings.FlyoutDensity = PanelDensity;
         _settings.Language = SelectedLanguage;
         _settings.LaunchAtStartup = LaunchAtStartup;
+        _settings.HideUnknownBatteryDevices = HideUnknownBatteryDevices;
 
         _settings.TrayAutoColor=TrayAutoColor;
         _settings.TrayHighColor=Helpers.TrayAppearance.ValidColor(TrayHighColor,"#00C98D");
@@ -416,6 +464,11 @@ public partial class SettingsViewModel : ObservableObject
         _settings.DesktopPollingHz=latest.DesktopPollingHz;
         _settings.GamePollingHz=latest.GamePollingHz;
         _settings.PollingGames=latest.PollingGames;
+        // Renames / hidden lists are saved immediately by the flyout and the unhide button;
+        // carry the on-disk state so this Save does not clobber those writes.
+        _settings.CustomDeviceNames=latest.CustomDeviceNames;
+        _settings.HiddenDevices=latest.HiddenDevices;
+        _settings.HiddenDeviceNames=latest.HiddenDeviceNames;
         _settings.Save();
 
         // Update startup registry configuration
@@ -605,4 +658,11 @@ public partial class DeviceThresholdItem : ObservableObject
 
     [ObservableProperty]
     private int _selectedThreshold;
+}
+
+/// <summary>A hidden device listed in the settings page with an unhide action.</summary>
+public sealed class HiddenDeviceItem
+{
+    public string Id { get; init; } = string.Empty;
+    public string DisplayName { get; init; } = string.Empty;
 }
