@@ -14,8 +14,9 @@
             <SolidColorBrush x:Key="PeripheralEdgeBrush" Color="#25FFFFFF" />
             <SolidColorBrush x:Key="PeripheralCardEdgeBrush" Color="#25FFFFFF" />
             <SolidColorBrush x:Key="PeripheralGlintBrush" Color="Transparent" />
-            <CornerRadius x:Key="PeripheralPanelRadius">12</CornerRadius>
+            <CornerRadius x:Key="PeripheralPanelRadius">8</CornerRadius>
             <CornerRadius x:Key="PeripheralCardRadius">8</CornerRadius>
+            <CornerRadius x:Key="PeripheralFooterRadius">0,0,8,8</CornerRadius>
 
             <!-- Panel size profile (标准); FlyoutDensity.Apply overwrites these at runtime. -->
             <sys:Double x:Key="FlyoutWidth">416</sys:Double>

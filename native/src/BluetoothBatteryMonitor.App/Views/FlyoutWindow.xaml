@@ -504,7 +504,7 @@
                     BorderThickness="0,1,0,0"
                     BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}"
                     Background="{DynamicResource SubtleFillColorSecondaryBrush}"
-                    CornerRadius="0,0,7,7">
+                    CornerRadius="{DynamicResource PeripheralFooterRadius}">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />

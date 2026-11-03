@@ -351,12 +351,13 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private string _selectedTheme;
 
-    public IReadOnlyList<string> AvailableThemes { get; } = new[] { ThemeManager.AppearanceNormal, ThemeManager.AppearanceGlass };
+    public IReadOnlyList<string> AvailableThemes { get; } = new[] { ThemeManager.AppearanceNormal, ThemeManager.AppearanceFrosted, ThemeManager.AppearanceGlass };
 
     /// <summary>Same values as <see cref="AvailableThemes"/>, with localized display text.</summary>
     public IReadOnlyList<TrayStyleOption> AvailableThemeOptions => new[]
     {
         new TrayStyleOption(ThemeManager.AppearanceNormal, LocalizationService.GetString("Theme_Normal")),
+        new TrayStyleOption(ThemeManager.AppearanceFrosted, LocalizationService.GetString("Theme_Frosted")),
         new TrayStyleOption(ThemeManager.AppearanceGlass, LocalizationService.GetString("Theme_Glass"))
     };
 

@@ -1,0 +1,2 @@
+79968fbc724d1e8e696345bed6fd65acc3fcce3bcc7fa76164e77cb97f0661a5 *Peripheral-Battery-0.3.9-x64.exe
+3e80d3b3c4ca2ca97b28dc28ef2b137d82cadea8a5328424cce094a5f16e5a8a *Peripheral-Battery-Setup-0.3.9.exe

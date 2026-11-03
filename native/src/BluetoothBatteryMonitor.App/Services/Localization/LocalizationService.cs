@@ -132,6 +132,7 @@ public static class LocalizationService
             ["Settings_PanelSizeSpacious"] = "Spacious",
             ["Theme_Normal"] = "Standard",
             ["Theme_Glass"] = "Liquid glass",
+            ["Theme_Frosted"] = "Frosted glass",
             ["Settings_ThresholdDefault"] = "Default (global)",
             ["Settings_Seconds"] = "{0} seconds",
             ["GamePolling_Title"] = "Polling rate",
@@ -324,6 +325,7 @@ public static class LocalizationService
             ["Settings_PanelSizeSpacious"] = "Geniş",
             ["Theme_Normal"] = "Standart",
             ["Theme_Glass"] = "Sıvı cam",
+            ["Theme_Frosted"] = "Buzlu cam",
             ["Settings_ThresholdDefault"] = "Varsayılan (genel)",
             ["Settings_Seconds"] = "{0} saniye",
             ["GamePolling_Title"] = "Oyun anket hızı",
@@ -487,7 +489,7 @@ public static class LocalizationService
         zh["Settings_TrayStyle"] = "显示方式";
         zh["Settings_TrayRingWidth"] = "圆环粗细";
         zh["Settings_Appearance"] = "界面外观";
-        zh["Settings_AppearanceDesc"] = "普通版（默认）· 液态玻璃跟随系统深色设置";
+        zh["Settings_AppearanceDesc"] = "普通版（默认）· 毛玻璃 / 液态玻璃跟随系统深色设置";
         zh["Settings_PanelSize"] = "面板大小";
         zh["Settings_PanelSizeDesc"] = "紧凑 / 标准 / 宽松，保存后立即生效";
         zh["Settings_PanelSizeCompact"] = "紧凑";
@@ -495,6 +497,7 @@ public static class LocalizationService
         zh["Settings_PanelSizeSpacious"] = "宽松";
         zh["Theme_Normal"] = "普通版";
         zh["Theme_Glass"] = "液态玻璃";
+        zh["Theme_Frosted"] = "毛玻璃";
         zh["Settings_ThresholdDefault"] = "默认（全局）";
         zh["Settings_Seconds"] = "{0} 秒";
         zh["GamePolling_Title"] = "回报率调度";
@@ -666,6 +669,7 @@ public static class LocalizationService
         fr["Settings_PanelSizeSpacious"] = "Spacieux";
         fr["Theme_Normal"] = "Standard";
         fr["Theme_Glass"] = "Verre liquide";
+        fr["Theme_Frosted"] = "Verre dépoli";
         fr["Settings_ThresholdDefault"] = "Par défaut (global)";
         fr["Settings_Seconds"] = "{0} secondes";
         fr["GamePolling_Title"] = "Fréquence en jeu";
@@ -842,6 +846,7 @@ public static class LocalizationService
         de["Settings_PanelSizeSpacious"] = "Großzügig";
         de["Theme_Normal"] = "Standard";
         de["Theme_Glass"] = "Liquid Glass";
+        de["Theme_Frosted"] = "Milchglas";
         de["Settings_ThresholdDefault"] = "Standard (global)";
         de["Settings_Seconds"] = "{0} Sekunden";
         de["GamePolling_Title"] = "Polling-Rate";
@@ -1018,6 +1023,7 @@ public static class LocalizationService
         es["Settings_PanelSizeSpacious"] = "Amplio";
         es["Theme_Normal"] = "Estándar";
         es["Theme_Glass"] = "Cristal líquido";
+        es["Theme_Frosted"] = "Cristal esmerilado";
         es["Settings_ThresholdDefault"] = "Predeterminado (global)";
         es["Settings_Seconds"] = "{0} segundos";
         es["GamePolling_Title"] = "Sondeo en juego";
@@ -1194,6 +1200,7 @@ public static class LocalizationService
         it["Settings_PanelSizeSpacious"] = "Ampio";
         it["Theme_Normal"] = "Standard";
         it["Theme_Glass"] = "Vetro liquido";
+        it["Theme_Frosted"] = "Vetro smerigliato";
         it["Settings_ThresholdDefault"] = "Predefinito (globale)";
         it["Settings_Seconds"] = "{0} secondi";
         it["GamePolling_Title"] = "Polling in gioco";
@@ -1370,6 +1377,7 @@ public static class LocalizationService
         zht["Settings_PanelSizeSpacious"] = "寬鬆";
         zht["Theme_Normal"] = "普通版";
         zht["Theme_Glass"] = "液態玻璃";
+        zht["Theme_Frosted"] = "毛玻璃";
         zht["Settings_ThresholdDefault"] = "預設（全域）";
         zht["Settings_Seconds"] = "{0} 秒";
         zht["GamePolling_Title"] = "遊戲回報率";

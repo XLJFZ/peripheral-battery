@@ -7,6 +7,8 @@ namespace BluetoothBatteryMonitor.App.Services.System;
 public static class GlassAppearance
 {
     public static bool Enabled { get; private set; }
+    /// <summary>True for the clearer, edge-lit liquid material; false for standard/frosted.</summary>
+    public static bool Liquid { get; private set; }
     /// <summary>True when the active glass palette is the dark one.</summary>
     public static bool DarkPalette { get; private set; }
     public static bool Reduced { get; private set; }
@@ -18,7 +20,9 @@ public static class GlassAppearance
 
     public static void Apply(string theme,bool dark)
     {
-        Enabled=theme.StartsWith("液态玻璃",StringComparison.Ordinal);
+        var mode=ThemeManager.Normalize(theme);
+        Enabled=mode!=ThemeManager.AppearanceNormal;
+        Liquid=mode==ThemeManager.AppearanceGlass;
         DarkPalette=Enabled && dark;
         Reduced=theme.Contains("低透明") || SystemParameters.HighContrast || !TransparencyAllowed() || !BackdropSupported();
         var resources=Application.Current.Resources;
@@ -34,27 +38,50 @@ public static class GlassAppearance
         }
         if(Enabled && !SystemParameters.HighContrast)
         {
-            // System Acrylic supplies the blur; the panel only adds a soft tint so the
-            // desktop stays visible. Both palettes follow the Windows app theme.
-            if(dark)
+            // Both materials use the Windows Acrylic compositor. Frosted keeps a stronger tint
+            // for readability; Liquid uses a clearer centre and brighter lens-like edges.
+            if(!Liquid)
             {
-                resources["PeripheralPanelBrush"]=Gradient(Reduced?"#FF262628":"#B4252527",Reduced?"#FF2E2E31":"#9E2E2E31");
-                resources["PeripheralCardBrush"]=Gradient(Reduced?"#FF2A2A2D":"#24FFFFFF",Reduced?"#FF232326":"#10FFFFFF");
-                resources["PeripheralEdgeBrush"]=EdgeGradient(Color.FromArgb(70,255,255,255),Color.FromArgb(16,0,0,0),Color.FromArgb(150,255,255,255));
-                resources["PeripheralGlintBrush"]=new RadialGradientBrush(Color.FromArgb(38,255,255,255),Colors.Transparent){Center=new Point(.25,0),GradientOrigin=new Point(.25,0),RadiusX=.9,RadiusY=1.1};
+                if(dark)
+                {
+                    resources["PeripheralPanelBrush"]=Gradient(Reduced?"#FF262628":"#D9252527",Reduced?"#FF2E2E31":"#CC2E2E31");
+                    resources["PeripheralCardBrush"]=Gradient("#52FFFFFF","#28FFFFFF");
+                    resources["PeripheralEdgeBrush"]=EdgeGradient(Color.FromArgb(110,255,255,255),Color.FromArgb(28,0,0,0),Color.FromArgb(150,255,255,255));
+                    resources["PeripheralGlintBrush"]=new RadialGradientBrush(Color.FromArgb(48,255,255,255),Colors.Transparent){Center=new Point(.25,0),GradientOrigin=new Point(.25,0),RadiusX=.9,RadiusY=1.1};
+                    resources["PeripheralCardHoverBrush"]=new SolidColorBrush(Color.FromArgb(38,255,255,255));
+                    resources["PeripheralCardEdgeBrush"]=new SolidColorBrush(Color.FromArgb(56,255,255,255));
+                }
+                else
+                {
+                    resources["PeripheralPanelBrush"]=Gradient(Reduced?"#FFF5F6F8":"#E3F6F7F9",Reduced?"#FFE6E9EE":"#D8E9ECF1");
+                    resources["PeripheralCardBrush"]=Gradient("#33000000","#14000000");
+                    resources["PeripheralEdgeBrush"]=EdgeGradient(Color.FromArgb(210,255,255,255),Color.FromArgb(45,70,75,85),Color.FromArgb(165,255,255,255));
+                    resources["PeripheralGlintBrush"]=new RadialGradientBrush(Color.FromArgb(62,255,255,255),Colors.Transparent){Center=new Point(.25,0),GradientOrigin=new Point(.25,0),RadiusX=.9,RadiusY=1.1};
+                    resources["PeripheralCardHoverBrush"]=new SolidColorBrush(Color.FromArgb(26,0,0,0));
+                    resources["PeripheralCardEdgeBrush"]=new SolidColorBrush(Color.FromArgb(40,70,75,85));
+                }
+            }
+            else if(dark)
+            {
+                resources["PeripheralPanelBrush"]=Gradient(Reduced?"#FF262628":"#66202327",Reduced?"#FF2E2E31":"#482B2C30");
+                resources["PeripheralCardBrush"]=Gradient(Reduced?"#FF2A2A2D":"#24FFFFFF",Reduced?"#FF232326":"#0AFFFFFF");
+                resources["PeripheralEdgeBrush"]=EdgeGradient(Color.FromArgb(125,255,255,255),Color.FromArgb(20,0,0,0),Color.FromArgb(190,255,255,255));
+                resources["PeripheralGlintBrush"]=new RadialGradientBrush(Color.FromArgb(58,255,255,255),Colors.Transparent){Center=new Point(.2,0),GradientOrigin=new Point(.2,0),RadiusX=.85,RadiusY=1.05};
                 resources["PeripheralCardHoverBrush"]=new SolidColorBrush(Color.FromArgb(38,255,255,255));
+                resources["PeripheralCardEdgeBrush"]=EdgeGradient(Color.FromArgb(65,255,255,255),Color.FromArgb(8,255,255,255),Color.FromArgb(35,255,255,255));
             }
             else
             {
-                resources["PeripheralPanelBrush"]=Gradient(Reduced?"#FFF5F6F8":"#B8F6F7F9",Reduced?"#FFE6E9EE":"#9EE9ECF1");
-                resources["PeripheralCardBrush"]=Gradient(Reduced?"#FFFAFBFC":"#1F000000",Reduced?"#FFF2F4F7":"#0C000000");
-                resources["PeripheralEdgeBrush"]=EdgeGradient(Color.FromArgb(190,255,255,255),Color.FromArgb(40,70,75,85),Color.FromArgb(190,255,255,255));
-                resources["PeripheralGlintBrush"]=new RadialGradientBrush(Color.FromArgb(80,255,255,255),Colors.Transparent){Center=new Point(.25,0),GradientOrigin=new Point(.25,0),RadiusX=.9,RadiusY=1.1};
-                resources["PeripheralCardHoverBrush"]=new SolidColorBrush(Color.FromArgb(28,0,0,0));
+                resources["PeripheralPanelBrush"]=Gradient(Reduced?"#FFF5F6F8":"#80F7F9FB",Reduced?"#FFE6E9EE":"#5CE9EEF3");
+                resources["PeripheralCardBrush"]=Gradient(Reduced?"#FFFAFBFC":"#38FFFFFF",Reduced?"#FFF2F4F7":"#12FFFFFF");
+                resources["PeripheralEdgeBrush"]=EdgeGradient(Color.FromArgb(220,255,255,255),Color.FromArgb(45,70,75,85),Color.FromArgb(235,255,255,255));
+                resources["PeripheralGlintBrush"]=new RadialGradientBrush(Color.FromArgb(110,255,255,255),Colors.Transparent){Center=new Point(.2,0),GradientOrigin=new Point(.2,0),RadiusX=.85,RadiusY=1.05};
+                resources["PeripheralCardHoverBrush"]=new SolidColorBrush(Color.FromArgb(22,0,0,0));
+                resources["PeripheralCardEdgeBrush"]=EdgeGradient(Color.FromArgb(165,255,255,255),Color.FromArgb(30,255,255,255),Color.FromArgb(45,70,75,85));
             }
             resources["PeripheralPanelRadius"]=new CornerRadius(PanelRadius);
-            resources["PeripheralCardEdgeBrush"]=Brushes.Transparent;
-            resources["PeripheralCardRadius"]=new CornerRadius(CardRadius);
+            resources["PeripheralCardRadius"]=new CornerRadius(Liquid?10:CardRadius);
+            resources["PeripheralFooterRadius"]=new CornerRadius(0,0,PanelRadius,PanelRadius);
         }
         else
         {
@@ -66,6 +93,7 @@ public static class GlassAppearance
             resources["PeripheralCardEdgeBrush"]=resources["PeripheralEdgeBrush"];
             resources["PeripheralPanelRadius"]=new CornerRadius(PanelRadius);
             resources["PeripheralCardRadius"]=new CornerRadius(CardRadius);
+            resources["PeripheralFooterRadius"]=new CornerRadius(0,0,PanelRadius,PanelRadius);
         }
         foreach(Window window in Application.Current.Windows)
         {

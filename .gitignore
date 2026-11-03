@@ -11,3 +11,7 @@ diagnostic.json
 **/obj/
 native/publish/
 macos/diagnostics/
+.dotnet/
+.dotnet-sdk.zip
+.dotnet-install.sh
+.dotnet-install.ps1

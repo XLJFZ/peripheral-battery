@@ -7,16 +7,19 @@ namespace BluetoothBatteryMonitor.App.Services.System;
 public static class ThemeManager
 {
     public const string AppearanceGlass = "液态玻璃";
+    public const string AppearanceFrosted = "毛玻璃";
     public const string AppearanceNormal = "普通版";
 
     /// <summary>
-    /// Collapses legacy values (System / Dark / Light / 液态玻璃（低透明）) into the two
+    /// Collapses legacy values (System / Dark / Light / 液态玻璃（低透明）) into the three
     /// supported appearance modes. Anything unknown falls back to the default 普通版.
     /// </summary>
     public static string Normalize(string? theme)
-        => !string.IsNullOrWhiteSpace(theme) && theme.StartsWith(AppearanceGlass, StringComparison.Ordinal)
-            ? AppearanceGlass
-            : AppearanceNormal;
+    {
+        if (string.IsNullOrWhiteSpace(theme)) return AppearanceNormal;
+        if (theme.StartsWith(AppearanceGlass, StringComparison.Ordinal)) return AppearanceGlass;
+        return theme.Equals(AppearanceFrosted, StringComparison.Ordinal) ? AppearanceFrosted : AppearanceNormal;
+    }
 
     private const string RegistryKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
     private const string RegistryValueName = "AppsUseLightTheme";
@@ -90,9 +93,8 @@ public static class ThemeManager
             app.Dispatcher.BeginInvoke(()=>ApplyTheme(themePreference,forcedDark),global::System.Windows.Threading.DispatcherPriority.Background);
             return;
         }
-        // 普通版 keeps its dark desktop UI; 液态玻璃 follows the Windows app theme so a
-        // dark desktop no longer produces a light panel.
-        bool isDark = forcedDark ?? (Normalize(themePreference) == AppearanceGlass ? IsWindowsDarkTheme() : true);
+        // 普通版 keeps its dark desktop UI; both glass materials follow the Windows app theme.
+        bool isDark = forcedDark ?? (Normalize(themePreference) != AppearanceNormal ? IsWindowsDarkTheme() : true);
 
         try
         {

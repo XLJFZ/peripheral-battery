@@ -41,6 +41,7 @@ public class PeripheralAppearanceTests
     [InlineData("液态玻璃（低透明）",0,"普通版")]
     [InlineData("液态玻璃",1,"液态玻璃")]
     [InlineData("液态玻璃（低透明）",1,"液态玻璃")]
+    [InlineData("毛玻璃",1,"毛玻璃")]
     [InlineData("普通版",1,"普通版")]
     [InlineData("未知值",1,"普通版")]
     public void AppearanceDefaultsToNormalAndKeepsExplicitChoice(string? theme,int version,string expected)
