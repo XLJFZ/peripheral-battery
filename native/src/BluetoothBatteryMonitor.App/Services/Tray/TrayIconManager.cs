@@ -259,8 +259,10 @@ public class TrayIconManager : IDisposable
         // Lowest batteries remain visible when more than three devices are connected.
         var ringDevices=_mainViewModel.Devices.Where(d=>d.IsConnected&&d.HasBattery)
             .OrderBy(d=>settings.DeviceRank(d.Id)).ThenBy(d=>d.BatteryProgress).ThenBy(d=>d.Id,StringComparer.OrdinalIgnoreCase).Take(3).ToList();
+        // While a visible device charges, its ring breathes (same rhythm as per-device icons).
+        int mainPulseTick=settings.TrayChargingPulse&&ringDevices.Any(d=>d.IsCharging)?_pulseTick:-1;
         var newIcon = TrayIconGenerator.GenerateMultiple(
-            ringDevices.Select(d=>(d.BatteryProgress,d.IsCharging)).ToList(),isDark,settings);
+            ringDevices.Select(d=>(d.BatteryProgress,d.IsCharging)).ToList(),isDark,settings,mainPulseTick);
 
         _taskbarIcon.Icon = newIcon;
 
@@ -360,7 +362,7 @@ public class TrayIconManager : IDisposable
         bool anyCharging = settings.TrayChargingPulse &&
             (settings.TrayPerDeviceIcons
                 ? SelectPerDeviceIcons(_mainViewModel.Devices).Any(d => d.IsCharging)
-                : _mainViewModel.IsLowestCharging);
+                : _mainViewModel.Devices.Any(d => d.IsConnected && d.HasBattery && d.IsCharging));
 
         if (anyCharging && !_pulseTimer.IsEnabled)
         {
