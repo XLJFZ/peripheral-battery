@@ -41,6 +41,47 @@ public class UpdateCheckService
         return ver != null ? $"{ver.Major}.{ver.Minor}.{ver.Build}" : "1.0.0";
     }
 
+    /// <summary>
+    /// Picks the installer and the checksum asset out of a GitHub release payload.
+    /// The whole asset list is scanned: the checksum often comes last, so stopping at
+    /// the installer would lose it.
+    /// </summary>
+    internal static (string? Download, string? Checksum) SelectAssets(JsonElement root)
+    {
+        string? setupUrl = null;
+        string? fallbackUrl = null;
+        string? checksumUrl = null;
+
+        if (!root.TryGetProperty("assets", out var assets) || assets.ValueKind != JsonValueKind.Array)
+            return (null, null);
+
+        foreach (var item in assets.EnumerateArray())
+        {
+            string name = item.TryGetProperty("name", out var n) ? (n.GetString() ?? "") : "";
+            string url = item.TryGetProperty("browser_download_url", out var d) ? (d.GetString() ?? "") : "";
+            if (string.IsNullOrEmpty(url)) continue;
+
+            if (checksumUrl == null &&
+                (name.Equals("sha256.txt", StringComparison.OrdinalIgnoreCase) ||
+                 name.EndsWith(".sha256", StringComparison.OrdinalIgnoreCase)))
+            {
+                checksumUrl = url;
+                continue;
+            }
+
+            bool isExe = name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase);
+            bool isZip = name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase);
+            if (!isExe && !isZip) continue;
+
+            if (isExe && name.Contains("Setup", StringComparison.OrdinalIgnoreCase))
+                setupUrl ??= url;               // the installer beats a bare EXE
+            else
+                fallbackUrl ??= url;            // portable EXE or zip archive
+        }
+
+        return (setupUrl ?? fallbackUrl, checksumUrl);
+    }
+
     public async Task<UpdateCheckResult> CheckForUpdatesAsync(CancellationToken ct = default)
     {
         string currentVerStr = GetCurrentVersion();
@@ -91,38 +132,7 @@ public class UpdateCheckService
             string htmlUrl = root.TryGetProperty("html_url", out var urlElem) ? (urlElem.GetString() ?? "") : "";
             string body = root.TryGetProperty("body", out var bodyElem) ? (bodyElem.GetString() ?? "") : "";
 
-            string? bestDownloadUrl = null;
-            string? checksumUrl = null;
-            if (root.TryGetProperty("assets", out var assetsElem) && assetsElem.ValueKind == JsonValueKind.Array)
-            {
-                // Prefer Setup installer first, fallback to standalone App.exe or zip archive
-                foreach (var item in assetsElem.EnumerateArray())
-                {
-                    string name = item.TryGetProperty("name", out var n) ? (n.GetString() ?? "") : "";
-                    string dlUrl = item.TryGetProperty("browser_download_url", out var d) ? (d.GetString() ?? "") : "";
-
-                    if (checksumUrl == null &&
-                        (name.Equals("sha256.txt", StringComparison.OrdinalIgnoreCase) ||
-                         name.EndsWith(".sha256", StringComparison.OrdinalIgnoreCase)))
-                    {
-                        checksumUrl = dlUrl;
-                    }
-
-                    if (name.Contains("Setup", StringComparison.OrdinalIgnoreCase) && name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
-                    {
-                        bestDownloadUrl = dlUrl;
-                        break;
-                    }
-                    if (bestDownloadUrl == null && name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
-                    {
-                        bestDownloadUrl = dlUrl;
-                    }
-                    else if (bestDownloadUrl == null && name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
-                    {
-                        bestDownloadUrl = dlUrl;
-                    }
-                }
-            }
+            var (bestDownloadUrl, checksumUrl) = SelectAssets(root);
 
             bool isNewer = CompareVersions(cleanTag, currentVersionStr) > 0;
 
