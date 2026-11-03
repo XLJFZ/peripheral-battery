@@ -1,7 +1,8 @@
 # Build the portable single-file release: one EXE, no installer, no runtime prerequisite.
 $ErrorActionPreference = 'Stop'
 Set-Location -LiteralPath $PSScriptRoot
-$version = '0.3.7'
+$version = '0.3.8'
+$python = if (Test-Path -LiteralPath './.venv/Scripts/python.exe') { './.venv/Scripts/python.exe' } else { 'python' }
 $out = "dist/portable-$version"
 if (Test-Path -LiteralPath $out) { Remove-Item -LiteralPath $out -Recurse -Force }
 dotnet publish native/src/BluetoothBatteryMonitor.App/BluetoothBatteryMonitor.App.csproj `
@@ -11,9 +12,9 @@ dotnet publish native/src/BluetoothBatteryMonitor.App/BluetoothBatteryMonitor.Ap
     -p:EnableCompressionInSingleFile=true `
     -p:DebugType=none
 if ($LASTEXITCODE) { throw 'Portable publish failed' }
-& ./.venv/Scripts/python.exe tools/check_portable_exe.py "$out/BluetoothBatteryMonitor.App.exe" --report "build/portable-smoke.json"
+& $python tools/check_portable_exe.py "$out/BluetoothBatteryMonitor.App.exe" --report "build/portable-smoke.json"
 if ($LASTEXITCODE) { throw 'Portable verification failed' }
-& ./.venv/Scripts/python.exe tools/check_flyout_layout.py --exe "$out/BluetoothBatteryMonitor.App.exe" --report "build/flyout-layout.json"
+& $python tools/check_flyout_layout.py --exe "$out/BluetoothBatteryMonitor.App.exe" --report "build/flyout-layout.json"
 if ($LASTEXITCODE) { throw 'Flyout layout verification failed' }
 $release = "releases/v$version"
 New-Item -ItemType Directory -Force -Path $release | Out-Null

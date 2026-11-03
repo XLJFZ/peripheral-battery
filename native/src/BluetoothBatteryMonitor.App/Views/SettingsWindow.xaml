@@ -16,6 +16,41 @@
 
     <ui:FluentWindow.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
+
+        <!-- 可折叠分组标题：透明背景 + 右侧箭头，贴合深色卡片风格 -->
+        <Style x:Key="GroupHeaderToggle" TargetType="ToggleButton">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="Cursor" Value="Hand" />
+            <!-- 右侧留出滚动条的宽度，箭头不要贴着滚动条 -->
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="Bd" Background="Transparent" CornerRadius="6" Padding="8,7">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <ContentPresenter VerticalAlignment="Center" />
+                                <Path x:Name="Arrow" Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0"
+                                      Data="M 0 0 L 4 4 L 8 0"
+                                      Stroke="{DynamicResource TextFillColorSecondaryBrush}" StrokeThickness="1.6"
+                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Arrow" Property="Data" Value="M 0 4 L 4 0 L 8 4" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </ui:FluentWindow.Resources>
 
     <Grid Margin="24,20,24,20">
@@ -39,468 +74,496 @@
         </StackPanel>
 
         <!-- Ayar Kartları -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,6,0">
-            <StackPanel Margin="0,0,0,0">
-                <!-- Peripheral Battery tray appearance -->
-                <Border Margin="0,0,0,12" Padding="14,12" CornerRadius="8"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1">
-                    <StackPanel>
-                        <TextBlock Text="{DynamicResource Settings_TraySection}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                        <TextBlock Text="{DynamicResource Settings_TraySectionDesc}" FontSize="12" Margin="0,4,0,12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,12">
-                            <StackPanel Margin="18,0"><Image x:Name="PreviewHigh" Width="32" Height="32"/><TextBlock Text="80%" HorizontalAlignment="Center" Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/></StackPanel>
-                            <StackPanel Margin="18,0"><Image x:Name="PreviewMid" Width="32" Height="32"/><TextBlock Text="30%" HorizontalAlignment="Center" Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/></StackPanel>
-                            <StackPanel Margin="18,0"><Image x:Name="PreviewLow" Width="32" Height="32"/><TextBlock Text="9%" HorizontalAlignment="Center" Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/></StackPanel>
-                        </StackPanel>
-                        <CheckBox Content="{DynamicResource Settings_TrayAutoColor}" IsChecked="{Binding TrayAutoColor}" Margin="0,0,0,6"/>
-                        <TextBlock Text="{DynamicResource Settings_TrayColorLegend}" FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,12"/>
-                        <Grid>
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="24"/><ColumnDefinition Width="100"/></Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions><RowDefinition Height="38"/><RowDefinition Height="38"/><RowDefinition Height="38"/><RowDefinition Height="38"/></Grid.RowDefinitions>
-                            <TextBlock Grid.Row="0" Text="{DynamicResource Settings_TrayHigh}" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                            <Border Grid.Row="0" Grid.Column="1" Background="{Binding TrayHighColor}" Tag="TrayHighColor" Cursor="Hand" MouseLeftButtonUp="ChooseTrayColor" Width="16" Height="16" CornerRadius="4"/>
-                            <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding TrayHighColor,UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Row="1" Text="{DynamicResource Settings_TrayMid}" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                            <Border Grid.Row="1" Grid.Column="1" Background="{Binding TrayMidColor}" Tag="TrayMidColor" Cursor="Hand" MouseLeftButtonUp="ChooseTrayColor" Width="16" Height="16" CornerRadius="4"/>
-                            <TextBox Grid.Row="1" Grid.Column="2" Text="{Binding TrayMidColor,UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Row="2" Text="{DynamicResource Settings_TrayLow}" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                            <Border Grid.Row="2" Grid.Column="1" Background="{Binding TrayLowColor}" Tag="TrayLowColor" Cursor="Hand" MouseLeftButtonUp="ChooseTrayColor" Width="16" Height="16" CornerRadius="4"/>
-                            <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding TrayLowColor,UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Row="3" Text="{DynamicResource Settings_TrayFixed}" FontSize="11" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                            <Border Grid.Row="3" Grid.Column="1" Background="{Binding TrayFixedColor}" Tag="TrayFixedColor" Cursor="Hand" MouseLeftButtonUp="ChooseTrayColor" Width="16" Height="16" CornerRadius="4"/>
-                            <TextBox Grid.Row="3" Grid.Column="2" Text="{Binding TrayFixedColor,UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
-                        </Grid>
-                        <TextBlock Text="{DynamicResource Settings_TrayColorHint}" FontSize="11" Margin="0,8,0,8" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                        <Grid Margin="0,4,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="135"/></Grid.ColumnDefinitions>
-                            <TextBlock Text="{DynamicResource Settings_TrayStyle}" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                            <ComboBox Grid.Column="1" ItemsSource="{x:Static vm:SettingsViewModel.AvailableTrayStyleOptions}" SelectedValuePath="Value" DisplayMemberPath="Display" SelectedValue="{Binding TrayIconStyle, Mode=TwoWay}"/>
-                        </Grid>
-                        <TextBlock Text="{DynamicResource Settings_TrayRingWidth}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                        <Slider Minimum="7" Maximum="13" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding TrayRingWidth}" Margin="0,8,0,0"/>
-                    </StackPanel>
-                </Border>
-
-
-                <!-- 1. Başlangıçta Çalıştır -->
-                <Border Margin="0,0,0,12"
-                        Padding="14,10"
-                        CornerRadius="8"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                        BorderThickness="1"
-                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="{DynamicResource Settings_LaunchAtStartup}"
-                                       FontSize="14"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                            <TextBlock Text="{DynamicResource Settings_LaunchAtStartupDesc}"
-                                       FontSize="12"
-                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                        </StackPanel>
-                        <CheckBox Grid.Column="1"
-                                  IsChecked="{Binding LaunchAtStartup, Mode=TwoWay}"
-                                  VerticalAlignment="Center" />
-                    </Grid>
-                </Border>
-
-                <!-- 2. Dil Seçimi (Language) -->
-                <Border Margin="0,0,0,12"
-                        Padding="14,10"
-                        CornerRadius="8"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                        BorderThickness="1"
-                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="{DynamicResource Settings_Language}"
-                                       FontSize="14"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                            <TextBlock Text="{DynamicResource Settings_LanguageDesc}"
-                                       FontSize="12"
-                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                        </StackPanel>
-                        <ComboBox Grid.Column="1"
-                                  ItemsSource="{Binding AvailableLanguages}"
-                                  SelectedValuePath="Code"
-                                  DisplayMemberPath="DisplayName"
-                                  SelectedValue="{Binding SelectedLanguage, Mode=TwoWay}"
-                                  Width="130"
-                                  VerticalAlignment="Center" />
-                    </Grid>
-                </Border>
-
-                <!-- 3. Arayüz Teması (Theme) -->
-                <Border Margin="0,0,0,12"
-                        Padding="14,10"
-                        CornerRadius="8"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                        BorderThickness="1"
-                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="{DynamicResource Settings_Appearance}"
-                                       FontSize="14"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                            <TextBlock Text="{DynamicResource Settings_AppearanceDesc}"
-                                       FontSize="12"
-                                       TextWrapping="Wrap"
-                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                        </StackPanel>
-                        <ComboBox x:Name="AppearanceModeSelector" Grid.Column="1"
-                                  ItemsSource="{Binding AvailableThemes}"
-                                  SelectedItem="{Binding SelectedTheme, Mode=TwoWay}"
-                                  Width="130"
-                                  VerticalAlignment="Center" />
-                    </Grid>
-                </Border>
-
-                <!-- 3b. Panel boyutu -->
-                <Border Margin="0,0,0,12"
-                        Padding="14,10"
-                        CornerRadius="8"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                        BorderThickness="1"
-                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="{DynamicResource Settings_PanelSize}"
-                                       FontSize="14"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                            <TextBlock Text="{DynamicResource Settings_PanelSizeDesc}"
-                                       FontSize="12"
-                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                        </StackPanel>
-                        <ComboBox Grid.Column="1"
-                                  ItemsSource="{Binding AvailableDensities}"
-                                  SelectedItem="{Binding PanelDensity, Mode=TwoWay}"
-                                  Width="130"
-                                  VerticalAlignment="Center" />
-                    </Grid>
-                </Border>
-
-                <!-- 4. Bildirimleri Etkinleştir -->
-                <Border Margin="0,0,0,12"
-                        Padding="14,10"
-                        CornerRadius="8"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                        BorderThickness="1"
-                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="{DynamicResource Settings_Notifications}"
-                                       FontSize="14"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                            <TextBlock Text="{DynamicResource Settings_NotificationsDesc}"
-                                       FontSize="12"
-                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                        </StackPanel>
-                        <CheckBox Grid.Column="1"
-                                  IsChecked="{Binding EnableNotifications, Mode=TwoWay}"
-                                  VerticalAlignment="Center" />
-                    </Grid>
-                </Border>
-
-                <!-- 3. Akıllı Ses Yönlendirici (Smart Audio Router) -->
-                <Border Margin="0,0,0,12"
-                        Padding="14,10"
-                        CornerRadius="8"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                        BorderThickness="1"
-                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="{DynamicResource Settings_AudioRouter}"
-                                       FontSize="14"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                            <TextBlock Text="{DynamicResource Settings_AudioRouterDesc}"
-                                       FontSize="12"
-                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                        </StackPanel>
-                        <CheckBox Grid.Column="1"
-                                  IsChecked="{Binding AutoSwitchAudioEndpoint, Mode=TwoWay}"
-                                  VerticalAlignment="Center" />
-                    </Grid>
-                </Border>
-
-                <!-- 4. Yerel REST / JSON API Sunucusu -->
-                <Border Margin="0,0,0,12"
-                        Padding="14,10"
-                        CornerRadius="8"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                        BorderThickness="1"
-                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
-                    <StackPanel>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,10,0">
+                <StackPanel Margin="0,0,0,0">
+                <StackPanel Margin="0,0,0,10">
+                    <ToggleButton x:Name="GrpAppearanceToggle" IsChecked="True" Style="{StaticResource GroupHeaderToggle}">
+                        <TextBlock Text="{DynamicResource Settings_GroupAppearance}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                    </ToggleButton>
+                    <StackPanel Margin="0,10,0,0" Visibility="{Binding IsChecked, ElementName=GrpAppearanceToggle, Converter={StaticResource BoolToVis}}">
+                    <Border Margin="0,0,0,12"
+                            Padding="14,10"
+                            CornerRadius="8"
+                            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                            BorderThickness="1"
+                            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="{DynamicResource Settings_RestApi}"
+                                <TextBlock Text="{DynamicResource Settings_Appearance}"
                                            FontSize="14"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                                <TextBlock Text="{DynamicResource Settings_RestApiDesc}"
+                                <TextBlock Text="{DynamicResource Settings_AppearanceDesc}"
+                                           FontSize="12"
+                                           TextWrapping="Wrap"
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                            <ComboBox x:Name="AppearanceModeSelector" Grid.Column="1"
+                                      ItemsSource="{Binding AvailableThemeOptions}"
+                                      SelectedValuePath="Value"
+                                      DisplayMemberPath="Display"
+                                      SelectedValue="{Binding SelectedTheme, Mode=TwoWay}"
+                                      Width="130"
+                                      VerticalAlignment="Center" />
+                        </Grid>
+                    </Border>
+                    <Border Margin="0,0,0,12"
+                            Padding="14,10"
+                            CornerRadius="8"
+                            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                            BorderThickness="1"
+                            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{DynamicResource Settings_PanelSize}"
+                                           FontSize="14"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                                <TextBlock Text="{DynamicResource Settings_PanelSizeDesc}"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                            <ComboBox Grid.Column="1"
+                                      ItemsSource="{Binding AvailableDensityOptions}"
+                                      SelectedValuePath="Value"
+                                      DisplayMemberPath="Display"
+                                      SelectedValue="{Binding PanelDensity, Mode=TwoWay}"
+                                      Width="130"
+                                      VerticalAlignment="Center" />
+                        </Grid>
+                    </Border>
+                    <!-- 托盘图标与颜色 -->
+                    <Border Margin="0,0,0,12" Padding="14,12" CornerRadius="8"
+                            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="{DynamicResource Settings_TraySection}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                            <TextBlock Text="{DynamicResource Settings_TraySectionDesc}" FontSize="12" Margin="0,4,0,12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,12">
+                                <StackPanel Margin="18,0"><Image x:Name="PreviewHigh" Width="32" Height="32"/><TextBlock Text="80%" HorizontalAlignment="Center" Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/></StackPanel>
+                                <StackPanel Margin="18,0"><Image x:Name="PreviewMid" Width="32" Height="32"/><TextBlock Text="30%" HorizontalAlignment="Center" Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/></StackPanel>
+                                <StackPanel Margin="18,0"><Image x:Name="PreviewLow" Width="32" Height="32"/><TextBlock Text="9%" HorizontalAlignment="Center" Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/></StackPanel>
+                            </StackPanel>
+                            <CheckBox Content="{DynamicResource Settings_TrayAutoColor}" IsChecked="{Binding TrayAutoColor}" Margin="0,0,0,6"/>
+                            <TextBlock Text="{DynamicResource Settings_TrayColorLegend}" FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,12"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="24"/><ColumnDefinition Width="100"/></Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions><RowDefinition Height="38"/><RowDefinition Height="38"/><RowDefinition Height="38"/><RowDefinition Height="38"/></Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" Text="{DynamicResource Settings_TrayHigh}" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                <Border Grid.Row="0" Grid.Column="1" Background="{Binding TrayHighColor}" Tag="TrayHighColor" Cursor="Hand" MouseLeftButtonUp="ChooseTrayColor" Width="16" Height="16" CornerRadius="4"/>
+                                <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding TrayHighColor,UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Row="1" Text="{DynamicResource Settings_TrayMid}" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                <Border Grid.Row="1" Grid.Column="1" Background="{Binding TrayMidColor}" Tag="TrayMidColor" Cursor="Hand" MouseLeftButtonUp="ChooseTrayColor" Width="16" Height="16" CornerRadius="4"/>
+                                <TextBox Grid.Row="1" Grid.Column="2" Text="{Binding TrayMidColor,UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Row="2" Text="{DynamicResource Settings_TrayLow}" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                <Border Grid.Row="2" Grid.Column="1" Background="{Binding TrayLowColor}" Tag="TrayLowColor" Cursor="Hand" MouseLeftButtonUp="ChooseTrayColor" Width="16" Height="16" CornerRadius="4"/>
+                                <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding TrayLowColor,UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Row="3" Text="{DynamicResource Settings_TrayFixed}" FontSize="11" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                <Border Grid.Row="3" Grid.Column="1" Background="{Binding TrayFixedColor}" Tag="TrayFixedColor" Cursor="Hand" MouseLeftButtonUp="ChooseTrayColor" Width="16" Height="16" CornerRadius="4"/>
+                                <TextBox Grid.Row="3" Grid.Column="2" Text="{Binding TrayFixedColor,UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+                            </Grid>
+                            <TextBlock Text="{DynamicResource Settings_TrayColorHint}" FontSize="11" Margin="0,8,0,8" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                            <Grid Margin="0,4,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="135"/></Grid.ColumnDefinitions>
+                                <TextBlock Text="{DynamicResource Settings_TrayStyle}" VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                <ComboBox Grid.Column="1" ItemsSource="{x:Static vm:SettingsViewModel.AvailableTrayStyleOptions}" SelectedValuePath="Value" DisplayMemberPath="Display" SelectedValue="{Binding TrayIconStyle, Mode=TwoWay}"/>
+                            </Grid>
+                            <TextBlock Text="{DynamicResource Settings_TrayRingWidth}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                            <Slider Minimum="7" Maximum="13" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding TrayRingWidth}" Margin="0,8,0,0"/>
+                        </StackPanel>
+                    </Border>
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Margin="0,0,0,10">
+                    <ToggleButton x:Name="GrpBehaviorToggle" IsChecked="True" Style="{StaticResource GroupHeaderToggle}">
+                        <TextBlock Text="{DynamicResource Settings_GroupBehavior}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                    </ToggleButton>
+                    <StackPanel Margin="0,10,0,0" Visibility="{Binding IsChecked, ElementName=GrpBehaviorToggle, Converter={StaticResource BoolToVis}}">
+                    <!-- 1. Başlangıçta Çalıştır -->
+                    <Border Margin="0,0,0,12"
+                            Padding="14,10"
+                            CornerRadius="8"
+                            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                            BorderThickness="1"
+                            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{DynamicResource Settings_LaunchAtStartup}"
+                                           FontSize="14"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                                <TextBlock Text="{DynamicResource Settings_LaunchAtStartupDesc}"
                                            FontSize="12"
                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                             </StackPanel>
                             <CheckBox Grid.Column="1"
-                                      IsChecked="{Binding EnableRestApi, Mode=TwoWay}"
+                                      IsChecked="{Binding LaunchAtStartup, Mode=TwoWay}"
                                       VerticalAlignment="Center" />
                         </Grid>
-
-                        <!-- Port ve Canlı URL Önizlemesi -->
-                        <Grid Margin="0,10,0,2" IsEnabled="{Binding EnableRestApi}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="{DynamicResource Settings_RestApiPort}"
-                                           FontSize="12"
-                                           FontWeight="Medium"
-                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                                <TextBlock Text="{Binding RestApiUrlPreview}"
-                                           FontSize="11"
-                                           FontFamily="Consolas"
-                                           Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                           Margin="0,2,0,0" />
-                            </StackPanel>
-                            <TextBox Grid.Column="1"
-                                     Text="{Binding RestApiPort, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
-                                     Width="80"
-                                     MaxLength="5"
-                                     TextAlignment="Center"
-                                     VerticalAlignment="Center" />
-                        </Grid>
-                    </StackPanel>
-                </Border>
-
-                <!-- 5. Düşük Pil Eşiği -->
-                <Border Margin="0,0,0,12"
-                        Padding="14,10"
-                        CornerRadius="8"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                        BorderThickness="1"
-                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
-                    <StackPanel>
-                        <Grid>
-                            <TextBlock Text="{DynamicResource Settings_LowThreshold}"
-                                       FontSize="14"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                            <TextBlock Text="{Binding LowBatteryThresholdText}"
-                                       FontSize="14"
-                                       FontWeight="Bold"
-                                       HorizontalAlignment="Right"
-                                       Foreground="#F59E0B" />
-                        </Grid>
-                        <Slider Minimum="15"
-                                Maximum="40"
-                                Value="{Binding LowBatteryThreshold, Mode=TwoWay}"
-                                TickFrequency="5"
-                                IsSnapToTickEnabled="True"
-                                Margin="0,8,0,0" />
-                    </StackPanel>
-                </Border>
-
-                <!-- Cihaz Bazlı Özel Bildirim Eşikleri -->
-                <Border Margin="0,0,0,12"
-                        Padding="14,10"
-                        CornerRadius="8"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                        BorderThickness="1"
-                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
-                    <StackPanel>
-                        <TextBlock Text="{DynamicResource Settings_DeviceThresholds}"
-                                   FontSize="14"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                        <TextBlock Text="{DynamicResource Settings_DeviceThresholdsDesc}"
-                                   FontSize="12"
-                                   TextWrapping="Wrap"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                   Margin="0,2,0,8" />
-
-                        <!-- Tanımlı Cihaz Eşikleri -->
-                        <ItemsControl ItemsSource="{Binding DeviceThresholds}"
-                                      Visibility="{Binding HasDeviceThresholds, Converter={StaticResource BoolToVis}}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid Margin="0,4">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="{Binding Name}"
-                                                   FontSize="12"
-                                                   VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   Margin="0,0,10,0"
-                                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                                        <ComboBox Grid.Column="1"
-                                                  ItemsSource="{x:Static vm:SettingsViewModel.AvailableThresholds}"
-                                                  SelectedValuePath="Value"
-                                                  DisplayMemberPath="DisplayName"
-                                                  SelectedValue="{Binding SelectedThreshold, Mode=TwoWay}"
-                                                  Width="175"
-                                                  VerticalAlignment="Center" />
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-
-                        <!-- İpucu kutusu -->
-                        <Border Padding="8,6"
-                                CornerRadius="6"
-                                Background="{DynamicResource SubtleFillColorSecondaryBrush}"
-                                Margin="0,4,0,0">
-                            <TextBlock Text="{DynamicResource Settings_DeviceThresholdsTip}"
-                                       FontSize="11"
-                                       TextWrapping="Wrap"
-                                       Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
-                        </Border>
-                    </StackPanel>
-                </Border>
-
-                <!-- 6. Kritik Pil Eşiği -->
-                <Border Margin="0,0,0,12"
-                        Padding="14,10"
-                        CornerRadius="8"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                        BorderThickness="1"
-                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
-                    <StackPanel>
-                        <Grid>
-                            <TextBlock Text="{DynamicResource Settings_CriticalThreshold}"
-                                       FontSize="14"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                            <TextBlock Text="{Binding CriticalBatteryThresholdText}"
-                                       FontSize="14"
-                                       FontWeight="Bold"
-                                       HorizontalAlignment="Right"
-                                       Foreground="#EF4444" />
-                        </Grid>
-                        <Slider Minimum="5"
-                                Maximum="15"
-                                Value="{Binding CriticalBatteryThreshold, Mode=TwoWay}"
-                                TickFrequency="1"
-                                IsSnapToTickEnabled="True"
-                                Margin="0,8,0,0" />
-                    </StackPanel>
-                </Border>
-
-                <!-- 7. Tarama Sıklığı -->
-                <Border Margin="0,0,0,12"
-                        Padding="14,10"
-                        CornerRadius="8"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                        BorderThickness="1"
-                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="{DynamicResource Settings_PollingFrequency}"
-                                       FontSize="14"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                            <TextBlock Text="{DynamicResource Settings_PollingFrequencyDesc}"
-                                       FontSize="12"
-                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                        </StackPanel>
-                        <ComboBox Grid.Column="1"
-                                  ItemsSource="{x:Static vm:SettingsViewModel.AvailableRefreshIntervals}"
-                                  SelectedValuePath="Seconds"
-                                  DisplayMemberPath="DisplayName"
-                                  SelectedValue="{Binding RefreshIntervalSeconds, Mode=TwoWay}"
-                                  Width="120"
-                                  VerticalAlignment="Center" />
-                    </Grid>
-                </Border>
-
-                <!-- 8. Yazılım Güncellemeleri (Software Updates) -->
-                <Border Margin="0,0,0,12"
-                        Padding="14,10"
-                        CornerRadius="8"
-                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                        BorderThickness="1"
-                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
-                    <StackPanel>
+                    </Border>
+                    <Border Margin="0,0,0,12"
+                            Padding="14,10"
+                            CornerRadius="8"
+                            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                            BorderThickness="1"
+                            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="{DynamicResource Update_Title}"
+                                <TextBlock Text="{DynamicResource Settings_Language}"
                                            FontSize="14"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                                <TextBlock Text="{DynamicResource Update_Desc}"
+                                <TextBlock Text="{DynamicResource Settings_LanguageDesc}"
                                            FontSize="12"
                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                             </StackPanel>
-                            <Button Grid.Column="1"
-                                    Content="{DynamicResource Update_CheckNow}"
-                                    Command="{Binding CheckForUpdatesCommand}"
-                                    IsEnabled="{Binding CanCheckUpdates}"
-                                    Padding="14,6"
-                                    VerticalAlignment="Center" />
+                            <ComboBox Grid.Column="1"
+                                      ItemsSource="{Binding AvailableLanguages}"
+                                      SelectedValuePath="Code"
+                                      DisplayMemberPath="DisplayName"
+                                      SelectedValue="{Binding SelectedLanguage, Mode=TwoWay}"
+                                      Width="130"
+                                      VerticalAlignment="Center" />
                         </Grid>
-
-                        <!-- Güncelleme Durum Mesajı -->
-                        <TextBlock Text="{Binding UpdateStatusMessage}"
-                                   FontSize="12"
-                                   FontWeight="Medium"
-                                   Foreground="#3B82F6"
-                                   Margin="0,8,0,0"
-                                   TextWrapping="Wrap" />
-
-                        <!-- Yeni Sürüm İndirme Butonu -->
-                        <Button Content="{DynamicResource Update_Download}"
-                                Command="{Binding OpenUpdateDownloadCommand}"
-                                Visibility="{Binding HasUpdateAvailable, Converter={StaticResource BoolToVis}}"
-                                HorizontalAlignment="Left"
-                                Margin="0,8,0,0"
-                                Padding="16,6" />
+                    </Border>
+                    <Border Margin="0,0,0,12"
+                            Padding="14,10"
+                            CornerRadius="8"
+                            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                            BorderThickness="1"
+                            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{DynamicResource Settings_AudioRouter}"
+                                           FontSize="14"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                                <TextBlock Text="{DynamicResource Settings_AudioRouterDesc}"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                            <CheckBox Grid.Column="1"
+                                      IsChecked="{Binding AutoSwitchAudioEndpoint, Mode=TwoWay}"
+                                      VerticalAlignment="Center" />
+                        </Grid>
+                    </Border>
+                    <Border Margin="0,0,0,12"
+                            Padding="14,10"
+                            CornerRadius="8"
+                            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                            BorderThickness="1"
+                            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{DynamicResource Settings_PollingFrequency}"
+                                           FontSize="14"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                                <TextBlock Text="{DynamicResource Settings_PollingFrequencyDesc}"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                            <ComboBox Grid.Column="1"
+                                      ItemsSource="{x:Static vm:SettingsViewModel.AvailableRefreshIntervals}"
+                                      SelectedValuePath="Seconds"
+                                      DisplayMemberPath="DisplayName"
+                                      SelectedValue="{Binding RefreshIntervalSeconds, Mode=TwoWay}"
+                                      Width="120"
+                                      VerticalAlignment="Center" />
+                        </Grid>
+                    </Border>
                     </StackPanel>
-                </Border>
+                </StackPanel>
+                <StackPanel Margin="0,0,0,10">
+                    <ToggleButton x:Name="GrpNotificationsToggle" IsChecked="False" Style="{StaticResource GroupHeaderToggle}">
+                        <TextBlock Text="{DynamicResource Settings_GroupNotifications}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                    </ToggleButton>
+                    <StackPanel Margin="0,10,0,0" Visibility="{Binding IsChecked, ElementName=GrpNotificationsToggle, Converter={StaticResource BoolToVis}}">
+                    <Border Margin="0,0,0,12"
+                            Padding="14,10"
+                            CornerRadius="8"
+                            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                            BorderThickness="1"
+                            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{DynamicResource Settings_Notifications}"
+                                           FontSize="14"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                                <TextBlock Text="{DynamicResource Settings_NotificationsDesc}"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                            <CheckBox Grid.Column="1"
+                                      IsChecked="{Binding EnableNotifications, Mode=TwoWay}"
+                                      VerticalAlignment="Center" />
+                        </Grid>
+                    </Border>
+                    <Border Margin="0,0,0,12"
+                            Padding="14,10"
+                            CornerRadius="8"
+                            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                            BorderThickness="1"
+                            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+                        <StackPanel>
+                            <Grid>
+                                <TextBlock Text="{DynamicResource Settings_LowThreshold}"
+                                           FontSize="14"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                                <TextBlock Text="{Binding LowBatteryThresholdText}"
+                                           FontSize="14"
+                                           FontWeight="Bold"
+                                           HorizontalAlignment="Right"
+                                           Foreground="#F59E0B" />
+                            </Grid>
+                            <Slider Minimum="15"
+                                    Maximum="40"
+                                    Value="{Binding LowBatteryThreshold, Mode=TwoWay}"
+                                    TickFrequency="5"
+                                    IsSnapToTickEnabled="True"
+                                    Margin="0,8,0,0" />
+                        </StackPanel>
+                    </Border>
+                    <Border Margin="0,0,0,12"
+                            Padding="14,10"
+                            CornerRadius="8"
+                            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                            BorderThickness="1"
+                            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+                        <StackPanel>
+                            <TextBlock Text="{DynamicResource Settings_DeviceThresholds}"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                            <TextBlock Text="{DynamicResource Settings_DeviceThresholdsDesc}"
+                                       FontSize="12"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                       Margin="0,2,0,8" />
 
+                            <!-- Tanımlı Cihaz Eşikleri -->
+                            <ItemsControl ItemsSource="{Binding DeviceThresholds}"
+                                          Visibility="{Binding HasDeviceThresholds, Converter={StaticResource BoolToVis}}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Name}"
+                                                       FontSize="12"
+                                                       VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       Margin="0,0,10,0"
+                                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                                            <ComboBox Grid.Column="1"
+                                                      ItemsSource="{x:Static vm:SettingsViewModel.AvailableThresholds}"
+                                                      SelectedValuePath="Value"
+                                                      DisplayMemberPath="DisplayName"
+                                                      SelectedValue="{Binding SelectedThreshold, Mode=TwoWay}"
+                                                      Width="175"
+                                                      VerticalAlignment="Center" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- İpucu kutusu -->
+                            <Border Padding="8,6"
+                                    CornerRadius="6"
+                                    Background="{DynamicResource SubtleFillColorSecondaryBrush}"
+                                    Margin="0,4,0,0">
+                                <TextBlock Text="{DynamicResource Settings_DeviceThresholdsTip}"
+                                           FontSize="11"
+                                           TextWrapping="Wrap"
+                                           Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                    <Border Margin="0,0,0,12"
+                            Padding="14,10"
+                            CornerRadius="8"
+                            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                            BorderThickness="1"
+                            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+                        <StackPanel>
+                            <Grid>
+                                <TextBlock Text="{DynamicResource Settings_CriticalThreshold}"
+                                           FontSize="14"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                                <TextBlock Text="{Binding CriticalBatteryThresholdText}"
+                                           FontSize="14"
+                                           FontWeight="Bold"
+                                           HorizontalAlignment="Right"
+                                           Foreground="#EF4444" />
+                            </Grid>
+                            <Slider Minimum="5"
+                                    Maximum="15"
+                                    Value="{Binding CriticalBatteryThreshold, Mode=TwoWay}"
+                                    TickFrequency="1"
+                                    IsSnapToTickEnabled="True"
+                                    Margin="0,8,0,0" />
+                        </StackPanel>
+                    </Border>
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Margin="0,0,0,0">
+                    <ToggleButton x:Name="GrpAdvancedToggle" IsChecked="False" Style="{StaticResource GroupHeaderToggle}">
+                        <TextBlock Text="{DynamicResource Settings_GroupAdvanced}" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                    </ToggleButton>
+                    <StackPanel Margin="0,10,0,0" Visibility="{Binding IsChecked, ElementName=GrpAdvancedToggle, Converter={StaticResource BoolToVis}}">
+                    <Border Margin="0,0,0,12"
+                            Padding="14,10"
+                            CornerRadius="8"
+                            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                            BorderThickness="1"
+                            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+                        <StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{DynamicResource Settings_RestApi}"
+                                               FontSize="14"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                                    <TextBlock Text="{DynamicResource Settings_RestApiDesc}"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                </StackPanel>
+                                <CheckBox Grid.Column="1"
+                                          IsChecked="{Binding EnableRestApi, Mode=TwoWay}"
+                                          VerticalAlignment="Center" />
+                            </Grid>
+
+                            <!-- Port ve Canlı URL Önizlemesi -->
+                            <Grid Margin="0,10,0,2" IsEnabled="{Binding EnableRestApi}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{DynamicResource Settings_RestApiPort}"
+                                               FontSize="12"
+                                               FontWeight="Medium"
+                                               Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                                    <TextBlock Text="{Binding RestApiUrlPreview}"
+                                               FontSize="11"
+                                               FontFamily="Consolas"
+                                               Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                               Margin="0,2,0,0" />
+                                </StackPanel>
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding RestApiPort, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                         Width="80"
+                                         MaxLength="5"
+                                         TextAlignment="Center"
+                                         VerticalAlignment="Center" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                    <Border Margin="0,0,0,12"
+                            Padding="14,10"
+                            CornerRadius="8"
+                            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                            BorderThickness="1"
+                            BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}">
+                        <StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{DynamicResource Update_Title}"
+                                               FontSize="14"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                                    <TextBlock Text="{DynamicResource Update_Desc}"
+                                               FontSize="12"
+                                               TextWrapping="Wrap"
+                                               Margin="0,0,12,0"
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                </StackPanel>
+                                <Button Grid.Column="1"
+                                        Content="{DynamicResource Update_CheckNow}"
+                                        Command="{Binding CheckForUpdatesCommand}"
+                                        IsEnabled="{Binding CanCheckUpdates}"
+                                        Padding="14,6"
+                                        VerticalAlignment="Center" />
+                            </Grid>
+
+                            <!-- Güncelleme Durum Mesajı -->
+                            <TextBlock Text="{Binding UpdateStatusMessage}"
+                                       FontSize="12"
+                                       FontWeight="Medium"
+                                       Foreground="#3B82F6"
+                                       Margin="0,8,0,0"
+                                       TextWrapping="Wrap"
+                                       Visibility="{Binding HasUpdateStatusMessage, Converter={StaticResource BoolToVis}}" />
+
+                            <!-- Yeni sürüm: indir ve kur / manuel indir -->
+                            <ProgressBar Value="{Binding UpdateProgressPercent}"
+                                         Maximum="100"
+                                         Height="4"
+                                         Margin="0,10,0,0"
+                                         Visibility="{Binding IsInstallingUpdate, Converter={StaticResource BoolToVis}}" />
+
+                            <StackPanel Orientation="Horizontal"
+                                        Margin="0,8,0,0"
+                                        Visibility="{Binding HasUpdateAvailable, Converter={StaticResource BoolToVis}}">
+                                <Button Content="{DynamicResource Update_InstallNow}"
+                                        Command="{Binding InstallUpdateCommand}"
+                                        IsEnabled="{Binding CanInstallUpdate}"
+                                        Padding="16,6" />
+                                <Button Content="{DynamicResource Update_Download}"
+                                        Command="{Binding OpenUpdateDownloadCommand}"
+                                        Margin="8,0,0,0"
+                                        Padding="16,6" />
+                            </StackPanel>
+
+                            <TextBlock Text="{Binding UpdateProgressText}"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                       Margin="0,6,0,0"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+                    </StackPanel>
+                </StackPanel>
             </StackPanel>
         </ScrollViewer>
 

@@ -87,6 +87,10 @@ public static class LocalizationService
             ["Tray_StyleRing"] = "Ring",
             ["Tray_StyleNumber"] = "Number",
             ["Tray_StyleBoth"] = "Ring + number",
+            ["Settings_GroupAppearance"] = "Appearance",
+            ["Settings_GroupBehavior"] = "Behaviour",
+            ["Settings_GroupNotifications"] = "Notifications",
+            ["Settings_GroupAdvanced"] = "Advanced",
             ["Settings_TraySection"] = "Tray icon and colors",
             ["Settings_TraySectionDesc"] = "Previews use sample levels; the tray updates after saving.",
             ["Settings_TrayColorLegend"] = "Above 30% green · 10-30% amber · below 10% red",
@@ -101,6 +105,11 @@ public static class LocalizationService
             ["Settings_AppearanceDesc"] = "Standard (default) · liquid glass follows Windows dark mode",
             ["Settings_PanelSize"] = "Panel size",
             ["Settings_PanelSizeDesc"] = "Compact / standard / spacious, applied on save",
+            ["Settings_PanelSizeCompact"] = "Compact",
+            ["Settings_PanelSizeStandard"] = "Standard",
+            ["Settings_PanelSizeSpacious"] = "Spacious",
+            ["Theme_Normal"] = "Standard",
+            ["Theme_Glass"] = "Liquid glass",
             ["Settings_ThresholdDefault"] = "Default (global)",
             ["Settings_Seconds"] = "{0} seconds",
             ["GamePolling_Title"] = "Game polling rate",
@@ -113,6 +122,20 @@ public static class LocalizationService
             ["TrayColor_Title"] = "Choose tray color",
             ["TrayColor_Header"] = "Pick a color",
             ["TrayColor_Apply"] = "Apply color",
+            ["Update_InstallNow"] = "Download and install",
+            ["Update_Preparing"] = "Preparing update...",
+            ["Update_Downloading"] = "Downloading {0}%",
+            ["Update_Verifying"] = "Verifying installer...",
+            ["Update_Launching"] = "Starting installer...",
+            ["Update_Installing"] = "Installer started, closing this window...",
+            ["Update_PortableHint"] = "The portable build cannot self-update. Opening the download page instead.",
+            ["Update_Err_BlockedHost"] = "Download host is not allowed; update cancelled.",
+            ["Update_Err_NoInstaller"] = "This release has no installer; download it manually.",
+            ["Update_Err_NoChecksum"] = "No SHA-256 published for this release; update cancelled for safety.",
+            ["Update_Err_HashMismatch"] = "Installer checksum mismatch; file deleted, please download manually.",
+            ["Update_Err_Http"] = "Download failed (HTTP error).",
+            ["Update_Err_Cancelled"] = "Update cancelled.",
+            ["Update_Err_Generic"] = "Update failed. Please download the installer manually.",
             ["Settings_Title"] = "Settings - Bluetooth Battery Monitor",
             ["Settings_Header"] = "Application Settings",
             ["Settings_SubHeader"] = "Customize battery tracking and notification preferences.",
@@ -165,7 +188,7 @@ public static class LocalizationService
             ["Update_Checking"] = "Checking GitHub for updates...",
             ["Update_UpToDate"] = "You are using the latest version (v{0}).",
             ["Update_Available"] = "New version available: v{0}!",
-            ["Update_Download"] = "Download & Install Update",
+            ["Update_Download"] = "Open download page",
             ["Update_Error"] = "Could not check for updates. Please try again later."
         },
 
@@ -229,6 +252,10 @@ public static class LocalizationService
             ["Tray_StyleRing"] = "Halka",
             ["Tray_StyleNumber"] = "Sayı",
             ["Tray_StyleBoth"] = "Halka + sayı",
+            ["Settings_GroupAppearance"] = "Görünüm",
+            ["Settings_GroupBehavior"] = "Davranış",
+            ["Settings_GroupNotifications"] = "Bildirimler",
+            ["Settings_GroupAdvanced"] = "Gelişmiş",
             ["Settings_TraySection"] = "Simge ve renkler",
             ["Settings_TraySectionDesc"] = "Önizleme örnek değerlerdir; kaydedince simge güncellenir.",
             ["Settings_TrayColorLegend"] = "%30 üzeri yeşil · %10-30 amber · %10 altı kırmızı",
@@ -243,6 +270,11 @@ public static class LocalizationService
             ["Settings_AppearanceDesc"] = "Standart (varsayılan) · sıvı cam Windows koyu modunu izler",
             ["Settings_PanelSize"] = "Panel boyutu",
             ["Settings_PanelSizeDesc"] = "Kompakt / standart / geniş, kaydedince uygulanır",
+            ["Settings_PanelSizeCompact"] = "Sıkı",
+            ["Settings_PanelSizeStandard"] = "Standart",
+            ["Settings_PanelSizeSpacious"] = "Geniş",
+            ["Theme_Normal"] = "Standart",
+            ["Theme_Glass"] = "Sıvı cam",
             ["Settings_ThresholdDefault"] = "Varsayılan (genel)",
             ["Settings_Seconds"] = "{0} saniye",
             ["GamePolling_Title"] = "Oyun anket hızı",
@@ -255,6 +287,20 @@ public static class LocalizationService
             ["TrayColor_Title"] = "Simge rengi seç",
             ["TrayColor_Header"] = "Renk seç",
             ["TrayColor_Apply"] = "Rengi uygula",
+            ["Update_InstallNow"] = "İndir ve kur",
+            ["Update_Preparing"] = "Güncelleme hazırlanıyor...",
+            ["Update_Downloading"] = "İndiriliyor %{0}",
+            ["Update_Verifying"] = "Kurulum doğrulanıyor...",
+            ["Update_Launching"] = "Kurulum başlatılıyor...",
+            ["Update_Installing"] = "Kurulum başladı, pencere kapanıyor...",
+            ["Update_PortableHint"] = "Taşınabilir sürüm kendini güncelleyemez; indirme sayfası açıldı.",
+            ["Update_Err_BlockedHost"] = "İndirme adresi izinli değil; güncelleme iptal edildi.",
+            ["Update_Err_NoInstaller"] = "Bu sürümde kurulum yok; elle indirin.",
+            ["Update_Err_NoChecksum"] = "Bu sürüm için SHA-256 yayınlanmamış; güvenlik için iptal edildi.",
+            ["Update_Err_HashMismatch"] = "Kurulum özeti uyuşmadı; dosya silindi, elle indirin.",
+            ["Update_Err_Http"] = "İndirme başarısız (HTTP hatası).",
+            ["Update_Err_Cancelled"] = "Güncelleme iptal edildi.",
+            ["Update_Err_Generic"] = "Güncelleme başarısız. Kurulumu elle indirin.",
             ["Settings_Title"] = "Ayarlar - Bluetooth Pil Monitörü",
             ["Settings_Header"] = "Uygulama Ayarları",
             ["Settings_SubHeader"] = "Pil takibi ve bildirim tercihlerinizi özelleştirin.",
@@ -307,7 +353,7 @@ public static class LocalizationService
             ["Update_Checking"] = "GitHub güncellemeleri denetleniyor...",
             ["Update_UpToDate"] = "Uygulamanız en güncel sürümde! (v{0})",
             ["Update_Available"] = "Yeni bir sürüm mevcut: v{0}!",
-            ["Update_Download"] = "Güncellemeyi İndir ve Kur",
+            ["Update_Download"] = "İndirme sayfasını aç",
             ["Update_Error"] = "Güncellemeler denetlenemedi. Lütfen daha sonra tekrar deneyin."
         }
     };
@@ -350,6 +396,10 @@ public static class LocalizationService
         zh["Tray_StyleRing"] = "圆环";
         zh["Tray_StyleNumber"] = "数字";
         zh["Tray_StyleBoth"] = "圆环 + 数字";
+        zh["Settings_GroupAppearance"] = "外观";
+        zh["Settings_GroupBehavior"] = "行为";
+        zh["Settings_GroupNotifications"] = "通知";
+        zh["Settings_GroupAdvanced"] = "高级";
         zh["Settings_TraySection"] = "托盘图标与颜色";
         zh["Settings_TraySectionDesc"] = "预览为示例电量；保存后立即更新托盘。";
         zh["Settings_TrayColorLegend"] = "高于 30% 绿色 · 10%～30% 黄色 · 低于 10% 红色";
@@ -364,6 +414,11 @@ public static class LocalizationService
         zh["Settings_AppearanceDesc"] = "普通版（默认）· 液态玻璃跟随系统深色设置";
         zh["Settings_PanelSize"] = "面板大小";
         zh["Settings_PanelSizeDesc"] = "紧凑 / 标准 / 宽松，保存后立即生效";
+        zh["Settings_PanelSizeCompact"] = "紧凑";
+        zh["Settings_PanelSizeStandard"] = "标准";
+        zh["Settings_PanelSizeSpacious"] = "宽松";
+        zh["Theme_Normal"] = "普通版";
+        zh["Theme_Glass"] = "液态玻璃";
         zh["Settings_ThresholdDefault"] = "默认（全局）";
         zh["Settings_Seconds"] = "{0} 秒";
         zh["GamePolling_Title"] = "游戏回报率调度";
@@ -376,6 +431,20 @@ public static class LocalizationService
         zh["TrayColor_Title"] = "选择托盘颜色";
         zh["TrayColor_Header"] = "选择颜色";
         zh["TrayColor_Apply"] = "应用颜色";
+        zh["Update_InstallNow"] = "下载并安装";
+        zh["Update_Preparing"] = "正在准备更新…";
+        zh["Update_Downloading"] = "正在下载 {0}%";
+        zh["Update_Verifying"] = "正在校验安装包…";
+        zh["Update_Launching"] = "正在启动安装程序…";
+        zh["Update_Installing"] = "安装程序已启动，本窗口即将关闭…";
+        zh["Update_PortableHint"] = "便携版不能自动升级，已打开下载页。";
+        zh["Update_Err_BlockedHost"] = "下载地址不在允许范围内，已取消更新。";
+        zh["Update_Err_NoInstaller"] = "该版本没有安装包，请手动下载。";
+        zh["Update_Err_NoChecksum"] = "该版本没有发布 SHA-256 校验值，出于安全考虑已取消更新。";
+        zh["Update_Err_HashMismatch"] = "安装包校验失败，已删除，请手动下载。";
+        zh["Update_Err_Http"] = "下载失败（HTTP 错误）。";
+        zh["Update_Err_Cancelled"] = "已取消更新。";
+        zh["Update_Err_Generic"] = "更新失败，请手动下载安装包。";
         zh["Settings_Title"] = "设置 · 外设电量";
         zh["Settings_Header"] = "应用设置";
         zh["Settings_SubHeader"] = "自定义外观、设备电量与通知。";

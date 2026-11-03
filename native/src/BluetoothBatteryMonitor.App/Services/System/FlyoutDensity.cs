@@ -23,6 +23,7 @@ public static class FlyoutDensity
 
     private sealed record Profile(
         double Width,
+        TextWrapping NameWrapping,
         Thickness HeaderPadding,
         Thickness ListPadding,
         Thickness CardPadding,
@@ -37,6 +38,7 @@ public static class FlyoutDensity
 
     private static readonly Profile CompactProfile = new(
         Width: 344,
+        NameWrapping: TextWrapping.NoWrap,
         HeaderPadding: new Thickness(12, 10, 12, 8),
         ListPadding: new Thickness(8, 6, 8, 6),
         CardPadding: new Thickness(10, 8, 10, 8),
@@ -51,6 +53,7 @@ public static class FlyoutDensity
 
     private static readonly Profile StandardProfile = new(
         Width: 416,
+        NameWrapping: TextWrapping.Wrap,
         HeaderPadding: new Thickness(16, 14, 16, 10),
         ListPadding: new Thickness(12, 8, 12, 8),
         CardPadding: new Thickness(14, 12, 14, 12),
@@ -65,6 +68,7 @@ public static class FlyoutDensity
 
     private static readonly Profile SpaciousProfile = new(
         Width: 472,
+        NameWrapping: TextWrapping.Wrap,
         HeaderPadding: new Thickness(20, 18, 20, 14),
         ListPadding: new Thickness(16, 10, 16, 10),
         CardPadding: new Thickness(18, 16, 18, 16),
@@ -106,8 +110,12 @@ public static class FlyoutDensity
         resources["FlyoutNameSize"] = profile.NameSize;
         resources["FlyoutMetaSize"] = profile.MetaSize;
         resources["FlyoutBatterySize"] = profile.BatterySize;
+        resources["FlyoutNameWrapping"] = profile.NameWrapping;
+        resources["FlyoutNameTrimming"] = profile.NameWrapping == TextWrapping.NoWrap ? TextTrimming.CharacterEllipsis : TextTrimming.None;
 
-        foreach (Window window in Application.Current.Windows)
+        var app = Application.Current;
+        if (app == null) return;
+        foreach (Window window in app.Windows)
         {
             if (window is not FlyoutWindow flyout) continue;
             flyout.ApplyDensity(profile.Width);
