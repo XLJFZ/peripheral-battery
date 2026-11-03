@@ -46,6 +46,38 @@ public class PeripheralAppearanceTests
     public void AppearanceDefaultsToNormalAndKeepsExplicitChoice(string? theme,int version,string expected)
         => Assert.Equal(expected,Settings.MigrateTheme(theme,version));
 
+    [Theory]
+    [InlineData("Razer DeathAdder V3 Pro (Wireless)", "Razer DeathAdder V3 Pro")]
+    [InlineData("Sony WH-1000XM5（无线）", "Sony WH-1000XM5")]
+    [InlineData("  Logitech MX Master 3S  ", "Logitech MX Master 3S")]
+    [InlineData("", "?")]
+    [InlineData(null, "?")]
+    public void TrayTooltipShortensDeviceNames(string? name,string expected)
+        => Assert.Equal(expected,MonitorApp::BluetoothBatteryMonitor.App.Services.Tray.TrayIconManager.ShortDeviceName(name));
+
+    [Fact] public void TrayTooltipTruncatesVeryLongNames()
+    {
+        string result=MonitorApp::BluetoothBatteryMonitor.App.Services.Tray.TrayIconManager.ShortDeviceName("Super Long Peripheral Model Name With Extra Words");
+        Assert.True(result.Length<=26,result);
+        Assert.EndsWith("…",result);
+    }
+
+    [Fact] public void TrayTooltipBodyStaysCompact()
+    {
+        string body=MonitorApp::BluetoothBatteryMonitor.App.Services.Tray.TrayIconManager.BuildTooltipBody(
+            new[]{("Razer DeathAdder V3 Pro (Wireless)","76%"),("键盘 · 主题预览","64%")},2);
+        Assert.Equal("① Razer DeathAdder V3 Pro 76%\n② 键盘 · 主题预览 64%",body);
+    }
+
+    [Fact] public void TrayTooltipBodyMentionsHiddenDevices()
+    {
+        MonitorApp::BluetoothBatteryMonitor.App.Services.Localization.LocalizationService.ApplyLanguage("zh");
+        string body=MonitorApp::BluetoothBatteryMonitor.App.Services.Tray.TrayIconManager.BuildTooltipBody(
+            new[]{("Razer DeathAdder V3 Pro","76%")},5);
+        Assert.Contains("① Razer DeathAdder V3 Pro 76%",body);
+        Assert.Contains("点击查看",body);
+    }
+
     [Fact] public void FreshProfileUsesNormalAppearance()
     {
         var settings=new Settings();

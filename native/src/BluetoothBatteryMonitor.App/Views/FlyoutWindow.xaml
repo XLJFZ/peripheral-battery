@@ -8,8 +8,10 @@
         mc:Ignorable="d"
         Title="{DynamicResource App_Title}"
         Width="416"
+        Height="240"
+        MinHeight="0"
         MaxHeight="660"
-        SizeToContent="Height"
+        SizeToContent="Manual"
         WindowStyle="None"
         Background="Transparent"
         ShowInTaskbar="False"
@@ -88,9 +90,8 @@
                           Grid.Row="1"
                           VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled"
-                          MaxHeight="500"
                           Padding="12,8">
-                <ItemsControl ItemsSource="{Binding Devices}">
+                <ItemsControl x:Name="DeviceList" ItemsSource="{Binding Devices}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="{x:Type vm:DeviceItemViewModel}">
                             <!-- Cihaz Kartı -->

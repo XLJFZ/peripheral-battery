@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows;
@@ -238,18 +239,46 @@ public class TrayIconManager : IDisposable
             catch { }
         }
 
-        // Update tooltip text
+        // Update tooltip text: one short line per ring, no verbose ring description.
         if (_mainViewModel.Devices.Count > 0)
         {
-            var summary = string.Join("\n", ringDevices.Select((d,i)=>$"环 {i+1}（由外向内） {d.Name}: {d.BatteryText}"));
-            if(_mainViewModel.Devices.Count(d=>d.IsConnected&&d.HasBattery)>3)summary+="\n其余设备请点击查看";
-            if(ringDevices.Count==0)summary=string.Join("\n",_mainViewModel.Devices.Take(4).Select(d=>$"{d.Name}: {d.BatteryText}"));
-            _taskbarIcon.ToolTipText = $"{LocalizationService.GetString("App_Title")}\n{summary}";
+            int withBattery = _mainViewModel.Devices.Count(d => d.IsConnected && d.HasBattery);
+            var summary = BuildTooltipBody(ringDevices.Select(d => (d.Name, d.BatteryText)).ToList(), withBattery);
+            if (ringDevices.Count == 0) summary = string.Join("\n", _mainViewModel.Devices.Take(4).Select(d => $"{ShortDeviceName(d.Name)} {d.BatteryText}"));
+            _taskbarIcon.ToolTipText = $"{LocalizationService.GetString("Tray_TooltipTitle")}\n{summary}";
         }
         else
         {
             _taskbarIcon.ToolTipText = LocalizationService.GetString("Tray_TooltipNoDevices");
         }
+    }
+
+    /// <summary>One short line per tray ring; extra connected devices collapse into one hint.</summary>
+    public static string BuildTooltipBody(IReadOnlyList<(string Name, string Battery)> rings, int connectedWithBattery)
+    {
+        var summary = string.Join("\n", rings.Select((r, i) => $"{RingMarker(i)} {ShortDeviceName(r.Name)} {r.Battery}"));
+        if (connectedWithBattery > 3) summary += "\n" + LocalizationService.GetString("Tray_MoreDevices", connectedWithBattery - 3);
+        return summary;
+    }
+
+    private static readonly string[] RingMarkers = { "①", "②", "③" };
+
+    private static string RingMarker(int index)
+        => index >= 0 && index < RingMarkers.Length ? RingMarkers[index] : $"{index + 1}.";
+
+    /// <summary>
+    /// Keeps the tooltip narrow: drops a trailing model suffix such as "(Wireless)" and
+    /// truncates unusually long names.
+    /// </summary>
+    public static string ShortDeviceName(string? name)
+    {
+        const int maxLength = 26;
+        if (string.IsNullOrWhiteSpace(name)) return "?";
+        string trimmed = global::System.Text.RegularExpressions.Regex
+            .Replace(name.Trim(), @"\s*[\(（][^\)）]*[\)）]\s*$", string.Empty)
+            .Trim();
+        if (trimmed.Length == 0) trimmed = name.Trim();
+        return trimmed.Length > maxLength ? trimmed[..(maxLength - 1)].TrimEnd() + "…" : trimmed;
     }
 
     public void Dispose()
