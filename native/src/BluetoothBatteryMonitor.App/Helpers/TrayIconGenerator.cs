@@ -27,7 +27,7 @@ public static class TrayIconGenerator
         => Generate(batteryLevel,isCharging,isDarkTheme,AppSettings.Load());
     public static Icon Generate(int? level,bool charging,bool dark,AppSettings settings,int pulseTick=-1)
     {
-        using var bitmap=Render(level,charging,dark,settings,pulseTick);
+        using var bitmap=Render(level,charging,dark,settings,pulseTick:pulseTick);
         IntPtr handle=bitmap.GetHicon();
         try{return (Icon)Icon.FromHandle(handle).Clone();}finally{NativeMethods.DestroyIcon(handle);}
     }
