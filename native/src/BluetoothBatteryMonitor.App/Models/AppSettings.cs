@@ -129,11 +129,16 @@ public class AppSettings
         Save();
     }
 
-    private static readonly string SettingsFolder = Path.Combine(
+    private static readonly string DefaultSettingsFolder = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
         "PeripheralBatteryNative");
 
-    private static readonly string SettingsFilePath = Path.Combine(SettingsFolder, "settings.json");
+    /// <summary>Test-only redirect so tests never touch the real %APPDATA% profile.</summary>
+    internal static string? TestFolderOverride;
+
+    private static string SettingsFolder => TestFolderOverride ?? DefaultSettingsFolder;
+
+    private static string SettingsFilePath => Path.Combine(SettingsFolder, "settings.json");
 
     /// <summary>
     /// Last-write time (UTC) of settings.json, or DateTime.MinValue when it does not exist yet.
@@ -145,33 +150,76 @@ public class AppSettings
 
     public static AppSettings Load()
     {
+        // Primary file. A parse failure here means the file is corrupt (e.g. half-written by a
+        // crash); archive it for forensics before anything overwrites it, then fall back to the
+        // .bak copy that every successful Save leaves behind, and only then to defaults.
+        if (TryReadSettings(SettingsFilePath, out var settings))
+        {
+            return settings!;
+        }
+
+        ArchiveCorruptSettings();
+
+        if (TryReadSettings(SettingsFilePath + BackupSuffix, out settings))
+        {
+            return settings!;
+        }
+
+        return new AppSettings();
+    }
+
+    private const string BackupSuffix = ".bak";
+    private const string CorruptSuffix = ".corrupt";
+
+    private static bool TryReadSettings(string path, out AppSettings? settings)
+    {
+        settings = null;
+        try
+        {
+            if (!File.Exists(path))
+            {
+                return false;
+            }
+
+            var json = File.ReadAllText(path);
+            var parsed = JsonSerializer.Deserialize<AppSettings>(json);
+            if (parsed == null)
+            {
+                return false;
+            }
+
+            if (parsed.DeviceSpecificThresholds != null)
+            {
+                parsed.DeviceSpecificThresholds = new Dictionary<string, int>(parsed.DeviceSpecificThresholds, StringComparer.OrdinalIgnoreCase);
+            }
+            if (parsed.DeviceNames != null)
+            {
+                parsed.DeviceNames = new Dictionary<string, string>(parsed.DeviceNames, StringComparer.OrdinalIgnoreCase);
+            }
+            parsed.MigrateAppearance();
+            settings = parsed;
+            return true;
+        }
+        catch
+        {
+            // Caller decides how to recover (backup file / defaults).
+            return false;
+        }
+    }
+
+    private static void ArchiveCorruptSettings()
+    {
         try
         {
             if (File.Exists(SettingsFilePath))
             {
-                var json = File.ReadAllText(SettingsFilePath);
-                var settings = JsonSerializer.Deserialize<AppSettings>(json);
-                if (settings != null)
-                {
-                    if (settings.DeviceSpecificThresholds != null)
-                    {
-                        settings.DeviceSpecificThresholds = new Dictionary<string, int>(settings.DeviceSpecificThresholds, StringComparer.OrdinalIgnoreCase);
-                    }
-                    if (settings.DeviceNames != null)
-                    {
-                        settings.DeviceNames = new Dictionary<string, string>(settings.DeviceNames, StringComparer.OrdinalIgnoreCase);
-                    }
-                    settings.MigrateAppearance();
-                    return settings;
-                }
+                File.Copy(SettingsFilePath, SettingsFilePath + CorruptSuffix, overwrite: true);
             }
         }
         catch
         {
-            // Fallback to default settings on deserialization error
+            // Best effort; recovery continues with the backup or defaults.
         }
-
-        return new AppSettings();
     }
 
     public static event EventHandler<AppSettings>? SettingsChanged;
@@ -210,7 +258,22 @@ public class AppSettings
             }
 
             var json = JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(SettingsFilePath, json);
+
+            // Atomic write: serialize to a temp file in the same directory, then swap it in with
+            // File.Replace (which also keeps the previous contents as .bak). A crash or power cut
+            // mid-write can no longer leave a half-written settings.json behind.
+            var tempPath = SettingsFilePath + ".tmp";
+            var backupPath = SettingsFilePath + BackupSuffix;
+            File.WriteAllText(tempPath, json);
+
+            if (File.Exists(SettingsFilePath))
+            {
+                File.Replace(tempPath, SettingsFilePath, backupPath, ignoreMetadataErrors: true);
+            }
+            else
+            {
+                File.Move(tempPath, SettingsFilePath);
+            }
 
             SettingsChanged?.Invoke(null, this);
         }

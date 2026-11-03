@@ -145,60 +145,75 @@ public class WindowsPnpBatteryProvider : IBluetoothBatteryProvider
         catch { }
     }
 
-    private async void OnDeviceWatcherAdded(DeviceWatcher sender, DeviceInformation info)
+    private void OnDeviceWatcherAdded(DeviceWatcher sender, DeviceInformation info)
     {
-        int? battery = ExtractBatteryLevel(info);
-        if (battery.HasValue)
+        try
         {
-            string cleanName = CleanDeviceName(info.Name);
-            var devType = DetectDeviceType(cleanName, info.Id);
-
-            string providerSource = "Windows PnP";
-            if (devType == DeviceType.Gamepad || cleanName.Contains("Xbox", StringComparison.OrdinalIgnoreCase))
+            int? battery = ExtractBatteryLevel(info);
+            if (battery.HasValue)
             {
-                providerSource = "Windows PnP (Xbox)";
+                string cleanName = CleanDeviceName(info.Name);
+                var devType = DetectDeviceType(cleanName, info.Id);
+
+                string providerSource = "Windows PnP";
+                if (devType == DeviceType.Gamepad || cleanName.Contains("Xbox", StringComparison.OrdinalIgnoreCase))
+                {
+                    providerSource = "Windows PnP (Xbox)";
+                }
+                else if (devType is DeviceType.Headphones or DeviceType.Earbuds or DeviceType.Speaker ||
+                         info.Id.Contains("BTHENUM", StringComparison.OrdinalIgnoreCase))
+                {
+                    providerSource = "Windows PnP / HFP";
+                }
+
+                var model = new BluetoothDeviceModel
+                {
+                    Id = info.Id,
+                    Name = cleanName,
+                    BatteryLevel = battery.Value,
+                    // The engine's DeviceUpdated handler verifies connection state against its own
+                    // gated snapshot; doing a full snapshot here would duplicate that work per event.
+                    IsConnected = false,
+                    DeviceType = devType,
+                    BluetoothAddress = BluetoothDeviceModel.ExtractMacAddress(info.Id),
+                    ProviderSource = providerSource,
+                    LastUpdated = DateTime.Now
+                };
+
+                DeviceUpdated?.Invoke(this, model);
             }
-            else if (devType is DeviceType.Headphones or DeviceType.Earbuds or DeviceType.Speaker ||
-                     info.Id.Contains("BTHENUM", StringComparison.OrdinalIgnoreCase))
-            {
-                providerSource = "Windows PnP / HFP";
-            }
-
-            var model = new BluetoothDeviceModel
-            {
-                Id = info.Id,
-                Name = cleanName,
-                BatteryLevel = battery.Value,
-                IsConnected = false,
-                DeviceType = devType,
-                BluetoothAddress = BluetoothDeviceModel.ExtractMacAddress(info.Id),
-                ProviderSource = providerSource,
-                LastUpdated = DateTime.Now
-            };
-
-            model.IsConnected = await BluetoothConnectionChecker.IsDeviceConnectedAsync(model);
-            DeviceUpdated?.Invoke(this, model);
+        }
+        catch
+        {
+            // Watcher callbacks are async-void event handlers (WinRT raises them on its own
+            // thread pool); an escaped exception would crash the process.
         }
     }
 
-    private async void OnDeviceWatcherUpdated(DeviceWatcher sender, DeviceInformationUpdate infoUpdate)
+    private void OnDeviceWatcherUpdated(DeviceWatcher sender, DeviceInformationUpdate infoUpdate)
     {
-        if (infoUpdate.Properties.TryGetValue(PnpBatteryKey, out var pnpObj) && pnpObj != null)
+        try
         {
-            if (int.TryParse(pnpObj.ToString(), out int level))
+            if (infoUpdate.Properties.TryGetValue(PnpBatteryKey, out var pnpObj) && pnpObj != null)
             {
-                var model = new BluetoothDeviceModel
+                if (int.TryParse(pnpObj.ToString(), out int level))
                 {
-                    Id = infoUpdate.Id,
-                    BatteryLevel = level,
-                    LastUpdated = DateTime.Now,
-                    BluetoothAddress = BluetoothDeviceModel.ExtractMacAddress(infoUpdate.Id),
-                    ProviderSource = "Windows PnP (Live)"
-                };
+                    var model = new BluetoothDeviceModel
+                    {
+                        Id = infoUpdate.Id,
+                        BatteryLevel = level,
+                        LastUpdated = DateTime.Now,
+                        BluetoothAddress = BluetoothDeviceModel.ExtractMacAddress(infoUpdate.Id),
+                        ProviderSource = "Windows PnP (Live)"
+                    };
 
-                model.IsConnected = await BluetoothConnectionChecker.IsDeviceConnectedAsync(model);
-                DeviceUpdated?.Invoke(this, model);
+                    DeviceUpdated?.Invoke(this, model);
+                }
             }
+        }
+        catch
+        {
+            // See OnDeviceWatcherAdded: never let a watcher event crash the process.
         }
     }
 

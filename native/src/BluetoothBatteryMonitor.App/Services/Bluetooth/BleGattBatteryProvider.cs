@@ -39,65 +39,80 @@ public class BleGattBatteryProvider : IBluetoothBatteryProvider
 
                 try
                 {
-                    using var bleDevice = await BluetoothLEDevice.FromIdAsync(info.Id).AsTask(cancellationToken);
+                    var bleDevice = await BluetoothLEDevice.FromIdAsync(info.Id).AsTask(cancellationToken);
                     if (bleDevice == null) continue;
 
-                    // Query Battery Service (0x180F)
-                    var servicesResult = await bleDevice.GetGattServicesForUuidAsync(
-                        GattServiceUuids.Battery,
-                        BluetoothCacheMode.Uncached).AsTask(cancellationToken);
-
-                    if (servicesResult.Status != GattCommunicationStatus.Success || servicesResult.Services.Count == 0)
+                    // keepAlive = a live notification subscription now owns this instance and it is
+                    // registered in _activeDevices; the caller must not dispose it.
+                    bool keepAlive = false;
+                    try
                     {
-                        // Retry from cache
-                        servicesResult = await bleDevice.GetGattServicesForUuidAsync(
+                        // Query Battery Service (0x180F)
+                        var servicesResult = await bleDevice.GetGattServicesForUuidAsync(
                             GattServiceUuids.Battery,
-                            BluetoothCacheMode.Cached).AsTask(cancellationToken);
-                    }
+                            BluetoothCacheMode.Uncached).AsTask(cancellationToken);
 
-                    if (servicesResult.Status == GattCommunicationStatus.Success && servicesResult.Services.Count > 0)
-                    {
-                        foreach (var service in servicesResult.Services)
+                        if (servicesResult.Status != GattCommunicationStatus.Success || servicesResult.Services.Count == 0)
                         {
-                            var charResult = await service.GetCharacteristicsForUuidAsync(
-                                GattCharacteristicUuids.BatteryLevel,
-                                BluetoothCacheMode.Uncached).AsTask(cancellationToken);
+                            // Retry from cache
+                            servicesResult = await bleDevice.GetGattServicesForUuidAsync(
+                                GattServiceUuids.Battery,
+                                BluetoothCacheMode.Cached).AsTask(cancellationToken);
+                        }
 
-                            if (charResult.Status == GattCommunicationStatus.Success && charResult.Characteristics.Count > 0)
+                        if (servicesResult.Status == GattCommunicationStatus.Success && servicesResult.Services.Count > 0)
+                        {
+                            foreach (var service in servicesResult.Services)
                             {
-                                var batteryChar = charResult.Characteristics[0];
-                                var readResult = await batteryChar.ReadValueAsync(BluetoothCacheMode.Uncached).AsTask(cancellationToken);
+                                var charResult = await service.GetCharacteristicsForUuidAsync(
+                                    GattCharacteristicUuids.BatteryLevel,
+                                    BluetoothCacheMode.Uncached).AsTask(cancellationToken);
 
-                                if (readResult.Status == GattCommunicationStatus.Success && readResult.Value != null)
+                                if (charResult.Status == GattCommunicationStatus.Success && charResult.Characteristics.Count > 0)
                                 {
-                                    byte[] data = readResult.Value.ToArray();
-                                    if (data.Length > 0)
+                                    var batteryChar = charResult.Characteristics[0];
+                                    var readResult = await batteryChar.ReadValueAsync(BluetoothCacheMode.Uncached).AsTask(cancellationToken);
+
+                                    if (readResult.Status == GattCommunicationStatus.Success && readResult.Value != null)
                                     {
-                                        int level = data[0];
-                                        var model = new BluetoothDeviceModel
+                                        byte[] data = readResult.Value.ToArray();
+                                        if (data.Length > 0)
                                         {
-                                            Id = info.Id,
-                                            Name = !string.IsNullOrWhiteSpace(bleDevice.Name) ? bleDevice.Name : info.Name,
-                                            BatteryLevel = level,
-                                            IsConnected = bleDevice.ConnectionStatus == BluetoothConnectionStatus.Connected,
-                                            DeviceType = DetectDeviceType(info.Name),
-                                            BluetoothAddress = bleDevice.BluetoothAddress != 0 ? bleDevice.BluetoothAddress : BluetoothDeviceModel.ExtractMacAddress(info.Id),
-                                            ProviderSource = "BLE GATT",
-                                            LastUpdated = DateTime.Now
-                                        };
+                                            int level = data[0];
+                                            var model = new BluetoothDeviceModel
+                                            {
+                                                Id = info.Id,
+                                                Name = !string.IsNullOrWhiteSpace(bleDevice.Name) ? bleDevice.Name : info.Name,
+                                                BatteryLevel = level,
+                                                IsConnected = bleDevice.ConnectionStatus == BluetoothConnectionStatus.Connected,
+                                                DeviceType = DetectDeviceType(info.Name),
+                                                BluetoothAddress = bleDevice.BluetoothAddress != 0 ? bleDevice.BluetoothAddress : BluetoothDeviceModel.ExtractMacAddress(info.Id),
+                                                ProviderSource = "BLE GATT",
+                                                LastUpdated = DateTime.Now
+                                            };
 
-                                        resultList.Add(model);
+                                            resultList.Add(model);
 
-                                        // Subscribe to characteristic notifications if monitoring is active
-                                        if (_isMonitoring)
-                                        {
-                                            _ = SubscribeToBatteryNotificationAsync(info.Id, batteryChar, model);
+                                            // Subscribe to characteristic notifications if monitoring is active.
+                                            // Awaited (not fire-and-forget): the keepAlive decision must be
+                                            // settled before this scope disposes the instance.
+                                            if (_isMonitoring)
+                                            {
+                                                keepAlive = await SubscribeToBatteryNotificationAsync(info.Id, batteryChar, bleDevice);
+                                            }
+
+                                            break;
                                         }
-
-                                        break;
                                     }
                                 }
                             }
+                        }
+                    }
+                    finally
+                    {
+                        if (!keepAlive)
+                        {
+                            bleDevice.Dispose();
                         }
                     }
                 }
@@ -144,9 +159,17 @@ public class BleGattBatteryProvider : IBluetoothBatteryProvider
         _activeDevices.Clear();
     }
 
-    private async Task SubscribeToBatteryNotificationAsync(string deviceId, GattCharacteristic batteryChar, BluetoothDeviceModel model)
+    /// <summary>
+    /// Subscribes to battery notifications on <paramref name="batteryChar"/>.
+    /// Returns true when a subscription is now live and <paramref name="bleDevice"/> has been
+    /// registered in _activeDevices — the parent BluetoothLEDevice must stay alive for the
+    /// lifetime of the subscription, otherwise the OS tears the session down and notifications
+    /// never fire (the pre-0.3.15 behaviour, where each scan disposed the instance it had just
+    /// subscribed on). Returns false when the caller should dispose the instance.
+    /// </summary>
+    private async Task<bool> SubscribeToBatteryNotificationAsync(string deviceId, GattCharacteristic batteryChar, BluetoothLEDevice bleDevice)
     {
-        if (_subscribedCharacteristics.ContainsKey(deviceId)) return;
+        if (_subscribedCharacteristics.ContainsKey(deviceId)) return false;
 
         try
         {
@@ -160,13 +183,29 @@ public class BleGattBatteryProvider : IBluetoothBatteryProvider
                 if (status == GattCommunicationStatus.Success)
                 {
                     _subscribedCharacteristics[deviceId] = batteryChar;
+
+                    if (_activeDevices.TryGetValue(deviceId, out var existing) && !ReferenceEquals(existing, bleDevice))
+                    {
+                        _activeDevices[deviceId] = bleDevice;
+                        try { existing.Dispose(); } catch { }
+                    }
+                    else
+                    {
+                        _activeDevices[deviceId] = bleDevice;
+                    }
+
+                    return true;
                 }
+
+                batteryChar.ValueChanged -= OnCharacteristicValueChanged;
             }
         }
         catch
         {
             // Subscription may not be supported
         }
+
+        return false;
     }
 
     private void OnCharacteristicValueChanged(GattCharacteristic sender, GattValueChangedEventArgs args)

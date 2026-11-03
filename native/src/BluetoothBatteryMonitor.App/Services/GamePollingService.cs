@@ -21,6 +21,7 @@ public sealed class GamePollingService : IDisposable
     private bool? lastScene;
     private int stableCount;
     private bool faulted,disposed;
+    private int restoreRetries;
     private static string Journal=>Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),"PeripheralBatteryNative","polling-recovery.json");
     public void Start()=>timer ??= new Timer(async _=>await Tick(),null,2000,2000);
     public static async Task VerifyAsync(string output)
@@ -40,8 +41,37 @@ public sealed class GamePollingService : IDisposable
         {
             if(File.Exists(Journal) && activePath==null)
             {
-                var saved=JsonSerializer.Deserialize<Recovery>(File.ReadAllText(Journal))!;
-                SetRate(saved.Path,saved.Rate);File.Delete(Journal);Status="已恢复上次运行前的回报率";
+                // A failed restore must not latch `faulted` forever: a receiver that is merely
+                // unplugged at boot would otherwise leave the mouse at the modified rate with no
+                // retry path. Retry on subsequent ticks instead.
+                Recovery? saved=null;
+                try{saved=JsonSerializer.Deserialize<Recovery>(File.ReadAllText(Journal));}catch{ }
+                if(saved==null || string.IsNullOrWhiteSpace(saved.Path))
+                {
+                    // Corrupt journal: nothing restorable — drop it rather than faulting forever.
+                    try{File.Delete(Journal);}catch{ }
+                    Status="恢复日志损坏，已忽略";
+                }
+                else
+                {
+                    try
+                    {
+                        SetRate(saved.Path,saved.Rate);File.Delete(Journal);restoreRetries=0;Status="已恢复上次运行前的回报率";
+                    }
+                    catch
+                    {
+                        if(++restoreRetries>=5)
+                        {
+                            try{File.Delete(Journal);}catch{ }
+                            restoreRetries=0;
+                            Status="回报率恢复已放弃（接收器持续不可达）；如需调整请在厂商软件中设置";
+                        }
+                        else
+                        {
+                            Status=$"回报率恢复待重试（{restoreRetries}/5）";
+                        }
+                    }
+                }
             }
             var settings=AppSettings.Load();
             if(!settings.EnableGamePolling || faulted){Restore();return;}
