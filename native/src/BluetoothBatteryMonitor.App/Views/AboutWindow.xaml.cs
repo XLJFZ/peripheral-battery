@@ -1,5 +1,9 @@
+using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using Wpf.Ui.Controls;
 using BluetoothBatteryMonitor.App.Services.Localization;
 using BluetoothBatteryMonitor.App.Services.Update;
@@ -13,10 +17,31 @@ public partial class AboutWindow : FluentWindow
         InitializeComponent();
         try
         {
-            Icon = new System.Windows.Media.Imaging.BitmapImage(
-                new Uri("pack://application:,,,/BluetoothBatteryMonitor.App;component/Assets/app.ico", UriKind.Absolute));
+            Icon = LoadAppIcon();
+            AppIcon.Source = Icon;
         }
         catch { }
+
+        try
+        {
+            // The raw resource string carries a {0} placeholder; fill it with the real
+            // assembly version so the dialog can never drift from the actual build.
+            VersionText.Text = LocalizationService.GetString("About_Version", UpdateCheckService.GetCurrentVersion());
+        }
+        catch { }
+    }
+
+    internal static BitmapSource LoadAppIcon()
+    {
+        // BitmapImage.DecodePixelWidth does not select the requested ICO frame.
+        // Decode the container explicitly and use its largest frame for the 64px image.
+        var decoder = BitmapDecoder.Create(
+            new Uri("pack://application:,,,/BluetoothBatteryMonitor.App;component/Assets/app.ico", UriKind.Absolute),
+            BitmapCreateOptions.PreservePixelFormat,
+            BitmapCacheOption.OnLoad);
+        var icon = decoder.Frames.OrderByDescending(frame => frame.PixelWidth * frame.PixelHeight).First();
+        icon.Freeze();
+        return icon;
     }
 
     private void OnCloseClick(object sender, RoutedEventArgs e)

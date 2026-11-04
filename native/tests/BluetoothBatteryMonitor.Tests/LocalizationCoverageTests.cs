@@ -50,6 +50,7 @@ public class LocalizationCoverageTests
             LocalizationService.ApplyLanguage(lang);
             Assert.Contains("{0}", LocalizationService.GetString("Settings_Seconds"));
             Assert.Contains("{0}", LocalizationService.GetString("Update_Available"));
+            Assert.Contains("{0}", LocalizationService.GetString("About_Version"));
             Assert.Contains("{0}", LocalizationService.GetString("Toast_CriticalTitle"));
             Assert.Contains("{1}", LocalizationService.GetString("Toast_CriticalBody"));
             Assert.Contains("{1}", LocalizationService.GetString("Update_PendingFailed"));
@@ -64,5 +65,22 @@ public class LocalizationCoverageTests
         LocalizationService.ApplyLanguage("zht");
         var traditional = LocalizationService.GetString("Flyout_Header");
         Assert.NotEqual(simplified, traditional);
+    }
+
+    [Fact]
+    public void AboutContentDoesNotFallBackToEnglish()
+    {
+        // Regression: zh used to ship without the About_Overview/Feature keys, so the
+        // dialog silently showed the English seed values inside a Chinese UI.
+        LocalizationService.ApplyLanguage("en");
+        var englishText = LocalizationService.GetString("About_OverviewText");
+        var englishHeading = LocalizationService.GetString("About_Overview");
+        foreach (var lang in AllLanguages.Where(l => l != "en"))
+        {
+            LocalizationService.ApplyLanguage(lang);
+            Assert.NotEqual(englishText, LocalizationService.GetString("About_OverviewText"));
+            Assert.NotEqual(englishHeading, LocalizationService.GetString("About_Overview"));
+        }
+        LocalizationService.ApplyLanguage("en");
     }
 }

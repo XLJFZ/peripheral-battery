@@ -192,7 +192,7 @@ public static class LocalizationService
             // About Window
             ["About_Title"] = "About - Bluetooth Battery Monitor",
             ["About_AppName"] = "Bluetooth Battery Monitor",
-            ["About_Version"] = "Version 1.0.0 (x64)",
+            ["About_Version"] = "Version {0} (x64)",
             ["About_Overview"] = "Overview",
             ["About_OverviewText"] = "A modern Fluent Design desktop application for Windows 10 and 11 that lives in your system tray and displays real-time battery levels and audio telemetry for your connected Bluetooth devices.",
             ["About_Features"] = "Key Highlights",
@@ -390,7 +390,7 @@ public static class LocalizationService
             // About Window
             ["About_Title"] = "Hakkında - Bluetooth Pil Monitörü",
             ["About_AppName"] = "Bluetooth Pil Monitörü",
-            ["About_Version"] = "Sürüm 1.0.0 (x64)",
+            ["About_Version"] = "Sürüm {0} (x64)",
             ["About_Overview"] = "Genel Bakış",
             ["About_OverviewText"] = "Windows 10 ve Windows 11 için modern Fluent Design arayüzüne sahip, bağlı Bluetooth cihazlarınızın pil seviyelerini ve ses durumlarını gerçek zamanlı gösteren masaüstü aracı.",
             ["About_Features"] = "Öne Çıkan Özellikler",
@@ -568,7 +568,16 @@ public static class LocalizationService
         zh["Menu_Threshold40"] = "40%";
         zh["About_Title"] = "关于 · Peripheral";
         zh["About_AppName"] = "Peripheral Battery";
-        zh["About_Version"] = "版本 0.2.0（x64）";
+        zh["About_Version"] = "版本 {0}（x64）";
+        zh["About_Overview"] = "概览";
+        zh["About_OverviewText"] = "一款采用 Fluent 设计的 Windows 10/11 桌面应用，常驻系统托盘，实时显示已连接蓝牙设备的电量与音频遥测信息。";
+        zh["About_Features"] = "核心亮点";
+        zh["About_Feature1"] = "• 36 种硬件协议：AirPods、Galaxy Buds、Sony MDR、Logitech HID++/LIGHTSPEED、DualSense、Joy-Con 等";
+        zh["About_Feature2"] = "• 动态系统托盘图标（GDI+ 电量表盘渲染）";
+        zh["About_Feature3"] = "• 原生 Windows Toast 通知（低电量与极低电量提醒）";
+        zh["About_Feature4"] = "• 智能音频路由与编解码器检测（LDAC、aptX HD、AAC、SBC）";
+        zh["About_Feature5"] = "• 内置本地 REST / JSON API（Rainmeter、Stream Deck、Home Assistant）";
+        zh["About_Close"] = "确定";
         zh["Update_Title"] = "软件更新";
         zh["Update_Desc"] = "检查此项目的 GitHub 发行版";
         zh["Update_CheckNow"] = "检查更新";
@@ -727,7 +736,7 @@ public static class LocalizationService
         fr["Settings_DiscardAndClose"] = "Annuler";
         fr["About_Title"] = "À propos - Batterie Bluetooth";
         fr["About_AppName"] = "Bluetooth Battery Monitor";
-        fr["About_Version"] = "Version 1.0.0 (x64)";
+        fr["About_Version"] = "Version {0} (x64)";
         fr["About_Overview"] = "Présentation";
         fr["About_OverviewText"] = "Une application de bureau au design Fluent pour Windows 10 et 11, résidente dans la zone de notification, qui affiche en temps réel le niveau de batterie et la télémétrie audio de vos appareils Bluetooth.";
         fr["About_Features"] = "Points clés";
@@ -904,7 +913,7 @@ public static class LocalizationService
         de["Settings_DiscardAndClose"] = "Verwerfen";
         de["About_Title"] = "Über - Bluetooth-Batterie";
         de["About_AppName"] = "Bluetooth Battery Monitor";
-        de["About_Version"] = "Version 1.0.0 (x64)";
+        de["About_Version"] = "Version {0} (x64)";
         de["About_Overview"] = "Überblick";
         de["About_OverviewText"] = "Eine moderne Fluent-Design-Desktopanwendung für Windows 10 und 11, die im Systemtray lebt und Echtzeit-Batteriestände sowie Audio-Telemetrie verbundener Bluetooth-Geräte anzeigt.";
         de["About_Features"] = "Kernmerkmale";
@@ -1081,7 +1090,7 @@ public static class LocalizationService
         es["Settings_DiscardAndClose"] = "Descartar";
         es["About_Title"] = "Acerca de - Batería Bluetooth";
         es["About_AppName"] = "Bluetooth Battery Monitor";
-        es["About_Version"] = "Versión 1.0.0 (x64)";
+        es["About_Version"] = "Versión {0} (x64)";
         es["About_Overview"] = "Descripción general";
         es["About_OverviewText"] = "Una aplicación de escritorio con diseño Fluent para Windows 10 y 11 que reside en la bandeja del sistema y muestra en tiempo real el nivel de batería y la telemetría de audio de tus dispositivos Bluetooth.";
         es["About_Features"] = "Puntos destacados";
@@ -1258,7 +1267,7 @@ public static class LocalizationService
         it["Settings_DiscardAndClose"] = "Annulla";
         it["About_Title"] = "Informazioni - Batteria Bluetooth";
         it["About_AppName"] = "Bluetooth Battery Monitor";
-        it["About_Version"] = "Versione 1.0.0 (x64)";
+        it["About_Version"] = "Versione {0} (x64)";
         it["About_Overview"] = "Panoramica";
         it["About_OverviewText"] = "Un’applicazione desktop con design Fluent per Windows 10 e 11 che vive nella tray di sistema e mostra in tempo reale i livelli di batteria e la telemetria audio dei dispositivi Bluetooth collegati.";
         it["About_Features"] = "Punti chiave";
@@ -1435,7 +1444,7 @@ public static class LocalizationService
         zht["Settings_DiscardAndClose"] = "不儲存關閉";
         zht["About_Title"] = "關於 - 外設電量";
         zht["About_AppName"] = "外設電量";
-        zht["About_Version"] = "版本 1.0.0（x64）";
+        zht["About_Version"] = "版本 {0}（x64）";
         zht["About_Overview"] = "概述";
         zht["About_OverviewText"] = "一款採用 Fluent 設計的 Windows 10/11 桌面應用程式，常駐系統匣，即時顯示已連接藍牙裝置的電量與音訊資訊。";
         zht["About_Features"] = "主要特色";
