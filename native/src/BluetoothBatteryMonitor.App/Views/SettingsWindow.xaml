@@ -640,6 +640,13 @@
                                         VerticalAlignment="Center" />
                             </Grid>
 
+                            <TextBlock Text="{DynamicResource Update_AutoTitle}" Margin="0,12,0,4" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                            <ComboBox ItemsSource="{Binding AutoUpdateCheckOptions}"
+                                      DisplayMemberPath="Display" SelectedValuePath="Value"
+                                      SelectedValue="{Binding AutoUpdateCheckFrequency, Mode=TwoWay}"
+                                      HorizontalAlignment="Stretch" />
+
                             <!-- Güncelleme Durum Mesajı -->
                             <TextBlock Text="{Binding UpdateStatusMessage}"
                                        FontSize="12"

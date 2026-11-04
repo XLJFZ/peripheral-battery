@@ -1472,6 +1472,49 @@ public static class LocalizationService
         zht["Update_FailedBody"] = "v{0} 沒有裝成功，目前仍是原本的版本。可在設定 → 更新裡重試。";
         zht["Update_PendingFailed"] = "上次更新到 v{0} 未完成，目前仍是 v{1}，請按「檢查更新」重試。";
         Translations["zht"] = zht;
+        foreach (var dict in Translations.Values)
+        {
+            dict["Update_AutoTitle"] = "Automatically check for updates at launch";
+            dict["Update_AutoWeekly"] = "Once a week";
+            dict["Update_AutoStartup"] = "Every launch";
+            dict["Update_AutoOff"] = "Off";
+            dict["Update_AutoAvailable"] = "Version {0} is available. Open Settings → Updates to review and install it.";
+        }
+        Translations["tr"]["Update_AutoTitle"] = "Başlangıçta güncellemeleri otomatik denetle";
+        Translations["tr"]["Update_AutoWeekly"] = "Haftada bir";
+        Translations["tr"]["Update_AutoStartup"] = "Her başlangıçta";
+        Translations["tr"]["Update_AutoOff"] = "Kapalı";
+        Translations["tr"]["Update_AutoAvailable"] = "{0} sürümü mevcut. İncelemek ve yüklemek için Ayarlar → Güncellemeler bölümünü açın.";
+        Translations["fr"]["Update_AutoTitle"] = "Rechercher les mises à jour au démarrage";
+        Translations["fr"]["Update_AutoWeekly"] = "Une fois par semaine";
+        Translations["fr"]["Update_AutoStartup"] = "À chaque démarrage";
+        Translations["fr"]["Update_AutoOff"] = "Désactivé";
+        Translations["fr"]["Update_AutoAvailable"] = "La version {0} est disponible. Ouvrez Paramètres → Mises à jour pour la consulter et l’installer.";
+        Translations["de"]["Update_AutoTitle"] = "Beim Start automatisch nach Updates suchen";
+        Translations["de"]["Update_AutoWeekly"] = "Einmal pro Woche";
+        Translations["de"]["Update_AutoStartup"] = "Bei jedem Start";
+        Translations["de"]["Update_AutoOff"] = "Aus";
+        Translations["de"]["Update_AutoAvailable"] = "Version {0} ist verfügbar. Öffnen Sie Einstellungen → Updates zum Prüfen und Installieren.";
+        Translations["es"]["Update_AutoTitle"] = "Buscar actualizaciones al iniciar";
+        Translations["es"]["Update_AutoWeekly"] = "Una vez por semana";
+        Translations["es"]["Update_AutoStartup"] = "En cada inicio";
+        Translations["es"]["Update_AutoOff"] = "Desactivado";
+        Translations["es"]["Update_AutoAvailable"] = "La versión {0} está disponible. Abra Ajustes → Actualizaciones para revisarla e instalarla.";
+        Translations["it"]["Update_AutoTitle"] = "Cerca aggiornamenti all’avvio";
+        Translations["it"]["Update_AutoWeekly"] = "Una volta a settimana";
+        Translations["it"]["Update_AutoStartup"] = "A ogni avvio";
+        Translations["it"]["Update_AutoOff"] = "Disattivato";
+        Translations["it"]["Update_AutoAvailable"] = "La versione {0} è disponibile. Apri Impostazioni → Aggiornamenti per verificarla e installarla.";
+        zh["Update_AutoTitle"] = "启动时自动检查更新";
+        zh["Update_AutoWeekly"] = "每周一次";
+        zh["Update_AutoStartup"] = "每次启动";
+        zh["Update_AutoOff"] = "关闭";
+        zh["Update_AutoAvailable"] = "发现新版本 v{0}，可在设置 → 软件更新中查看并安装。";
+        zht["Update_AutoTitle"] = "啟動時自動檢查更新";
+        zht["Update_AutoWeekly"] = "每週一次";
+        zht["Update_AutoStartup"] = "每次啟動";
+        zht["Update_AutoOff"] = "關閉";
+        zht["Update_AutoAvailable"] = "發現新版本 v{0}，可在設定 → 軟體更新中查看並安裝。";
     }
 
     public static string GetString(string key, params object[] args)
