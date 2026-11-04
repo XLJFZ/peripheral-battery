@@ -25,6 +25,8 @@ public class AppSettings
     /// <summary>Animate the battery ring with a breathing pulse while a device is charging.</summary>
     public bool TrayChargingPulse { get; set; } = true;
     public bool LaunchAtStartup { get; set; } = false;
+    public string AutoUpdateCheckFrequency { get; set; } = "weekly";
+    public DateTime? AutoUpdateLastCheckUtc { get; set; }
     public bool EnableNotifications { get; set; } = true;
     public int LowBatteryThreshold { get; set; } = 20;
     public int CriticalBatteryThreshold { get; set; } = 10;

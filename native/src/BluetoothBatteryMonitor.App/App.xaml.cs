@@ -241,6 +241,7 @@ public partial class App : System.Windows.Application
         // 8. Start Engine
         _ = global::System.Threading.Tasks.Task.Run(() => _engine.Start());
         Services.GamePollingService.Instance.Start();
+        _ = CheckForUpdatesAtStartupAsync();
 
         if (e.Args.Any(a => a.Equals("--settings", StringComparison.OrdinalIgnoreCase)))
         {
@@ -257,6 +258,22 @@ public partial class App : System.Windows.Application
         {
             _flyoutWindow.ShowFlyout();
         }
+    }
+
+    private async global::System.Threading.Tasks.Task CheckForUpdatesAtStartupAsync()
+    {
+        try
+        {
+            var result = await Services.Update.AutoUpdateCheckService.CheckIfDueAsync(
+                AppSettings.Load, settings => settings.Save(),
+                () => new Services.Update.UpdateCheckService().CheckForUpdatesAsync(), DateTime.UtcNow);
+            if (result?.HasUpdate == true && AppSettings.Load().EnableNotifications &&
+                Services.Update.AutoUpdateCheckService.Normalize(AppSettings.Load().AutoUpdateCheckFrequency)
+                    != Services.Update.AutoUpdateCheckService.Off)
+                Notify(LocalizationService.GetString("Update_Title"),
+                    LocalizationService.GetString("Update_AutoAvailable", result.LatestVersion));
+        }
+        catch { /* An offline check must never interrupt startup. */ }
     }
 
     /// <summary>

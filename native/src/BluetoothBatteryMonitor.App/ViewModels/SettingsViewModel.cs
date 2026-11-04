@@ -21,6 +21,13 @@ public record AutoHideOption(int Seconds, string DisplayName);
 public partial class SettingsViewModel : ObservableObject
 {
     private AppSettings _settings;
+    [ObservableProperty] private string _autoUpdateCheckFrequency = AutoUpdateCheckService.Weekly;
+    public static IReadOnlyList<TrayStyleOption> AutoUpdateCheckOptions => new[]
+    {
+        new TrayStyleOption("weekly", LocalizationService.GetString("Update_AutoWeekly")),
+        new TrayStyleOption("startup", LocalizationService.GetString("Update_AutoStartup")),
+        new TrayStyleOption("off", LocalizationService.GetString("Update_AutoOff"))
+    };
 
     public static string[] AvailableTrayStyles => new[] { "圆环", "数字", "圆环 + 数字" };
 
@@ -76,6 +83,7 @@ public partial class SettingsViewModel : ObservableObject
     public SettingsViewModel(IEnumerable<BluetoothDeviceModel>? knownDevices = null)
     {
         _settings = AppSettings.Load();
+        _autoUpdateCheckFrequency = AutoUpdateCheckService.Normalize(_settings.AutoUpdateCheckFrequency);
         _trayAutoColor=_settings.TrayAutoColor; _trayHighColor=_settings.TrayHighColor;
         _trayMidColor=_settings.TrayMidColor; _trayLowColor=_settings.TrayLowColor;
         _trayFixedColor=_settings.TrayFixedColor; _trayIconStyle=_settings.TrayIconStyle;
@@ -465,7 +473,9 @@ public partial class SettingsViewModel : ObservableObject
         _settings.TrayRingWidth=Math.Clamp(TrayRingWidth,7,13);
         _settings.TrayPerDeviceIcons=TrayPerDeviceIcons;
         _settings.TrayChargingPulse=TrayChargingPulse;
+        _settings.AutoUpdateCheckFrequency = AutoUpdateCheckService.Normalize(AutoUpdateCheckFrequency);
         var latest=AppSettings.Load();
+        _settings.AutoUpdateLastCheckUtc = latest.AutoUpdateLastCheckUtc;
         _settings.DeviceOrder=latest.DeviceOrder;
         _settings.EnableGamePolling=latest.EnableGamePolling;
         _settings.DesktopPollingHz=latest.DesktopPollingHz;
