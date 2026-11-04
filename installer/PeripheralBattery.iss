@@ -3,7 +3,7 @@
 ; 说明：per-user 安装（%LOCALAPPDATA%\Programs），不需要管理员权限
 
 #define AppName "外设电量"
-#define AppVersion "0.4.0"
+#define AppVersion "0.4.1"
 #define AppPublisher "XLJFZ"
 #define AppUrl "https://github.com/XLJFZ/peripheral-battery"
 #define AppExe "外设电量.exe"
