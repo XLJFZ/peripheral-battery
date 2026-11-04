@@ -87,21 +87,26 @@
                         <TextBlock Text="{DynamicResource About_Feature1}"
                                    FontSize="12"
                                    Margin="0,0,0,4"
+                                   TextWrapping="Wrap"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                         <TextBlock Text="{DynamicResource About_Feature2}"
                                    FontSize="12"
                                    Margin="0,0,0,4"
+                                   TextWrapping="Wrap"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                         <TextBlock Text="{DynamicResource About_Feature3}"
                                    FontSize="12"
                                    Margin="0,0,0,4"
+                                   TextWrapping="Wrap"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                         <TextBlock Text="{DynamicResource About_Feature4}"
                                    FontSize="12"
                                    Margin="0,0,0,4"
+                                   TextWrapping="Wrap"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                         <TextBlock Text="{DynamicResource About_Feature5}"
                                    FontSize="12"
+                                   TextWrapping="Wrap"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                     </StackPanel>
                 </Border>

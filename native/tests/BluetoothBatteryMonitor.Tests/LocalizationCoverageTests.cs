@@ -83,4 +83,15 @@ public class LocalizationCoverageTests
         }
         LocalizationService.ApplyLanguage("en");
     }
+
+    [Fact]
+    public void AboutFeatureListMentionsRazerInEveryLanguage()
+    {
+        foreach (var lang in AllLanguages)
+        {
+            LocalizationService.ApplyLanguage(lang);
+            Assert.Contains("Razer", LocalizationService.GetString("About_Feature1"));
+        }
+        LocalizationService.ApplyLanguage("en");
+    }
 }

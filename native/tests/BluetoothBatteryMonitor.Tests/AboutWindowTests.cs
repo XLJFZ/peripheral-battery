@@ -1,5 +1,9 @@
 extern alias MonitorApp;
+using System;
+using System.Linq;
+using System.Threading;
 using System.Windows;
+using System.Windows.Controls;
 using Xunit;
 using AboutWindow = MonitorApp::BluetoothBatteryMonitor.App.Views.AboutWindow;
 
@@ -15,5 +19,40 @@ public class AboutWindowTests
 
         Assert.Equal(256, icon.PixelWidth);
         Assert.Equal(256, icon.PixelHeight);
+    }
+
+    [Fact]
+    public void FeatureTextWrapsInsteadOfClipping()
+    {
+        var wrappingModes = RunInSta(() =>
+        {
+            _ = Application.Current ?? new Application();
+            var window = new AboutWindow();
+            var root = (Grid)window.Content;
+            var scroll = root.Children.OfType<ScrollViewer>().Single();
+            var cards = (StackPanel)scroll.Content;
+            var featureCard = (StackPanel)((Border)cards.Children[1]).Child;
+            return featureCard.Children.OfType<TextBlock>().Skip(1)
+                .Select(text => text.TextWrapping).ToArray();
+        });
+
+        Assert.Equal(5, wrappingModes.Length);
+        Assert.All(wrappingModes, mode => Assert.Equal(TextWrapping.Wrap, mode));
+    }
+
+    private static T RunInSta<T>(Func<T> action)
+    {
+        T result = default!;
+        Exception? failure = null;
+        var thread = new Thread(() =>
+        {
+            try { result = action(); }
+            catch (Exception ex) { failure = ex; }
+        });
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        thread.Join();
+        if (failure != null) throw failure;
+        return result;
     }
 }
