@@ -22,8 +22,10 @@
 
         <!-- Header and Logo -->
         <StackPanel Grid.Row="0" Margin="0,10,0,16" HorizontalAlignment="Center">
-            <Image Source="pack://application:,,,/BluetoothBatteryMonitor.App;component/Assets/app.ico"
+            <Image x:Name="AppIcon"
+                   Source="pack://application:,,,/BluetoothBatteryMonitor.App;component/Assets/app.ico"
                    Width="64" Height="64"
+                   RenderOptions.BitmapScalingMode="HighQuality"
                    HorizontalAlignment="Center"
                    Margin="0,0,0,12" />
 
@@ -37,7 +39,8 @@
                 <Border Background="{DynamicResource SubtleFillColorSecondaryBrush}"
                         Padding="8,2"
                         CornerRadius="4">
-                    <TextBlock Text="{DynamicResource About_Version}"
+                    <TextBlock x:Name="VersionText"
+                               Text="{DynamicResource About_Version}"
                                FontSize="12"
                                FontWeight="Medium"
                                Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
@@ -107,16 +110,24 @@
 
         <!-- Bottom Action Buttons -->
         <Grid Grid.Row="2" Margin="0,16,0,0">
-            <Button Content="{DynamicResource Settings_RepoButton}"
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="1"
+                    Content="{DynamicResource Settings_RepoButton}"
                     ToolTip="https://github.com/XLJFZ/peripheral-battery"
-                    HorizontalAlignment="Center" Click="OpenRepository" Padding="14,6" />
-            <Button Content="{DynamicResource Update_CheckNow}"
-                    HorizontalAlignment="Left"
+                    HorizontalAlignment="Stretch" Margin="12,0,0,0" Click="OpenRepository" Padding="14,6" />
+            <Button Grid.Column="0"
+                    Content="{DynamicResource Update_CheckNow}"
+                    HorizontalAlignment="Stretch"
                     Click="OnCheckUpdatesClick"
                     Padding="14,6" />
 
-            <Button Content="{DynamicResource About_Close}"
-                    HorizontalAlignment="Right"
+            <Button Grid.Column="2"
+                    Content="{DynamicResource About_Close}"
+                    HorizontalAlignment="Stretch" Margin="12,0,0,0"
                     Click="OnCloseClick"
                     Padding="24,6" />
         </Grid>
