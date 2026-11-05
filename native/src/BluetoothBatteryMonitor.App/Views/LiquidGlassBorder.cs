@@ -14,7 +14,8 @@ public sealed class LiquidGlassBorder : Border
 {
     public static readonly DependencyProperty LiquidLightingProperty = DependencyProperty.Register(
         nameof(LiquidLighting), typeof(bool), typeof(LiquidGlassBorder),
-        new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender));
+        new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender,
+            (owner,args)=>((LiquidGlassBorder)owner).ResetMaterialHover((bool)args.NewValue)));
     public bool LiquidLighting
     {
         get => (bool)GetValue(LiquidLightingProperty);
@@ -47,6 +48,7 @@ public sealed class LiquidGlassBorder : Border
     private Point _sampleOrigin=new(double.NaN,double.NaN);
     protected override int VisualChildrenCount=>base.VisualChildrenCount+1;
     protected override Visual GetVisualChild(int index)=>index==0?_material:base.GetVisualChild(index-1);
+    private bool _hoverActive;
     private Point _target = new(.25, 0);
     private WriteableBitmap? _lens;
     private byte[]? _pixels;
@@ -63,8 +65,11 @@ public sealed class LiquidGlassBorder : Border
             var origin=PointToScreen(new Point(0,0));
             if(origin!=_sampleOrigin)InvalidateVisual();
         };
+        Loaded+=(_,_)=>SynchronizeHover();
+        IsVisibleChanged+=(_,e)=>{if(e.NewValue is true)SynchronizeHover();};
         Unloaded += (_, _) =>
         {
+            _hoverActive=false;
             BeginAnimation(HoverBlendProperty,null);
             SetCurrentValue(HoverBlendProperty,0.0);
             BeginAnimation(LightPositionProperty, null);
@@ -75,16 +80,33 @@ public sealed class LiquidGlassBorder : Border
             _pixels = null;
         };
     }
+    private void ResetMaterialHover(bool enabled)
+    {
+        _hoverActive=false;
+        BeginAnimation(HoverBlendProperty,null);SetCurrentValue(HoverBlendProperty,0.0);
+        if(enabled)SynchronizeHover();
+    }
+    private void SynchronizeHover()
+    {
+        if(!LiquidLighting||!IsMouseOver||ActualWidth<=0||ActualHeight<=0)return;
+        var p=Mouse.GetPosition(this);
+        UpdatePointer(new Point(Math.Clamp(p.X/ActualWidth,0,1),Math.Clamp(p.Y/ActualHeight,0,1)));
+    }
+    private void UpdatePointer(Point position)
+    {
+        MoveLight(position);
+        if(!_hoverActive)FadeHover(true);
+    }
     protected override void OnMouseEnter(MouseEventArgs e)
     {
         base.OnMouseEnter(e);
         if(!LiquidLighting||ActualWidth<=0||ActualHeight<=0)return;
         var p=e.GetPosition(this);
-        MoveLight(new Point(Math.Clamp(p.X/ActualWidth,0,1),Math.Clamp(p.Y/ActualHeight,0,1)));
-        FadeHover(true);
+        UpdatePointer(new Point(Math.Clamp(p.X/ActualWidth,0,1),Math.Clamp(p.Y/ActualHeight,0,1)));
     }
     private void FadeHover(bool active)
     {
+        _hoverActive=active;
         double target=active?1:0;
         if(!SystemParameters.ClientAreaAnimation)
         {
@@ -101,7 +123,7 @@ public sealed class LiquidGlassBorder : Border
         base.OnMouseMove(e);
         if (!LiquidLighting || ActualWidth <= 0 || ActualHeight <= 0) return;
         var p = e.GetPosition(this);
-        MoveLight(new Point(Math.Clamp(p.X / ActualWidth, 0, 1), Math.Clamp(p.Y / ActualHeight, 0, 1)));
+        UpdatePointer(new Point(Math.Clamp(p.X / ActualWidth, 0, 1), Math.Clamp(p.Y / ActualHeight, 0, 1)));
     }
     protected override void OnMouseLeave(MouseEventArgs e)
     {

@@ -119,12 +119,7 @@ public partial class FlyoutWindow : FluentWindow
         PreviewMouseDown += (s,e) => ResetIdle();
         PreviewMouseWheel += (s,e) => ResetIdle();
         PreviewKeyDown += (s,e) => ResetIdle();
-        _idleTimer.Tick += (s,e) =>
-        {
-            if (IsVisible && !DisableAutoClose && !_isChildContextMenuOpen && _autoHideSeconds > 0 &&
-                DateTime.UtcNow - _lastInteraction >= TimeSpan.FromSeconds(_autoHideSeconds))
-                HideFlyout();
-        };
+        _idleTimer.Tick += (s,e) => CheckIdle();
         _idleTimer.Start();
         Closed += (s,e) => _idleTimer.Stop();
 
@@ -179,6 +174,21 @@ public partial class FlyoutWindow : FluentWindow
         RepositionFlyout();
     }
 
+    private void CheckIdle()
+    {
+        // An opening request can be cancelled without a corresponding closing event.
+        if(_isChildContextMenuOpen&&!HasOpenContextMenu(this))_isChildContextMenuOpen=false;
+        if(IsVisible&&!DisableAutoClose&&!_isChildContextMenuOpen&&_autoHideSeconds>0&&
+            DateTime.UtcNow-_lastInteraction>=TimeSpan.FromSeconds(_autoHideSeconds))HideFlyout();
+    }
+    private static bool HasOpenContextMenu(DependencyObject root)
+    {
+        if(root is FrameworkElement element&&element.ContextMenu?.IsOpen==true)return true;
+        int count=global::System.Windows.Media.VisualTreeHelper.GetChildrenCount(root);
+        for(int i=0;i<count;i++)
+            if(HasOpenContextMenu(global::System.Windows.Media.VisualTreeHelper.GetChild(root,i)))return true;
+        return false;
+    }
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         ApplyModernWindowStyling();
@@ -322,6 +332,7 @@ public partial class FlyoutWindow : FluentWindow
 
         DeviceScrollViewer?.ScrollToTop();
         (DataContext as MainViewModel)?.RefreshAudioVolumes();
+        (DataContext as MainViewModel)?.RefreshOnOpenIfEmpty();
 
         if (!_hasRendered || ActualHeight <= 0)
         {

@@ -8,6 +8,13 @@ using SettingsViewModel = MonitorApp::BluetoothBatteryMonitor.App.ViewModels.Set
 public class FlyoutAutoHideTests
 {
     [Theory]
+    [InlineData(120,true,10)]
+    [InlineData(300,true,10)]
+    [InlineData(5,true,5)]
+    [InlineData(120,false,120)]
+    public void EmptyDeviceListRetriesWithoutFiveMinuteDelay(int configured,bool empty,int expected)
+        =>Assert.Equal(expected,MonitorApp::BluetoothBatteryMonitor.App.Services.Bluetooth.BluetoothBatteryEngine.NextPollSeconds(configured,empty));
+    [Theory]
     [InlineData(0, 0)]      // explicit "never"
     [InlineData(3, 3)]
     [InlineData(5, 5)]

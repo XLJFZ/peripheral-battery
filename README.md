@@ -1,15 +1,17 @@
 # Peripheral Battery · 外设电量
 
-当前 Windows 版本 **v0.4.2**，提供“普通版”（默认）、“毛玻璃”和“液态玻璃”三种外观，毛玻璃与液态玻璃跟随 Windows 深色/浅色设置。
+当前 Windows 版本 **v0.4.3**，提供“普通版”（默认）、“毛玻璃”和“液态玻璃”三种外观，毛玻璃与液态玻璃跟随 Windows 深色/浅色设置。
 
 液态玻璃弹窗支持实时背景折射与鼠标附近的局部高光，隐藏后停止采集。为避免采集自身，开启实时折射时弹窗可能不会出现在截图、录屏或部分远程桌面画面中。完整说明见 [v0.4.2 发布说明](notes/v0.4.2.md)。
+
+v0.4.3 修复反复打开或切换外观后的高光恢复、空设备列表的重试等待和浮窗自动隐藏。见 [v0.4.3 发布说明](notes/v0.4.3.md)。
 
 **两种安装方式**（都在 [Releases](https://github.com/XLJFZ/peripheral-battery/releases/latest) 里）：
 
 | 方式 | 文件 | 特点 |
 | --- | --- | --- |
-| 安装版（推荐） | `Peripheral-Battery-Setup-0.4.2.exe` | 向导安装到 `%LOCALAPPDATA%\Programs\PeripheralBattery`；开始菜单 / 桌面快捷方式；可在设置→应用中卸载；普通用户权限即可 |
-| 便携版 | `Peripheral-Battery-0.4.2-x64.exe` | 单个 EXE，双击即用，不需要安装运行时、不需要解压；删文件即卸载 |
+| 安装版（推荐） | `Peripheral-Battery-Setup-0.4.3.exe` | 向导安装到 `%LOCALAPPDATA%\Programs\PeripheralBattery`；开始菜单 / 桌面快捷方式；可在设置→应用中卸载；普通用户权限即可 |
+| 便携版 | `Peripheral-Battery-0.4.3-x64.exe` | 单个 EXE，双击即用，不需要安装运行时、不需要解压；删文件即卸载 |
 
 两种方式共用同一份程序与设置（`%APPDATA%\PeripheralBatteryNative`），可以互相切换。
 

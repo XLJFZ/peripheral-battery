@@ -42,6 +42,7 @@ public class BluetoothBatteryEngine : IDisposable
         }
     }
     public IReadOnlyList<IBluetoothBatteryProvider> Providers => _providers;
+    internal bool IsStarted {get;private set;}
 
     public BluetoothBatteryEngine(ToastNotificationService notificationService, IBluetoothAudioCodecDetector? codecDetector = null, IAudioEndpointManager? audioManager = null)
     {
@@ -82,6 +83,7 @@ public class BluetoothBatteryEngine : IDisposable
             provider.StartMonitoring();
         }
 
+        IsStarted=true;
         // Start initial scan
         _ = RefreshAllDevicesAsync();
 
@@ -119,14 +121,16 @@ public class BluetoothBatteryEngine : IDisposable
             }
 
             // Schedule next poll intelligently
-            int interval = AppSettings.Load().RefreshIntervalSeconds;
-            if (_devices.IsEmpty)
-            {
-                interval = Math.Max(interval, 300); // 5 minutes when no devices are paired
-            }
+            var pollingSettings=AppSettings.Load();
+            bool noVisibleDevices=!CurrentDevices.Any(d=>!pollingSettings.IsHidden(d.Id,d.BluetoothAddress)
+                &&(!pollingSettings.HideUnknownBatteryDevices||d.HasAnyBatteryReport));
+            int interval=NextPollSeconds(pollingSettings.RefreshIntervalSeconds,noVisibleDevices);
             ScheduleNextPoll(TimeSpan.FromSeconds(interval));
         }
     }
+
+    internal static int NextPollSeconds(int configured,bool noVisibleDevices)
+        =>noVisibleDevices?Math.Min(Math.Max(1,configured),10):Math.Max(1,configured);
 
     private async Task ScanOnceAsync()
     {
@@ -784,6 +788,7 @@ public class BluetoothBatteryEngine : IDisposable
     {
         if (_isDisposed) return;
         _isDisposed = true;
+        IsStarted=false;
 
         SystemEvents.SessionSwitch -= OnSessionSwitch;
         _pollingTimer?.Dispose();

@@ -1,7 +1,7 @@
-# Build the Windows installer: portable single file + Inno Setup wrapper.
+﻿# Build the Windows installer: portable single file + Inno Setup wrapper.
 $ErrorActionPreference = 'Stop'
 Set-Location -LiteralPath $PSScriptRoot
-$version = '0.4.2'
+$version = '0.4.3'
 
 # 1) Portable base (also produces the sha256 used in the release folder)
 & ./build-portable.ps1

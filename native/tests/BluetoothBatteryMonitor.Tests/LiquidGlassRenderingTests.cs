@@ -84,6 +84,25 @@ public class LiquidGlassRenderingTests
             Assert.InRange(Alpha(80,118),0,10);
         });
     }
+    [Fact]
+    public void MaterialToggleRearmsHoverOnNextPointerUpdate()
+    {
+        RunSta(()=>
+        {
+            var glass=new GlassBorder{Width=160,Height=80,LiquidLighting=true};
+            var flags=global::System.Reflection.BindingFlags.NonPublic|global::System.Reflection.BindingFlags.Instance;
+            var update=typeof(GlassBorder).GetMethod("UpdatePointer",flags)!;
+            var active=typeof(GlassBorder).GetField("_hoverActive",flags)!;
+            update.Invoke(glass,new object[]{new Point(.4,.3)});
+            Assert.True((bool)active.GetValue(glass)!);
+            glass.LiquidLighting=false;glass.LiquidLighting=true;
+            Assert.False((bool)active.GetValue(glass)!);
+            update.Invoke(glass,new object[]{new Point(.6,.7)});
+            Assert.True((bool)active.GetValue(glass)!);
+            var light=(DependencyProperty)typeof(GlassBorder).GetField("LightPositionProperty",global::System.Reflection.BindingFlags.NonPublic|global::System.Reflection.BindingFlags.Static)!.GetValue(null)!;
+            Assert.Equal(new Point(.6,.7),(Point)glass.GetValue(light));
+        });
+    }
     private static byte[] Render(GlassBorder glass,int width,int height)
     {
         glass.Measure(new Size(width,height));glass.Arrange(new Rect(0,0,width,height));glass.UpdateLayout();

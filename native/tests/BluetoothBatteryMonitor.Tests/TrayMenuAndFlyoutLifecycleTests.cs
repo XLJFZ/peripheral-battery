@@ -63,6 +63,25 @@ public class TrayMenuAndFlyoutLifecycleTests
     }
 
     [Fact]
+    public void StaleContextMenuFlagDoesNotPreventIdleHide()
+    {
+        RunInSta(()=>
+        {
+            var flyout=new AppFlyoutWindow(null!);
+            try
+            {
+                flyout.Show();
+                var flags=BindingFlags.NonPublic|BindingFlags.Instance;
+                typeof(AppFlyoutWindow).GetField("_isChildContextMenuOpen",flags)!.SetValue(flyout,true);
+                typeof(AppFlyoutWindow).GetField("_autoHideSeconds",flags)!.SetValue(flyout,3);
+                typeof(AppFlyoutWindow).GetField("_lastInteraction",flags)!.SetValue(flyout,DateTime.UtcNow.AddSeconds(-4));
+                typeof(AppFlyoutWindow).GetMethod("CheckIdle",flags)!.Invoke(flyout,null);
+                Assert.False(flyout.IsFlyoutOpen);
+            }
+            finally{flyout.Close();}
+        });
+    }
+    [Fact]
     public void TaskbarIcon_ConfiguresNoLeftClickDelayAndRightClickActivation()
     {
         RunInSta(() =>
@@ -340,35 +359,33 @@ public class TrayMenuAndFlyoutLifecycleTests
     {
         RunInSta(() =>
         {
-            var engine = new AppBluetoothEngine(null, null, null);
-            var vm = new AppMainViewModel(engine, null);
-            var flyout = new AppFlyoutWindow(vm);
-            var trayManager = new AppTrayIconManager(vm, flyout);
-
+            var previousFolder=AppSettings.TestFolderOverride;
+            var folder=System.IO.Path.Combine(System.IO.Path.GetTempPath(),"tray-startup-test-"+Guid.NewGuid().ToString("N"));
+            using var run=Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run",true);
+            var original=run?.GetValue("PeripheralBatteryNative");
+            var kind=original==null?Microsoft.Win32.RegistryValueKind.String:run!.GetValueKind("PeripheralBatteryNative");
+            AppFlyoutWindow? flyout=null;AppTrayIconManager? trayManager=null;
             try
             {
-                var createMenuMethod = typeof(AppTrayIconManager).GetMethod("CreateContextMenu", BindingFlags.NonPublic | BindingFlags.Instance);
-                Assert.NotNull(createMenuMethod);
-                var menu = createMenuMethod.Invoke(trayManager, null) as ContextMenu;
-                Assert.NotNull(menu);
-
-                var startupItem = menu.Items.OfType<MenuItem>().FirstOrDefault(m => m.Header?.ToString() == "Launch with Windows" || m.Header?.ToString() == "Windows ile Başlat");
-                Assert.NotNull(startupItem);
+                AppSettings.TestFolderOverride=folder;
+                var engine=new AppBluetoothEngine(null!,null,null);
+                var vm=new AppMainViewModel(engine,null);
+                flyout=new AppFlyoutWindow(vm);trayManager=new AppTrayIconManager(vm,flyout);
+                var menu=(ContextMenu)typeof(AppTrayIconManager).GetMethod("CreateContextMenu",BindingFlags.NonPublic|BindingFlags.Instance)!.Invoke(trayManager,null)!;
+                var startupItem=menu.Items.OfType<MenuItem>().First(m=>m.Header?.ToString()=="Launch with Windows"||m.Header?.ToString()=="Windows ile Başlat");
                 Assert.True(startupItem.IsCheckable);
-
-                // When clicked, WPF MenuItem with IsCheckable toggles IsChecked first, then raises Click event
-                bool initialChecked = startupItem.IsChecked;
-                startupItem.IsChecked = !initialChecked; // Simulate WPF click
+                bool initial=startupItem.IsChecked;startupItem.IsChecked=!initial;
                 startupItem.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
-
-                var savedSettings = AppSettings.Load();
-                Assert.Equal(!initialChecked, savedSettings.LaunchAtStartup);
-                Assert.Equal(!initialChecked, startupItem.IsChecked);
+                Assert.Equal(!initial,AppSettings.Load().LaunchAtStartup);
+                Assert.Equal(!initial,startupItem.IsChecked);
             }
             finally
             {
-                trayManager.Dispose();
-                flyout.Close();
+                trayManager?.Dispose();flyout?.Close();
+                if(original==null)run?.DeleteValue("PeripheralBatteryNative",false);
+                else run?.SetValue("PeripheralBatteryNative",original,kind);
+                AppSettings.TestFolderOverride=previousFolder;
+                if(System.IO.Directory.Exists(folder))System.IO.Directory.Delete(folder,true);
             }
         });
     }

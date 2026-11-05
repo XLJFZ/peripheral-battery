@@ -83,6 +83,11 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    public void RefreshOnOpenIfEmpty()
+    {
+        if(!HasDevices&&!IsBusy&&_engine.IsStarted)_=RefreshDevicesAsync();
+    }
+
     [RelayCommand]
     public static void OpenBluetoothSettings()
     {

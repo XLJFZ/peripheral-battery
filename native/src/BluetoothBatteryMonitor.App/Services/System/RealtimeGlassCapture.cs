@@ -25,6 +25,10 @@ public sealed class RealtimeGlassCapture : IDisposable
     private ImageBrush? _brush;
     public long FrameCount {get;private set;}
     public string? LastError {get;private set;}
+    public string? LastRecoveryError {get;private set;}
+    public int RecoveryCount {get;private set;}
+    internal Action? BeforeCaptureForTest {get;set;}
+    private readonly DispatcherTimer _startRetry=new(){Interval=TimeSpan.FromMilliseconds(750)};
     public double MeanCaptureMilliseconds => FrameCount==0?0:_captureMilliseconds/FrameCount;
     private double _captureMilliseconds;
     public GlassBackdropFrame? CurrentFrame {get;private set;}
@@ -34,6 +38,7 @@ public sealed class RealtimeGlassCapture : IDisposable
     public RealtimeGlassCapture(Window window)
     {
         _window=window;
+        _startRetry.Tick+=(_,_)=>{_startRetry.Stop();Update();};
         window.SourceInitialized+=OnStateChanged;
         window.IsVisibleChanged+=OnVisibilityChanged;
         window.Closed+=OnClosed;
@@ -55,37 +60,58 @@ public sealed class RealtimeGlassCapture : IDisposable
         {
             // Never capture our own surface if exclusion is unavailable.
             SetWindowDisplayAffinity(_handle,_originalAffinity);
-            LastError=$"Capture exclusion unavailable ({Marshal.GetLastWin32Error()})";return;
+            LastError=$"Capture exclusion unavailable ({Marshal.GetLastWin32Error()})";_startRetry.Start();return;
         }
-        _excluded=true;LastError=null;
+        _startRetry.Stop();_excluded=true;LastError=null;
         var cancellation=new CancellationTokenSource();_cancellation=cancellation;
         var previous=_worker;
         _worker=Task.Run(async()=>
         {
             // A quick hide/show cannot create two workers sharing the window's texture.
             try{await previous.ConfigureAwait(false);}catch{ }
-            try{await CaptureLoop(cancellation.Token).ConfigureAwait(false);}
-            catch(OperationCanceledException){ }
-            catch(Exception ex)
+            try
             {
-                if(!_window.Dispatcher.HasShutdownStarted)
-                    await _window.Dispatcher.InvokeAsync(()=>
+                int failures=0;
+                while(!cancellation.IsCancellationRequested)
+                {
+                    try{await CaptureLoop(cancellation.Token).ConfigureAwait(false);}
+                    catch(OperationCanceledException)when(cancellation.IsCancellationRequested){break;}
+                    catch(Exception ex)
                     {
-                        if(_cancellation==cancellation){LastError=ex.Message;Stop();}
-                    },DispatcherPriority.Background);
+                        if(cancellation.IsCancellationRequested||_window.Dispatcher.HasShutdownStarted)break;
+                        failures++;
+                        await _window.Dispatcher.InvokeAsync(()=>
+                        {
+                            if(_cancellation!=cancellation)return;
+                            LastError=ex.Message;LastRecoveryError=ex.Message;RecoveryCount++;
+                            ClearFrame();
+                        },DispatcherPriority.Background,cancellation.Token);
+                        // A transient device/session failure must not permanently disable glass.
+                        // Dispose the failed source (CaptureLoop's using), then create a fresh one.
+                        await Task.Delay(Math.Min(4000,500*failures),cancellation.Token).ConfigureAwait(false);
+                    }
+                }
             }
+            catch(OperationCanceledException)when(cancellation.IsCancellationRequested){ }
             finally{cancellation.Dispose();}
         });
     }
     private async Task CaptureLoop(CancellationToken token)
     {
         using var source=new DesktopCaptureSource();
+        var startup=Stopwatch.StartNew();bool receivedFrame=false;
         while(true)
         {
             token.ThrowIfCancellationRequested();
             var elapsed=Stopwatch.StartNew();
+            BeforeCaptureForTest?.Invoke();
             var frame=source.Capture(_handle);
-            if(frame==null){await Task.Delay(12,token).ConfigureAwait(false);continue;}
+            if(frame==null)
+            {
+                if(!receivedFrame&&startup.ElapsedMilliseconds>3000)throw new TimeoutException("No initial desktop capture frame");
+                await Task.Delay(12,token).ConfigureAwait(false);continue;
+            }
+            receivedFrame=true;
             var (left,top,width,height,pixels)=frame.Value;
             double captureMs=elapsed.Elapsed.TotalMilliseconds;
             await _window.Dispatcher.InvokeAsync(()=>
@@ -104,7 +130,7 @@ public sealed class RealtimeGlassCapture : IDisposable
                     CurrentFrame=new GlassBackdropFrame(_brush!,left,top,width,height);
                     _window.SetValue(Views.LiquidGlassBorder.BackdropFrameProperty,CurrentFrame);
                 }
-                FrameCount++;_captureMilliseconds+=captureMs;
+                LastError=null;FrameCount++;_captureMilliseconds+=captureMs;
             },DispatcherPriority.Background,token);
             // 24 FPS maximum; sleep on a worker, never block the UI.
             await Task.Delay(Math.Max(1,42-(int)elapsed.ElapsedMilliseconds),token).ConfigureAwait(false);
@@ -115,9 +141,13 @@ public sealed class RealtimeGlassCapture : IDisposable
     {
         var cancellation=_cancellation;_cancellation=null;
         cancellation?.Cancel();
+        _startRetry.Stop();ClearFrame();
+        if(_excluded){SetWindowDisplayAffinity(_handle,_originalAffinity);_excluded=false;}
+    }
+    private void ClearFrame()
+    {
         _window.ClearValue(Views.LiquidGlassBorder.BackdropFrameProperty);
         CurrentFrame=null;_image=null;_brush=null;
-        if(_excluded){SetWindowDisplayAffinity(_handle,_originalAffinity);_excluded=false;}
     }
     public void Dispose()
     {

@@ -83,6 +83,72 @@ public static class RealtimeGlassProbe
         }
         finally{window.Close();background.Close();ThemeManager.ApplyTheme(AppSettings.Load().Theme);}
     }
+    public static async Task RunAutoHide(string reportPath)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(reportPath))!);
+        var settings=AppSettings.Load();int seconds=AppSettings.NormalizeAutoHide(settings.FlyoutAutoHideSeconds);
+        if(seconds==0)throw new InvalidOperationException("Auto-hide is disabled in the current profile");
+        ThemeManager.ApplyTheme(settings.Theme);
+        var window=new Views.FlyoutWindow(null!){DisableAutoClose=false,ShowInTaskbar=false};
+        try
+        {
+            var clock=Stopwatch.StartNew();window.ShowFlyout();
+            while(window.IsVisible&&clock.Elapsed.TotalSeconds<seconds+4)await Task.Delay(80);
+            if(window.IsVisible)throw new InvalidOperationException("Flyout did not auto-hide");
+            await window.RealtimeGlass.PendingWorker;
+            await File.WriteAllTextAsync(reportPath,JsonSerializer.Serialize(new{success=true,configuredSeconds=seconds,
+                elapsedSeconds=clock.Elapsed.TotalSeconds,captureStopped=!window.RealtimeGlass.IsRunning}));
+            File.Delete(reportPath+"-error.txt");
+        }
+        finally{window.Close();}
+    }
+    public static async Task RunRecovery(string reportPath)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(reportPath))!);
+        ThemeManager.ApplyTheme(ThemeManager.AppearanceGlass,true);
+        var window=new Views.FlyoutWindow(null!){DisableAutoClose=true,ShowInTaskbar=false};
+        try
+        {
+            window.Show();GlassAppearance.ApplyWindow(window);
+            var capture=window.RealtimeGlass;
+            await WaitFor(()=>capture.FrameCount>=1);
+            long previous=capture.FrameCount;int injected=0;
+            capture.BeforeCaptureForTest=()=>
+            {
+                if(Interlocked.Exchange(ref injected,1)==0)throw new InvalidOperationException("Synthetic transient capture failure");
+            };
+            try{await WaitFor(()=>capture.RecoveryCount>=1&&capture.FrameCount>previous&&capture.LastError==null);}
+            catch(Exception ex){throw new InvalidOperationException($"Recovery did not complete: frames={capture.FrameCount},before={previous},retries={capture.RecoveryCount},running={capture.IsRunning},error={capture.LastError},last={capture.LastRecoveryError}",ex);}
+            capture.BeforeCaptureForTest=null;
+            const int reopenCycles=10,themeCycles=5;
+            for(int i=0;i<reopenCycles;i++)
+            {
+                previous=capture.FrameCount;
+                window.Hide();window.Show();
+                await WaitFor(()=>capture.FrameCount>previous&&capture.CurrentFrame!=null);
+            }
+            for(int i=0;i<themeCycles;i++)
+            {
+                ThemeManager.ApplyTheme(ThemeManager.AppearanceNormal,true);
+                await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                if(capture.IsRunning||capture.CurrentFrame!=null)throw new InvalidOperationException("Ordinary mode did not stop capture");
+                previous=capture.FrameCount;
+                ThemeManager.ApplyTheme(ThemeManager.AppearanceGlass,true);
+                await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                await WaitFor(()=>capture.FrameCount>previous&&capture.CurrentFrame!=null);
+            }
+            window.Hide();await capture.PendingWorker;
+            long hidden=capture.FrameCount;await Task.Delay(180);
+            if(capture.IsRunning||capture.FrameCount!=hidden)throw new InvalidOperationException("Capture continued after hide");
+            GetWindowDisplayAffinity(new global::System.Windows.Interop.WindowInteropHelper(window).Handle,out uint affinity);
+            if(affinity!=0)throw new InvalidOperationException("Capture exclusion was not restored");
+            await File.WriteAllTextAsync(reportPath,JsonSerializer.Serialize(new{success=true,reopenCycles,themeCycles,
+                transientFailureRecoveryVerified=true,recoveryCount=capture.RecoveryCount,frames=capture.FrameCount,
+                stopsWhenHidden=true,exclusionRestored=true,syntheticFailure=true},new JsonSerializerOptions{WriteIndented=true}));
+            File.Delete(reportPath+"-error.txt");
+        }
+        finally{window.Close();ThemeManager.ApplyTheme(AppSettings.Load().Theme);}
+    }
     private static async Task WaitFor(Func<bool> condition)
     {
         var watch=Stopwatch.StartNew();

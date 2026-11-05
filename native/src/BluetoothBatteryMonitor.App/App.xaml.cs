@@ -37,6 +37,20 @@ public partial class App : System.Windows.Application
 
     protected override async void OnStartup(StartupEventArgs e)
     {
+        int autoHideProbe=Array.IndexOf(e.Args,"--auto-hide-probe");
+        if(autoHideProbe>=0 && e.Args.Length>autoHideProbe+1)
+        {
+            base.OnStartup(e);ShutdownMode=ShutdownMode.OnExplicitShutdown;
+            try{await Services.RealtimeGlassProbe.RunAutoHide(e.Args[autoHideProbe+1]);Shutdown(0);}
+            catch(Exception ex){await global::System.IO.File.WriteAllTextAsync(e.Args[autoHideProbe+1]+"-error.txt",ex.ToString());Shutdown(1);}return;
+        }
+        int recoveryProbe=Array.IndexOf(e.Args,"--glass-recovery-probe");
+        if(recoveryProbe>=0 && e.Args.Length>recoveryProbe+1)
+        {
+            base.OnStartup(e);ShutdownMode=ShutdownMode.OnExplicitShutdown;
+            try{await Services.RealtimeGlassProbe.RunRecovery(e.Args[recoveryProbe+1]);Shutdown(0);}
+            catch(Exception ex){await global::System.IO.File.WriteAllTextAsync(e.Args[recoveryProbe+1]+"-error.txt",ex.ToString());Shutdown(1);}return;
+        }
         int realtimeProbe=Array.IndexOf(e.Args,"--realtime-glass-probe");
         if(realtimeProbe>=0 && e.Args.Length>realtimeProbe+1)
         {
@@ -258,7 +272,7 @@ public partial class App : System.Windows.Application
             MainViewModel.OpenSettingsWindow();
             return;
         }
-        _flyoutWindow.DisableAutoClose = glassLive || e.Args.Any(a => a.Equals("--pin", StringComparison.OrdinalIgnoreCase));
+        _flyoutWindow.DisableAutoClose = e.Args.Any(a => a.Equals("--pin", StringComparison.OrdinalIgnoreCase));
         _flyoutWindow.ShowInTaskbar = _flyoutWindow.DisableAutoClose;
 
         // Show flyout on initial launch unless --minimized is specified
