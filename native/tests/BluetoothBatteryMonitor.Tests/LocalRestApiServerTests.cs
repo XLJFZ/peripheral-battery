@@ -154,7 +154,7 @@ public class LocalRestApiServerTests
     }
 
     [Fact]
-    public async Task OptionsRequest_ReturnsNoContentWithCorsHeaders()
+    public async Task OptionsRequest_ReturnsNoContentWithoutAllowingCrossOriginAccess()
     {
         int port = GetNextPort();
 
@@ -165,10 +165,11 @@ public class LocalRestApiServerTests
 
         using var client = new HttpClient();
         var req = new HttpRequestMessage(HttpMethod.Options, $"http://127.0.0.1:{port}/devices");
+        req.Headers.Add("Origin", "https://example.com");
         var res = await client.SendAsync(req);
 
         Assert.Equal(HttpStatusCode.NoContent, res.StatusCode);
-        Assert.Contains(res.Headers, h => h.Key.Equals("Access-Control-Allow-Origin", StringComparison.OrdinalIgnoreCase));
+        Assert.False(res.Headers.Contains("Access-Control-Allow-Origin"));
     }
 
     [Fact]

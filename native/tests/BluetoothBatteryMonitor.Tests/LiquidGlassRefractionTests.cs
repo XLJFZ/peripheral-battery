@@ -34,11 +34,5 @@ public class LiquidGlassRefractionTests
         var bitmap=new RenderTargetBitmap(64,64,96,96,PixelFormats.Pbgra32);bitmap.Render(visual);
         var result=new byte[64*64*4];bitmap.CopyPixels(result,64*4,0);return result;
     }
-    private static void RunSta(Action action)
-    {
-        Exception? error=null;
-        var thread=new Thread(()=>{try{action();}catch(Exception ex){error=ex;}}){IsBackground=true};
-        thread.SetApartmentState(ApartmentState.STA);thread.Start();Assert.True(thread.Join(TimeSpan.FromSeconds(15)));
-        if(error!=null)System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(error).Throw();
-    }
+    private static void RunSta(Action action) => BluetoothBatteryMonitor.Tests.WpfTestHost.Run(action);
 }

@@ -14,11 +14,14 @@ public class AboutWindowTests
     {
         // Regression: BitmapImage.DecodePixelWidth does not make the ICO decoder
         // choose its 256px frame; the About window rendered a tiny frame at 64px.
-        _ = Application.Current ?? new Application();
-        var icon = AboutWindow.LoadAppIcon();
+        var size = RunInSta(() =>
+        {
+            var icon = AboutWindow.LoadAppIcon();
+            return (icon.PixelWidth, icon.PixelHeight);
+        });
 
-        Assert.Equal(256, icon.PixelWidth);
-        Assert.Equal(256, icon.PixelHeight);
+        Assert.Equal(256, size.PixelWidth);
+        Assert.Equal(256, size.PixelHeight);
     }
 
     [Fact]
@@ -26,33 +29,22 @@ public class AboutWindowTests
     {
         var wrappingModes = RunInSta(() =>
         {
-            _ = Application.Current ?? new Application();
             var window = new AboutWindow();
-            var root = (Grid)window.Content;
-            var scroll = root.Children.OfType<ScrollViewer>().Single();
-            var cards = (StackPanel)scroll.Content;
-            var featureCard = (StackPanel)((Border)cards.Children[1]).Child;
-            return featureCard.Children.OfType<TextBlock>().Skip(1)
-                .Select(text => text.TextWrapping).ToArray();
+            try
+            {
+                var root = (Grid)window.Content;
+                var scroll = root.Children.OfType<ScrollViewer>().Single();
+                var cards = (StackPanel)scroll.Content;
+                var featureCard = (StackPanel)((Border)cards.Children[1]).Child;
+                return featureCard.Children.OfType<TextBlock>().Skip(1)
+                    .Select(text => text.TextWrapping).ToArray();
+            }
+            finally { window.Close(); }
         });
 
         Assert.Equal(5, wrappingModes.Length);
         Assert.All(wrappingModes, mode => Assert.Equal(TextWrapping.Wrap, mode));
     }
 
-    private static T RunInSta<T>(Func<T> action)
-    {
-        T result = default!;
-        Exception? failure = null;
-        var thread = new Thread(() =>
-        {
-            try { result = action(); }
-            catch (Exception ex) { failure = ex; }
-        });
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        thread.Join();
-        if (failure != null) throw failure;
-        return result;
-    }
+    private static T RunInSta<T>(Func<T> action) => BluetoothBatteryMonitor.Tests.WpfTestHost.Run(action);
 }

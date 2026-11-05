@@ -1,7 +1,7 @@
-﻿# Build the portable single-file release: one EXE, no installer, no runtime prerequisite.
+# Build the portable single-file release: one EXE, no installer, no runtime prerequisite.
 $ErrorActionPreference = 'Stop'
 Set-Location -LiteralPath $PSScriptRoot
-$version = '0.4.3'
+$version = '0.4.4'
 $python = if (Test-Path -LiteralPath './.venv/Scripts/python.exe') { './.venv/Scripts/python.exe' } else { 'python' }
 $out = "dist/portable-$version"
 $resolvedOut = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot $out))

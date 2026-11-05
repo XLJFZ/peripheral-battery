@@ -416,6 +416,7 @@ public class TrayIconManager : IDisposable
     {
         _mainViewModel.BatteryStateChanged -= OnBatteryStateChanged;
         ThemeManager.ThemeChanged -= OnThemeChanged;
+        LocalizationService.LanguageChanged -= OnLanguageChanged;
 
         if (_pulseTimer != null)
         {

@@ -109,12 +109,5 @@ public class LiquidGlassRenderingTests
         var bitmap=new RenderTargetBitmap(width,height,96,96,PixelFormats.Pbgra32);bitmap.Render(glass);
         var pixels=new byte[width*height*4];bitmap.CopyPixels(pixels,width*4,0);return pixels;
     }
-    private static void RunSta(Action action)
-    {
-        Exception? error=null;
-        var thread=new Thread(()=>{try{action();}catch(Exception ex){error=ex;}}){IsBackground=true};
-        thread.SetApartmentState(ApartmentState.STA);thread.Start();
-        Assert.True(thread.Join(TimeSpan.FromSeconds(10)),"Glass render timed out");
-        if(error!=null)System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(error).Throw();
-    }
+    private static void RunSta(Action action) => BluetoothBatteryMonitor.Tests.WpfTestHost.Run(action);
 }

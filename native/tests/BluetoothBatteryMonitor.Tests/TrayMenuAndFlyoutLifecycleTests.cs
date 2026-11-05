@@ -25,42 +25,7 @@ public class TrayMenuAndFlyoutLifecycleTests
     // static state, so pin the language instead of depending on test order.
     static TrayMenuAndFlyoutLifecycleTests() => AppLocalization.ApplyLanguage("en");
 
-    private static void RunInSta(Action action)
-    {
-        Exception? ex = null;
-        var thread = new Thread(() =>
-        {
-            try
-            {
-                action();
-            }
-            catch (Exception e)
-            {
-                ex = e;
-            }
-            finally
-            {
-                try
-                {
-                    // Popup.Close queues native-window cleanup. Pump it before shutting down the
-                    // STA; synchronous shutdown can wait forever for that pending cleanup.
-                    var dispatcher = System.Windows.Threading.Dispatcher.CurrentDispatcher;
-                    dispatcher.BeginInvokeShutdown(System.Windows.Threading.DispatcherPriority.ContextIdle);
-                    System.Windows.Threading.Dispatcher.Run();
-                }
-                catch { }
-            }
-        });
-        thread.IsBackground = true;
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        Assert.True(thread.Join(TimeSpan.FromSeconds(15)), "UI test did not finish within 15 seconds.");
-
-        if (ex != null)
-        {
-            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(ex).Throw();
-        }
-    }
+    private static void RunInSta(Action action) => WpfTestHost.Run(action);
 
     [Fact]
     public void StaleContextMenuFlagDoesNotPreventIdleHide()
@@ -102,6 +67,10 @@ public class TrayMenuAndFlyoutLifecycleTests
 
                 Assert.True(taskbarIcon.NoLeftClickDelay);
                 Assert.Equal(PopupActivationMode.RightClick, taskbarIcon.MenuActivation);
+
+                trayManager.Dispose();
+                AppLocalization.ApplyLanguage("de");
+                AppLocalization.ApplyLanguage("en");
             }
             finally
             {

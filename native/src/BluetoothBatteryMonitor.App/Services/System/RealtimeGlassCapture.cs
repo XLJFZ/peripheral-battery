@@ -10,7 +10,7 @@ namespace BluetoothBatteryMonitor.App.Services.System;
 
 public sealed record GlassBackdropFrame(ImageBrush Brush,int Left,int Top,int Width,int Height);
 
-/// <summary>Crops a Windows Graphics Capture display frame to the visible flyout. No files, network, or
+/// <summary>Samples the desktop region around the visible flyout without a capture-session border. No files, network, or
 /// persisted frames. One worker and one awaited UI upload prevent a backlog of frames.</summary>
 public sealed class RealtimeGlassCapture : IDisposable
 {
