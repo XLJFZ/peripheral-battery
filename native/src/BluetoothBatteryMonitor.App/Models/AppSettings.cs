@@ -2,11 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace BluetoothBatteryMonitor.App.Models;
 
 public class AppSettings
 {
+    private bool _loadedFromUnreadableProfile;
+    // Keep fields written by newer versions when this version saves the profile.
+    [JsonExtensionData]
+    public Dictionary<string, JsonElement>? AdditionalSettings { get; set; }
+
     public List<string> DeviceOrder { get; set; } = new();
     public bool EnableGamePolling { get; set; }
     public int DesktopPollingHz { get; set; } = 500;
@@ -156,6 +162,43 @@ public class AppSettings
     private static string SettingsFilePath => Path.Combine(SettingsFolder, "settings.json");
 
     /// <summary>
+    /// An immutable, byte-for-byte copy before this version can migrate or save the profile.
+    /// Also called with the target version before launching an in-app upgrade. Unlike .bak,
+    /// these copies are never rotated by ordinary saves. Failure must prevent a destructive save.
+    /// </summary>
+    public static void CreateUpgradeSnapshot(string targetVersion)
+    {
+        if (!Version.TryParse(targetVersion.TrimStart('v', 'V'), out var version))
+            throw new ArgumentException("Invalid upgrade version", nameof(targetVersion));
+        var folder = Path.Combine(SettingsFolder, "upgrade-backups", "before-" + version);
+        foreach (var suffix in new[] { "", BackupSuffix })
+        {
+            var source = SettingsFilePath + suffix;
+            var destination = Path.Combine(folder, "settings.json" + suffix);
+            if (!File.Exists(source) || File.Exists(destination)) continue;
+            Directory.CreateDirectory(folder);
+            // A unique temporary file avoids leaving a partial snapshot after an interrupted copy.
+            var temporary = destination + "." + Guid.NewGuid().ToString("N") + ".tmp";
+            try
+            {
+                File.Copy(source, temporary);
+                try { File.Move(temporary, destination); }
+                catch (IOException) when (File.Exists(destination)) { /* Another caller won. */ }
+            }
+            finally
+            {
+                if (File.Exists(temporary)) File.Delete(temporary);
+            }
+        }
+    }
+
+    private static void SnapshotForCurrentVersion()
+    {
+        var version = typeof(AppSettings).Assembly.GetName().Version!;
+        CreateUpgradeSnapshot($"{version.Major}.{version.Minor}.{version.Build}");
+    }
+
+    /// <summary>
     /// Last-write time (UTC) of settings.json, or DateTime.MinValue when it does not exist yet.
     /// Lets hot-path callers (e.g. the flyout opening on every tray click) cache a loaded
     /// instance and only pay a re-read when the file actually changed.
@@ -165,6 +208,9 @@ public class AppSettings
 
     public static AppSettings Load()
     {
+        // Reading remains available on read-only profiles. Save retries and refuses to overwrite
+        // the profile if its pre-migration snapshot still cannot be created.
+        try { SnapshotForCurrentVersion(); } catch { }
         // Primary file. A parse failure here means the file is corrupt (e.g. half-written by a
         // crash); archive it for forensics before anything overwrites it, then fall back to the
         // .bak copy that every successful Save leaves behind, and only then to defaults.
@@ -180,7 +226,12 @@ public class AppSettings
             return settings!;
         }
 
-        return new AppSettings();
+        // Keep the application usable, but never persist fallback defaults over an existing
+        // profile that this version could not understand (including a future schema).
+        return new AppSettings
+        {
+            _loadedFromUnreadableProfile = File.Exists(SettingsFilePath) || File.Exists(SettingsFilePath + BackupSuffix)
+        };
     }
 
     private const string BackupSuffix = ".bak";
@@ -252,21 +303,19 @@ public class AppSettings
     public static event EventHandler<AppSettings>? SettingsChanged;
 
     /// <summary>
-    /// Normalises the appearance value and once-per-profile returns profiles written by
-    /// v0.3.0/v0.3.1 (System / Dark / Light / 液态玻璃) to the 普通版 default. Only an
-    /// explicit choice saved from v0.3.3 onwards keeps 液态玻璃.
+    /// Preserve supported user choices regardless of the version that wrote them.
+    /// Legacy aliases are mapped to their current equivalent; unknown values survive on disk.
     /// </summary>
     public static string MigrateTheme(string? theme, int themeVersion)
-        => themeVersion < CurrentThemeVersion
-            ? Services.System.ThemeManager.AppearanceNormal
-            : Services.System.ThemeManager.Normalize(theme);
+        => string.IsNullOrWhiteSpace(theme) ? Services.System.ThemeManager.AppearanceNormal
+            : theme == "液态玻璃（低透明）"
+                ? Services.System.ThemeManager.AppearanceGlass : theme;
 
     private void MigrateAppearance()
     {
         Theme = MigrateTheme(Theme, ThemeVersion);
-        FlyoutDensity = Services.System.FlyoutDensity.Normalize(FlyoutDensity);
-        FlyoutAutoHideSeconds = NormalizeAutoHide(FlyoutAutoHideSeconds);
-        ThemeVersion = CurrentThemeVersion;
+        // Consumers apply safe display fallbacks without rewriting future/unknown preferences.
+        ThemeVersion = Math.Max(ThemeVersion, CurrentThemeVersion);
     }
 
     /// <summary>Unknown or out-of-range values fall back to 5 s; only known steps survive.</summary>
@@ -347,10 +396,11 @@ public class AppSettings
 
     public void Save()
     {
-        Theme = Services.System.ThemeManager.Normalize(Theme);
-        ThemeVersion = CurrentThemeVersion;
+        if (_loadedFromUnreadableProfile) return;
+        ThemeVersion = Math.Max(ThemeVersion, CurrentThemeVersion);
         try
         {
+            SnapshotForCurrentVersion();
             if (!Directory.Exists(SettingsFolder))
             {
                 Directory.CreateDirectory(SettingsFolder);

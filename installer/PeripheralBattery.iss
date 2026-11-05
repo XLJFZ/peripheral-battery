@@ -3,7 +3,7 @@
 ; 说明：per-user 安装（%LOCALAPPDATA%\Programs），不需要管理员权限
 
 #define AppName "外设电量"
-#define AppVersion "0.4.1"
+#define AppVersion "0.4.2"
 #define AppPublisher "XLJFZ"
 #define AppUrl "https://github.com/XLJFZ/peripheral-battery"
 #define AppExe "外设电量.exe"
@@ -79,6 +79,30 @@ Type: filesandordirs; Name: "{app}"
 [Code]
 var
   RemoveSettings: Boolean;
+
+procedure InitializeWizard();
+var
+  I: Integer;
+  StartupValue: String;
+begin
+  { Respect explicit unattended task choices. }
+  for I := 1 to ParamCount do
+    if (Pos('/TASKS=', Uppercase(ParamStr(I))) = 1) or
+       (Pos('/MERGETASKS=', Uppercase(ParamStr(I))) = 1) then Exit;
+  { Previous installer task choices may be stale after the app changes autostart.
+    On an existing profile use its actual Run value; a fresh install keeps its defaults.
+    Users can still explicitly change the checkbox during an interactive install. }
+  if FileExists(ExpandConstant('{userappdata}\PeripheralBatteryNative\settings.json')) or
+     RegValueExists(HKEY_CURRENT_USER, 'Software\PeripheralBattery', 'InstallDir') or
+     RegValueExists(HKEY_CURRENT_USER, 'Software\Microsoft\Windows\CurrentVersion\Run', 'PeripheralBatteryNative') then
+  begin
+    if RegQueryStringValue(HKEY_CURRENT_USER, 'Software\Microsoft\Windows\CurrentVersion\Run', 'PeripheralBatteryNative', StartupValue) and
+       (StartupValue <> '') then
+      WizardSelectTasks('autostart')
+    else
+      WizardSelectTasks('!autostart');
+  end;
+end;
 
 function InitializeUninstall(): Boolean;
 begin

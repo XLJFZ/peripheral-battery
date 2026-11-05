@@ -175,6 +175,9 @@ public static class UpdateInstaller
 
             RemoveMarkOfTheWeb(target);
 
+            // Fail before starting Setup if the user's pre-upgrade profile cannot be protected.
+            Models.AppSettings.CreateUpgradeSnapshot(update.LatestVersion);
+
             progress?.Report(new UpdateProgress(UpdateStage.Launching, 100));
 
             // Written before launching: if Setup never finishes, the next start of the old
@@ -209,8 +212,14 @@ public static class UpdateInstaller
     /// <summary>Keeps the user's autostart choice instead of resetting it on every upgrade.</summary>
     private static string BuildArguments()
     {
-        var settings = Models.AppSettings.Load();
-        string tasks = settings.LaunchAtStartup ? "/TASKS=autostart" : "/TASKS=\"\"";
+        return BuildArguments(Services.System.StartupManager.IsStartupEnabled());
+    }
+
+    internal static string BuildArguments(bool startupEnabled)
+    {
+        // The settings UI uses the registry as the source of truth too. The JSON flag can be
+        // stale after a manual installation or an external change to Windows startup settings.
+        string tasks = startupEnabled ? "/TASKS=autostart" : "/TASKS=\"\"";
         // FORCECLOSEAPPLICATIONS makes Setup end this process itself; the AppMutex check
         // would otherwise stop a silent upgrade because we are still running.
         // /LOG keeps a record of the silent run next to update.log for support.

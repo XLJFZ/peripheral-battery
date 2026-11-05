@@ -1,4 +1,4 @@
-<Application x:Class="BluetoothBatteryMonitor.App.App"
+﻿<Application x:Class="BluetoothBatteryMonitor.App.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
@@ -13,6 +13,7 @@
             <SolidColorBrush x:Key="PeripheralCardBrush" Color="#2B2B2B" />
             <SolidColorBrush x:Key="PeripheralEdgeBrush" Color="#25FFFFFF" />
             <SolidColorBrush x:Key="PeripheralCardEdgeBrush" Color="#25FFFFFF" />
+            <sys:Boolean x:Key="PeripheralLiquidLighting">False</sys:Boolean>
             <SolidColorBrush x:Key="PeripheralGlintBrush" Color="Transparent" />
             <CornerRadius x:Key="PeripheralPanelRadius">8</CornerRadius>
             <CornerRadius x:Key="PeripheralCardRadius">8</CornerRadius>

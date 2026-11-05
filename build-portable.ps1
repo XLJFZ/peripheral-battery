@@ -1,10 +1,13 @@
-# Build the portable single-file release: one EXE, no installer, no runtime prerequisite.
+﻿# Build the portable single-file release: one EXE, no installer, no runtime prerequisite.
 $ErrorActionPreference = 'Stop'
 Set-Location -LiteralPath $PSScriptRoot
-$version = '0.4.1'
+$version = '0.4.2'
 $python = if (Test-Path -LiteralPath './.venv/Scripts/python.exe') { './.venv/Scripts/python.exe' } else { 'python' }
 $out = "dist/portable-$version"
-if (Test-Path -LiteralPath $out) { Remove-Item -LiteralPath $out -Recurse -Force }
+$resolvedOut = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot $out))
+$distRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot 'dist')) + [System.IO.Path]::DirectorySeparatorChar
+if (-not $resolvedOut.StartsWith($distRoot, [System.StringComparison]::OrdinalIgnoreCase)) { throw 'Portable output must stay inside dist.' }
+if (Test-Path -LiteralPath $resolvedOut) { Remove-Item -LiteralPath $resolvedOut -Recurse -Force }
 dotnet publish native/src/BluetoothBatteryMonitor.App/BluetoothBatteryMonitor.App.csproj `
     -c Release -r win-x64 --self-contained true -o $out `
     -p:PublishSingleFile=true `

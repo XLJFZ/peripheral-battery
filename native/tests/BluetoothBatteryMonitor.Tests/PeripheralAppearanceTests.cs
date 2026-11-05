@@ -32,18 +32,19 @@ public class PeripheralAppearanceTests
     }
     [Fact] public void InvalidColorFallsBack()=>Assert.Equal("#00C98D",Appearance.ValidColor("bad","#00C98D"));
     [Theory]
-    [InlineData("System",0,"普通版")]
-    [InlineData("Dark",0,"普通版")]
-    [InlineData("Light",0,"普通版")]
+    [InlineData("System",0,"System")]
+    [InlineData("Dark",0,"Dark")]
+    [InlineData("Light",0,"Light")]
     [InlineData("",0,"普通版")]
     [InlineData(null,0,"普通版")]
-    [InlineData("液态玻璃",0,"普通版")]
-    [InlineData("液态玻璃（低透明）",0,"普通版")]
+    [InlineData("液态玻璃",0,"液态玻璃")]
+    [InlineData("液态玻璃（低透明）",0,"液态玻璃")]
     [InlineData("液态玻璃",1,"液态玻璃")]
     [InlineData("液态玻璃（低透明）",1,"液态玻璃")]
     [InlineData("毛玻璃",1,"毛玻璃")]
     [InlineData("普通版",1,"普通版")]
-    [InlineData("未知值",1,"普通版")]
+    [InlineData("未知值",1,"未知值")]
+    [InlineData("液态玻璃未来版",99,"液态玻璃未来版")]
     public void AppearanceDefaultsToNormalAndKeepsExplicitChoice(string? theme,int version,string expected)
         => Assert.Equal(expected,Settings.MigrateTheme(theme,version));
 

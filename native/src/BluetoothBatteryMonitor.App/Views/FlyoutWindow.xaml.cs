@@ -11,6 +11,7 @@ namespace BluetoothBatteryMonitor.App.Views;
 
 public partial class FlyoutWindow : FluentWindow
 {
+    internal RealtimeGlassCapture RealtimeGlass {get;}
     private Point _dragStart;
     private void GlassCardEnter(object sender,System.Windows.Input.MouseEventArgs e)=>AnimateGlassCard(sender,true);
     private void GlassCardLeave(object sender,System.Windows.Input.MouseEventArgs e)=>AnimateGlassCard(sender,false);
@@ -111,6 +112,7 @@ public partial class FlyoutWindow : FluentWindow
     public FlyoutWindow(MainViewModel viewModel)
     {
         InitializeComponent();
+        RealtimeGlass=new RealtimeGlassCapture(this);
         DataContext = viewModel;
         _autoHideSeconds = ReadAutoHideSeconds();
         PreviewMouseMove += (s,e) => ResetIdle();
@@ -128,8 +130,12 @@ public partial class FlyoutWindow : FluentWindow
 
         try
         {
-            Icon = new System.Windows.Media.Imaging.BitmapImage(
-                new Uri("pack://application:,,,/BluetoothBatteryMonitor.App;component/Assets/app.ico", UriKind.Absolute));
+            // An ICO decoded through BitmapImage can select its 16px entry. Supply a
+            // full-resolution source so WPF can generate both taskbar and titlebar HICONs.
+            Icon = System.Windows.Media.Imaging.BitmapFrame.Create(
+                new Uri("pack://application:,,,/BluetoothBatteryMonitor.App;component/Assets/app-taskbar.png", UriKind.Absolute),
+                System.Windows.Media.Imaging.BitmapCreateOptions.PreservePixelFormat,
+                System.Windows.Media.Imaging.BitmapCacheOption.OnLoad);
         }
         catch { }
 

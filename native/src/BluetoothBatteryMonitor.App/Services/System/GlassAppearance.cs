@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Media;
 using Wpf.Ui.Controls;
 
@@ -26,6 +26,7 @@ public static class GlassAppearance
         DarkPalette=Enabled && dark;
         Reduced=theme.Contains("低透明") || SystemParameters.HighContrast || !TransparencyAllowed() || !BackdropSupported();
         var resources=Application.Current.Resources;
+        resources["PeripheralLiquidLighting"]=Liquid && !Reduced;
         if(SystemParameters.HighContrast)
         {
             resources["TextFillColorPrimaryBrush"]=SystemColors.WindowTextBrush;
@@ -63,24 +64,29 @@ public static class GlassAppearance
             }
             else if(dark)
             {
-                resources["PeripheralPanelBrush"]=Gradient(Reduced?"#FF262628":"#66202327",Reduced?"#FF2E2E31":"#482B2C30");
-                resources["PeripheralCardBrush"]=Gradient(Reduced?"#FF2A2A2D":"#24FFFFFF",Reduced?"#FF232326":"#0AFFFFFF");
+                resources["PeripheralPanelBrush"]=Gradient(Reduced?"#FF262628":"#48202329",Reduced?"#FF2E2E31":"#3020252C");
+                resources["PeripheralCardBrush"]=Gradient(Reduced?"#FF2A2A2D":"#14FFFFFF",Reduced?"#FF232326":"#06FFFFFF");
                 resources["PeripheralEdgeBrush"]=EdgeGradient(Color.FromArgb(125,255,255,255),Color.FromArgb(20,0,0,0),Color.FromArgb(190,255,255,255));
-                resources["PeripheralGlintBrush"]=new RadialGradientBrush(Color.FromArgb(58,255,255,255),Colors.Transparent){Center=new Point(.2,0),GradientOrigin=new Point(.2,0),RadiusX=.85,RadiusY=1.05};
+                resources["PeripheralGlintBrush"]=new RadialGradientBrush(Color.FromArgb(24,255,255,255),Colors.Transparent){Center=new Point(.2,0),GradientOrigin=new Point(.2,0),RadiusX=.85,RadiusY=1.05};
                 resources["PeripheralCardHoverBrush"]=new SolidColorBrush(Color.FromArgb(38,255,255,255));
                 resources["PeripheralCardEdgeBrush"]=EdgeGradient(Color.FromArgb(65,255,255,255),Color.FromArgb(8,255,255,255),Color.FromArgb(35,255,255,255));
             }
             else
             {
-                resources["PeripheralPanelBrush"]=Gradient(Reduced?"#FFF5F6F8":"#80F7F9FB",Reduced?"#FFE6E9EE":"#5CE9EEF3");
-                resources["PeripheralCardBrush"]=Gradient(Reduced?"#FFFAFBFC":"#38FFFFFF",Reduced?"#FFF2F4F7":"#12FFFFFF");
+                resources["PeripheralPanelBrush"]=Gradient(Reduced?"#FFF5F6F8":"#58F7F9FB",Reduced?"#FFE6E9EE":"#38E9EEF3");
+                resources["PeripheralCardBrush"]=Gradient(Reduced?"#FFFAFBFC":"#24FFFFFF",Reduced?"#FFF2F4F7":"#0CFFFFFF");
                 resources["PeripheralEdgeBrush"]=EdgeGradient(Color.FromArgb(220,255,255,255),Color.FromArgb(45,70,75,85),Color.FromArgb(235,255,255,255));
-                resources["PeripheralGlintBrush"]=new RadialGradientBrush(Color.FromArgb(110,255,255,255),Colors.Transparent){Center=new Point(.2,0),GradientOrigin=new Point(.2,0),RadiusX=.85,RadiusY=1.05};
+                resources["PeripheralGlintBrush"]=new RadialGradientBrush(Color.FromArgb(42,255,255,255),Colors.Transparent){Center=new Point(.2,0),GradientOrigin=new Point(.2,0),RadiusX=.85,RadiusY=1.05};
                 resources["PeripheralCardHoverBrush"]=new SolidColorBrush(Color.FromArgb(22,0,0,0));
                 resources["PeripheralCardEdgeBrush"]=EdgeGradient(Color.FromArgb(165,255,255,255),Color.FromArgb(30,255,255,255),Color.FromArgb(45,70,75,85));
             }
+            if(Liquid && !Reduced)
+            {
+                resources["PeripheralGlintBrush"]=Brushes.Transparent;
+                resources["PeripheralCardHoverBrush"]=resources["PeripheralCardBrush"];
+            }
             resources["PeripheralPanelRadius"]=new CornerRadius(PanelRadius);
-            resources["PeripheralCardRadius"]=new CornerRadius(Liquid?10:CardRadius);
+            resources["PeripheralCardRadius"]=new CornerRadius(Liquid?12:CardRadius);
             resources["PeripheralFooterRadius"]=new CornerRadius(0,0,PanelRadius,PanelRadius);
         }
         else
@@ -141,6 +147,27 @@ public static class GlassAppearance
                 fluent.SetResourceReference(global::System.Windows.Controls.Control.BackgroundProperty,"ApplicationBackgroundBrush");
             // Acrylic uses the Windows compositor; no continuous rendering loop.
             fluent.WindowBackdropType=SystemParameters.HighContrast||!BackdropSupported()?WindowBackdropType.None:Enabled && !Reduced?WindowBackdropType.Acrylic:WindowBackdropType.Mica;
+            if(window is Views.FlyoutWindow)
+            {
+                // WPF-UI's active-window stroke is separate from DWM's native border.
+                if(Liquid && !SystemParameters.HighContrast)
+                {
+                    fluent.BorderBrush=Brushes.Transparent;
+                    fluent.BorderThickness=new Thickness(0);
+                }
+                else
+                {
+                    fluent.ClearValue(global::System.Windows.Controls.Control.BorderBrushProperty);
+                    fluent.ClearValue(global::System.Windows.Controls.Control.BorderThicknessProperty);
+                }
+                var handle=new global::System.Windows.Interop.WindowInteropHelper(window).Handle;
+                if(handle!=IntPtr.Zero)
+                {
+                    int border=Liquid && !SystemParameters.HighContrast?unchecked((int)0xFFFFFFFE):unchecked((int)0xFFFFFFFF);
+                    Helpers.NativeMethods.DwmSetWindowAttribute(handle,Helpers.NativeMethods.DWMWA_BORDER_COLOR,ref border,sizeof(int));
+                }
+            }
+            if(window is Views.FlyoutWindow flyout)flyout.RealtimeGlass?.Update();
         }
         catch(Exception ex)
         {

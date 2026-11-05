@@ -37,6 +37,13 @@ public partial class App : System.Windows.Application
 
     protected override async void OnStartup(StartupEventArgs e)
     {
+        int realtimeProbe=Array.IndexOf(e.Args,"--realtime-glass-probe");
+        if(realtimeProbe>=0 && e.Args.Length>realtimeProbe+1)
+        {
+            base.OnStartup(e);ShutdownMode=ShutdownMode.OnExplicitShutdown;
+            try{await Services.RealtimeGlassProbe.Run(e.Args[realtimeProbe+1]);Shutdown(0);}
+            catch(Exception ex){await global::System.IO.File.WriteAllTextAsync(e.Args[realtimeProbe+1]+"-error.txt",ex.ToString());Shutdown(1);}return;
+        }
         int glassPreview=Array.IndexOf(e.Args,"--glass-preview");
         if(glassPreview>=0 && e.Args.Length>glassPreview+1)
         {
@@ -200,6 +207,9 @@ public partial class App : System.Windows.Application
         _mainViewModel = new MainViewModel(_engine, _audioEndpointManager);
         _flyoutWindow = new FlyoutWindow(_mainViewModel);
         MainWindow = _flyoutWindow;
+        // Live review uses real devices and a temporary material override, without saving it.
+        bool glassLive = e.Args.Any(a => a.Equals("--glass-live", StringComparison.OrdinalIgnoreCase));
+        if(glassLive) ThemeManager.ApplyTheme(ThemeManager.AppearanceGlass);
 
         // 6. System Tray Manager
         _trayIconManager = new TrayIconManager(_mainViewModel, _flyoutWindow);
@@ -248,7 +258,7 @@ public partial class App : System.Windows.Application
             MainViewModel.OpenSettingsWindow();
             return;
         }
-        _flyoutWindow.DisableAutoClose = e.Args.Any(a => a.Equals("--pin", StringComparison.OrdinalIgnoreCase));
+        _flyoutWindow.DisableAutoClose = glassLive || e.Args.Any(a => a.Equals("--pin", StringComparison.OrdinalIgnoreCase));
         _flyoutWindow.ShowInTaskbar = _flyoutWindow.DisableAutoClose;
 
         // Show flyout on initial launch unless --minimized is specified

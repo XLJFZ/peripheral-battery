@@ -1,15 +1,19 @@
 # Peripheral Battery · 外设电量
 
-当前 Windows 版本 **v0.3.18**，提供“普通版”（默认）、“毛玻璃”和“液态玻璃”三种外观，毛玻璃与液态玻璃跟随 Windows 深色/浅色设置。
+当前 Windows 版本 **v0.4.2**，提供“普通版”（默认）、“毛玻璃”和“液态玻璃”三种外观，毛玻璃与液态玻璃跟随 Windows 深色/浅色设置。
+
+液态玻璃弹窗支持实时背景折射与鼠标附近的局部高光，隐藏后停止采集。为避免采集自身，开启实时折射时弹窗可能不会出现在截图、录屏或部分远程桌面画面中。完整说明见 [v0.4.2 发布说明](notes/v0.4.2.md)。
 
 **两种安装方式**（都在 [Releases](https://github.com/XLJFZ/peripheral-battery/releases/latest) 里）：
 
 | 方式 | 文件 | 特点 |
 | --- | --- | --- |
-| 安装版（推荐） | `Peripheral-Battery-Setup-0.3.14.exe` | 向导安装到 `%LOCALAPPDATA%\Programs\PeripheralBattery`；开始菜单 / 桌面快捷方式；可在设置→应用中卸载；普通用户权限即可 |
-| 便携版 | `Peripheral-Battery-0.3.14-x64.exe` | 单个 EXE，双击即用，不需要安装运行时、不需要解压；删文件即卸载 |
+| 安装版（推荐） | `Peripheral-Battery-Setup-0.4.2.exe` | 向导安装到 `%LOCALAPPDATA%\Programs\PeripheralBattery`；开始菜单 / 桌面快捷方式；可在设置→应用中卸载；普通用户权限即可 |
+| 便携版 | `Peripheral-Battery-0.4.2-x64.exe` | 单个 EXE，双击即用，不需要安装运行时、不需要解压；删文件即卸载 |
 
 两种方式共用同一份程序与设置（`%APPDATA%\PeripheralBatteryNative`），可以互相切换。
+
+v0.4.2 起，旧配置中的有效外观选择和未识别字段会保留。首次读取已有配置、以及应用内升级前，会在设置目录的 `upgrade-backups\before-版本号` 下保存原始快照，日常保存不会覆盖它。恢复方法与适用范围见 [v0.4.2 发布说明](notes/v0.4.2.md)。
 
 安装版支持**应用内升级**：设置 → 高级 → 软件更新 → 检查更新 → 「下载并安装」。程序会下载 Setup、比对 release 里的 `sha256.txt`（拿不到校验值就中止）、去掉 MOTW 后静默安装并自动重启；便携版没有安装器，只会打开下载页。升级是否真的装成功会被核对：安装前写入 `update-pending.json`，下次启动时比对版本，成功发一条通知，失败则保留红色提示并在设置页给出重试入口。
 
@@ -51,3 +55,5 @@ GitHub Pages 从 `main` 分支的 `/docs` 发布。网页原稿为 `web/index.ht
 Python 版本基于 [marsuyone/mchose-battery-tray](https://github.com/marsuyone/mchose-battery-tray) 扩展，上游原始代码保存在 `upstream/`，原始提交为 `f8e0e06b9934b8beb48c6d5d884e3330f1188aea`。上游未声明许可证，本仓库不为其添加许可证；公开可见不代表获得额外再许可权。
 
 原生托盘基于 [BluetoothBatteryMonitor](https://github.com/Kaandonmez/BluetoothBatteryMonitor) 改造，保留 `native/LICENSE` 中的 MIT 许可与署名。雷蛇报文与设备表参考 [razer-battery-report](https://github.com/xzeldon/razer-battery-report/tree/master/crates/razer-hid)，回报率报文对照 [OpenRazer](https://github.com/openrazer/openrazer/blob/master/driver/razerchromacommon.c) 并在本机验证。本项目没有复制 FerrisPulse 的 GPLv3 源码。
+
+液态玻璃的视觉设计参考 [liquid-glass-react](https://github.com/rdev/liquid-glass-react)，本项目使用 Windows 原生采集与 WPF 着色器实现。

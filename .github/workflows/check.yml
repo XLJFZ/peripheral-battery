@@ -22,11 +22,17 @@ jobs:
         with:
           dotnet-version: '8.0.x'
       - run: python -m pip install 'Pillow>=10.4,<14'
+      - name: Compile liquid glass shader
+        run: python tools/compile_glass_shader.py
       - run: python -m unittest discover -p 'test_*.py' -v
       - run: node test_webhid.cjs
       - run: node test_web_state.cjs
       - name: Tray regression checks
         run: dotnet test native/tests/BluetoothBatteryMonitor.Tests/BluetoothBatteryMonitor.Tests.csproj -c Release --filter "FullyQualifiedName~HidFreshnessTests|FullyQualifiedName~BluetoothBatteryEngine_HasAllProvidersRegistered|FullyQualifiedName~MultiRingTests|FullyQualifiedName~PeripheralAppearanceTests|FullyQualifiedName~ToastNotificationServiceTests|FullyQualifiedName~UpdateInstallerTests|FullyQualifiedName~UpdateAssetSelectionTests|FullyQualifiedName~UpdatePendingUpdateTests|FullyQualifiedName~UpdateHardeningTests|FullyQualifiedName~LocalRestApiTests|FullyQualifiedName~SingleInstanceLockTests|FullyQualifiedName~FlyoutAutoHideTests|FullyQualifiedName~LocalizationCoverageTests|FullyQualifiedName~AboutWindowTests|FullyQualifiedName~AutoUpdateCheckTests"
+      - name: Liquid glass rendering checks
+        run: dotnet test native/tests/BluetoothBatteryMonitor.Tests/BluetoothBatteryMonitor.Tests.csproj -c Release --no-build --filter "FullyQualifiedName~LiquidGlass"
+      - name: Upgrade settings preservation checks
+        run: dotnet test native/tests/BluetoothBatteryMonitor.Tests/BluetoothBatteryMonitor.Tests.csproj -c Release --no-build --filter "FullyQualifiedName~UpgradeSettingsPreservationTests|FullyQualifiedName~AppSettingsAtomicWriteTests"
       - name: Publish and verify popup dependencies
         run: |
           dotnet publish native/src/BluetoothBatteryMonitor.App/BluetoothBatteryMonitor.App.csproj -c Release -r win-x64 --self-contained true -o dist/ci-native

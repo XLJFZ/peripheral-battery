@@ -20,3 +20,7 @@ macos/diagnostics/
 releases/**/*.exe
 releases/**/*.sha256
 releases/**/sha256.txt
+
+# Local desktop review images and test diagnostics are not release sources.
+review/
+**/TestResults/

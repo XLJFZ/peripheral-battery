@@ -42,14 +42,19 @@ public class TrayMenuAndFlyoutLifecycleTests
             {
                 try
                 {
-                    System.Windows.Threading.Dispatcher.CurrentDispatcher.InvokeShutdown();
+                    // Popup.Close queues native-window cleanup. Pump it before shutting down the
+                    // STA; synchronous shutdown can wait forever for that pending cleanup.
+                    var dispatcher = System.Windows.Threading.Dispatcher.CurrentDispatcher;
+                    dispatcher.BeginInvokeShutdown(System.Windows.Threading.DispatcherPriority.ContextIdle);
+                    System.Windows.Threading.Dispatcher.Run();
                 }
                 catch { }
             }
         });
+        thread.IsBackground = true;
         thread.SetApartmentState(ApartmentState.STA);
         thread.Start();
-        thread.Join();
+        Assert.True(thread.Join(TimeSpan.FromSeconds(15)), "UI test did not finish within 15 seconds.");
 
         if (ex != null)
         {
