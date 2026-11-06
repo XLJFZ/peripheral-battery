@@ -21,6 +21,29 @@ public class BluetoothBatteryEngine : IDisposable
     private readonly SemaphoreSlim _scanLock = new(1, 1);
 
     private Timer? _pollingTimer;
+    private Timer? _hidRecoveryTimer;
+    private int _hidRecoveryRunning;
+
+    internal static bool NeedsHidRecovery(BluetoothDeviceModel device)
+        => device.ProviderSource.StartsWith("Peripheral HID", StringComparison.Ordinal)
+            && device.Type == DeviceType.Mouse && !device.IsConnected;
+
+    private async Task RecoverSleepingMouseAsync()
+    {
+        if (_isDisposed || _isSessionLocked || !CurrentDevices.Any(NeedsHidRecovery)
+            || Interlocked.Exchange(ref _hidRecoveryRunning, 1) != 0) return;
+        try
+        {
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            var provider = _providers.OfType<PeripheralHidBatteryProvider>().FirstOrDefault();
+            if (provider == null) return;
+            var devices = await provider.GetDevicesAsync(timeout.Token);
+            if (_isDisposed || _isSessionLocked) return;
+            foreach (var device in devices) OnProviderDeviceUpdated(provider, device);
+        }
+        catch { /* Retry on the next recovery tick. */ }
+        finally { Volatile.Write(ref _hidRecoveryRunning, 0); }
+    }
     private bool _isSessionLocked;
     private bool _isDisposed;
 
@@ -84,6 +107,8 @@ public class BluetoothBatteryEngine : IDisposable
         }
 
         IsStarted=true;
+        _hidRecoveryTimer = new Timer(async _ => await RecoverSleepingMouseAsync(), null,
+            TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(2));
         // Start initial scan
         _ = RefreshAllDevicesAsync();
 
@@ -244,7 +269,9 @@ public class BluetoothBatteryEngine : IDisposable
                     snapshot = DateTime.Now - _lastEventSnapshotAt < EventSnapshotTtl ? _lastEventSnapshot : null;
                 }
 
-                snapshot ??= await BluetoothConnectionChecker.CaptureSnapshotAsync(_audioManager);
+                // HID reads already report live link status; avoid waiting for a Bluetooth scan.
+                if (!dev.ProviderSource.StartsWith("Peripheral HID", StringComparison.Ordinal))
+                    snapshot ??= await BluetoothConnectionChecker.CaptureSnapshotAsync(_audioManager);
                 lock (_eventSnapshotLock)
                 {
                     _lastEventSnapshot = snapshot;
@@ -252,7 +279,8 @@ public class BluetoothBatteryEngine : IDisposable
                 }
 
                 // Verify live connection status of incoming event
-                dev.IsConnected = await BluetoothConnectionChecker.IsDeviceConnectedAsync(dev, snapshot);
+                if (!dev.ProviderSource.StartsWith("Peripheral HID", StringComparison.Ordinal))
+                    dev.IsConnected = await BluetoothConnectionChecker.IsDeviceConnectedAsync(dev, snapshot);
 
                 var activeDev = MergeOrAddDevice(dev);
 
@@ -792,6 +820,7 @@ public class BluetoothBatteryEngine : IDisposable
 
         SystemEvents.SessionSwitch -= OnSessionSwitch;
         _pollingTimer?.Dispose();
+        _hidRecoveryTimer?.Dispose();
 
         // Let an in-flight scan finish before tearing down the semaphore it will release.
         try

@@ -13,7 +13,14 @@ public sealed class PeripheralHidBatteryProvider : IBluetoothBatteryProvider
     public event EventHandler<BluetoothDeviceModel>? DeviceUpdated { add { } remove { } }
     private static string BackendPath => Path.Combine(AppContext.BaseDirectory,"backend","UniversalBatteryTray.exe");
     private Dictionary<string,BluetoothDeviceModel> previous = new();
+    private readonly SemaphoreSlim readGate = new(1, 1);
     public async Task<IReadOnlyList<BluetoothDeviceModel>> GetDevicesAsync(CancellationToken ct=default)
+    {
+        await readGate.WaitAsync(ct);
+        try { return await ReadDevicesAsync(ct); }
+        finally { readGate.Release(); }
+    }
+    private async Task<IReadOnlyList<BluetoothDeviceModel>> ReadDevicesAsync(CancellationToken ct)
     {
         string temp=Path.Combine(Path.GetTempPath(),"peripheral-hid-"+Guid.NewGuid().ToString("N")+".json");
         var rows=new List<BluetoothDeviceModel>();
